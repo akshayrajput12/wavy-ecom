@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { getAccountUser, getOrderByNumber, getReturnsForUser } from "@/backend/orders/repo";
+import { notFound, redirect } from "next/navigation";
+import { getSession } from "@/backend/_core/auth";
+import { CUSTOMER_CANCELLABLE, getMyOrder } from "@/backend/orders/repo";
 import { OrderDetailView } from "@/views/orders/OrderDetailView";
 import { returnableItems } from "@/views/returns/eligibility";
 
@@ -11,9 +12,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function OrderDetailPage({ params }: Props) {
-  const { number } = await params;
-  const [order, user] = await Promise.all([getOrderByNumber(number), getAccountUser()]);
-  if (!order || !user) notFound();
-  const returns = await getReturnsForUser(user.id);
-  return <OrderDetailView order={order} canReturn={returnableItems(order, returns).length > 0} />;
+  const [{ number }, session] = await Promise.all([params, getSession()]);
+  if (!session) redirect(`/login?next=/account/orders/${encodeURIComponent(number)}`);
+  const order = await getMyOrder(session, number);
+  if (!order) notFound();
+  return <OrderDetailView order={order} canCancel={CUSTOMER_CANCELLABLE.includes(order.status)} canReturn={returnableItems(order).length > 0} />;
 }

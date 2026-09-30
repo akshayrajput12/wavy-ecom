@@ -59,7 +59,8 @@ select pg_temp.public_read('categories', 'is_active');
 select pg_temp.staff_read('categories', 'catalog.read');
 select pg_temp.staff_write('categories', 'catalog.write');
 
-select pg_temp.public_read('collections', 'is_active');
+select pg_temp.public_read('collections',
+  $$is_active and (starts_at is null or starts_at <= now()) and (ends_at is null or ends_at > now())$$);
 select pg_temp.staff_read('collections', 'catalog.read');
 select pg_temp.staff_write('collections', 'catalog.write');
 
@@ -298,6 +299,11 @@ select pg_temp.staff_write('seo_overrides', 'seo.write');
 select pg_temp.public_read('redirects', 'is_active');
 select pg_temp.staff_write('redirects', 'seo.write');
 
+-- Home page: public sees active sections inside their window; content.write edits (and sees all).
+select pg_temp.public_read('home_sections',
+  $$is_active and (starts_at is null or starts_at <= now()) and (ends_at is null or ends_at > now())$$);
+select pg_temp.staff_write('home_sections', 'content.write');
+
 -- =============================================================================
 -- Analytics / support
 -- =============================================================================
@@ -322,7 +328,7 @@ select pg_temp.staff_read('support_ticket_messages', 'support.read');
 select pg_temp.staff_write('support_ticket_messages', 'support.write');
 
 -- =============================================================================
--- Settings / integrations / notifications / try-on / audit
+-- Settings / integrations / notifications / audit
 -- =============================================================================
 select pg_temp.public_read('store_settings', 'true');     -- non-secret: tax rate, thresholds, COD rules
 create policy staff_update on public.store_settings for update to authenticated
@@ -335,9 +341,6 @@ select pg_temp.staff_write('integration_configs', 'integrations.manage');
 
 select pg_temp.staff_read('notification_log', 'support.read');
 select pg_temp.staff_read('notification_log', 'orders.read');
-
-create policy own_select on public.tryon_sessions for select to authenticated using (user_id = (select auth.uid()));
-select pg_temp.staff_read('tryon_sessions', 'tryon.read');
 
 select pg_temp.staff_read('audit_logs', 'audit.read');
 
@@ -357,6 +360,18 @@ revoke insert, update, delete on public.audit_logs, public.payment_attempts, pub
   from authenticated;
 -- inventory rows change only through reserve/adjust RPCs
 revoke insert, update, delete on public.inventory from authenticated;
+-- product_variants.cost_price is never exposed through the Data API (margin data): clients get
+-- column-level SELECT on every other column; admin screens read it via the service role.
+-- A migration that adds a product_variants column must grant SELECT on it the same way.
+do $$
+declare v_cols text;
+begin
+  select string_agg(quote_ident(column_name), ', ' order by ordinal_position) into v_cols
+    from information_schema.columns
+   where table_schema = 'public' and table_name = 'product_variants' and column_name <> 'cost_price';
+  execute 'revoke select on public.product_variants from anon, authenticated';
+  execute format('grant select (%s) on public.product_variants to anon, authenticated', v_cols);
+end $$;
 -- profiles: role is never client-writable; status/email guarded by trigger
 revoke insert, update, delete on public.profiles from authenticated;
 grant update (full_name, phone, avatar_url, marketing_opt_in, last_seen_at, status) on public.profiles to authenticated;
@@ -369,12 +384,13 @@ grant execute on all functions in schema public to service_role;
 grant execute on function
   public.has_permission(text), public.auth_role(), public.is_staff(), public.is_service_role(),
   public.order_status_allowed(public.order_status, public.order_status), public.category_path(uuid),
-  public.get_order_tracking(text)
+  public.category_descendants(uuid), public.variant_options(uuid), public.get_order_tracking(text)
   to anon, authenticated;
 grant execute on function
   public.quote_cart(uuid, uuid, public.payment_provider, text), public.apply_coupon(uuid, text),
   public.get_customer_journey(uuid, integer), public.cancel_order(uuid, text),
-  public.adjust_inventory(uuid, integer, public.inventory_reason, text, text, uuid)
+  public.adjust_inventory(uuid, integer, public.inventory_reason, text, text, uuid),
+  public.restock_return(uuid)
   to authenticated;
 
 grant usage on schema public to supabase_auth_admin;

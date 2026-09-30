@@ -1,8 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { authCopy } from "@/data/account";
-import { site } from "@/data/site";
+import { authCopy } from "@/data/copy";
+import { siteConfig as site } from "@/lib/site";
 import { hasSupabase } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import { loginSchema, resetSchema, signupSchema, type AuthResult } from "./schema";
@@ -19,22 +19,24 @@ export async function signIn(input: unknown): Promise<AuthResult> {
   const { error } = await supabase.auth.signInWithPassword({ email: parsed.data.email, password: parsed.data.password });
   // generic message: don't reveal whether the email exists
   if (error) return { error: "That email and password don't match. Try again or reset your password." };
-  redirect(safeNext(parsed.data.next));
+  if (parsed.data.next) redirect(safeNext(parsed.data.next));
+  const { data: role } = await supabase.rpc("auth_role");
+  redirect(role && role !== "customer" ? "/admin/dashboard" : "/account");
 }
 
 export async function signUp(input: unknown): Promise<AuthResult> {
   const parsed = signupSchema.safeParse(input);
   if (!parsed.success) return invalid;
   if (!hasSupabase) return { error: authCopy.notConfigured };
-  const { name, email, phone, password } = parsed.data;
+  const { name, email, phone, password, next } = parsed.data;
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email, password,
-    options: { data: { name, phone, terms_accepted_at: new Date().toISOString() }, emailRedirectTo: `${site.url}/account` },
+    options: { data: { name, phone, terms_accepted_at: new Date().toISOString() }, emailRedirectTo: `${site.url}${safeNext(next)}` },
   });
   if (error) return { error: error.message };
   if (!data.session) return { message: "Check your inbox to confirm your email, then log in." };
-  redirect("/account");
+  redirect(safeNext(next));
 }
 
 export async function resetPassword(input: unknown): Promise<AuthResult> {

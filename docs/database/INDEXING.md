@@ -19,20 +19,23 @@ About 450 indexes (including the ones created for PKs and uniques, and the per-p
 | Query | Index |
 |---|---|
 | PDP by slug `products where slug = $1` | `products_slug_key` (unique) |
-| PLP by category, newest `where status='published' and category_id=$1 order by published_at desc` | `products_published_cat_idx (category_id, published_at desc) where published` |
+| PLP by category (incl. children: `category_id = any(category_descendants($1))`) | `products_published_cat_idx (category_id, sort_order, published_at desc) where published` |
+| Featured products | `products_published_featured_idx (sort_order, published_at desc) where published and is_featured` |
+| Newest by created_at | `products_published_created_idx (created_at desc) where published` |
+| Brand filter `lower(brand) = $1` / brand search | `products_published_brand_idx`, `products_brand_trgm_idx` |
+| Tag filter `tags @> '{wireless}'` / tag search | `products_tags_idx` GIN, `products_tags_trgm_idx` (trgm on `immutable_array_to_string(tags)`) |
 | "New in" | `products_published_new_idx (published_at desc) where published` |
 | Sort or filter by price | `products_published_price_idx (price_min) where published` (price range is kept in sync by trigger) |
-| Top rated | `products_published_rating_idx (rating_avg desc, review_count desc) where published` |
+| Top rated | `products_published_rating_idx (rating_display desc, review_count_display desc) where published` |
 | Search `search_vector @@ websearch_to_tsquery('english', $q)` | `products_search_idx` GIN |
 | Typo-tolerant / autocomplete `name ilike '%hood%'`, `similarity(name, $q)` | `products_name_trgm_idx` GIN trgm |
-| Collection page `collection_products where collection_id=$1 order by sort_order` | `collection_products_order_idx` |
+| Collection page `collection_products where collection_id=$1 order by position` | `collection_products_order_idx` |
 | Which collections a product is in (offers, badges) | `collection_products_product_idx` |
-| Filter by colour / size `exists (variants where lower(color)=$1 …)` | `product_variants_color_idx`, `product_variants_size_idx` (partial, not disabled) |
 | Filter by material / silhouette `product_attribute_values where attribute_value_id = any($1)` | `product_attribute_values_value_idx (attribute_value_id, product_id)` |
-| Variants of a product | `product_variants_product_idx (product_id, sort_order)` |
-| Gallery | `product_media_product_idx (product_id, sort_order)` |
+| Variants of a product | `product_variants_product_idx (product_id, position)` |
+| Gallery | `product_media_product_idx (product_id, position)` |
+| Home page sections | `home_sections_active_idx (sort_order) where is_active`; home grids `categories_home_idx`, `collections_home_idx` |
 | Stock for a variant | `inventory` PK |
-| Try-on eligible products | `products_tryon_idx` partial |
 | PDP approved reviews, newest / most helpful | `reviews_product_approved_idx`, `reviews_product_helpful_idx` (partial, approved) |
 | Active offers | `offers_active_idx (priority desc) where active` |
 | Coupon lookup at checkout `upper(code) = upper($1)` | `coupons_code_uidx` (unique), `coupons_active_code_idx` (partial) |
@@ -49,7 +52,6 @@ About 450 indexes (including the ones created for PKs and uniques, and the per-p
 | Order detail lines | `order_items_order_idx` |
 | My addresses / wishlist / cart | `addresses_user_idx`, `wishlist_items_user_idx`, `carts_active_user_uidx` |
 | Anonymous cart by cookie | `carts_active_session_uidx (session_id) where active` |
-| My returns / tickets / try-ons | `return_requests_user_idx`, `support_tickets_user_idx`, `tryon_sessions_user_idx` |
 | Verified-purchase check (trigger) | `order_items_product_idx (product_id, order_id)` + `orders_pkey` |
 | Coupon per-user limit | `coupon_redemptions_user_idx (coupon_id, user_id)` / `_email_idx (coupon_id, lower(email))` partial, not reversed |
 
@@ -61,7 +63,7 @@ About 450 indexes (including the ones created for PKs and uniques, and the per-p
 | Search order `wavy-1001…` / email / phone | `orders_number_trgm_idx`, `orders_email_trgm_idx`, `orders_email_idx lower(email)`, `orders_phone_idx` |
 | Products by status | `products_status_idx (status, updated_at desc)` |
 | SKU search | `product_variants_sku_trgm_idx` + `product_variants_sku_key` |
-| Low stock report `where available <= low_stock_threshold` | `inventory_low_stock_idx` (partial) |
+| Low stock report `inventory i join product_variants v … where i.available <= coalesce(v.low_stock_threshold, store default)` | `inventory_available_idx (available)` range scan |
 | Stock ledger for a variant | `inventory_movements_variant_idx (variant_id, created_at desc)` |
 | Customer search by email / name | `profiles_email_trgm_idx`, `profiles_name_trgm_idx`, `profiles_email_lower_uidx` |
 | Staff list | `profiles_staff_role_idx where role <> 'customer'`, `staff_members_status_idx` |
@@ -86,7 +88,6 @@ About 450 indexes (including the ones created for PKs and uniques, and the per-p
 | Unprocessed webhooks | `payment_events_backlog_idx where received/failed` |
 | Never pay twice | `payments_one_success_per_order_uidx`, `payment_attempts_one_success_per_order_uidx` (partial unique) |
 | Expiry sweeper | `orders_pending_payment_idx`, `inventory_reservations_expiry_idx where active` |
-| Try-on TTL cleanup | `tryon_sessions_expiry_idx where not expired/deleted` |
 | Scheduled blog publishing | `blog_posts_scheduled_idx where scheduled` |
 
 ### Analytics and customer journey

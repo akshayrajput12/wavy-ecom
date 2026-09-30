@@ -35,7 +35,6 @@ Analytics
 commerce and AI event/metric ingestion and reporting
 Integrations
 status/config metadata/test connection
-Try-On
 session/input/status/result/expiry/delete
 3. Commerce events
 Event
@@ -84,7 +83,6 @@ coupon_applied
 coupon_id,cart_id
 campaign_viewed
 campaign_id
-4. AI try-on requirements
 Eligible products expose the feature; the user sees its purpose and visualization-only nature.
 Validate file type/size before generation.
 Expose upload/queued/processing/completed/failed/expired states.
@@ -111,4 +109,3 @@ Commerce/page analytics; connection state.
 PostHog
 Product analytics and event/funnel tracking.
 AI provider
-Try-on generation; usage/cost; connection state; TTL policy reference.

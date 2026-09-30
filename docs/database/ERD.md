@@ -81,8 +81,6 @@ erDiagram
   ORDERS ||--o{ SUPPORT_TICKETS : ""
   PAYMENTS ||--o{ SUPPORT_TICKETS : ""
   SUPPORT_TICKETS ||--o{ SUPPORT_TICKET_MESSAGES : ""
-  PRODUCTS ||--o{ TRYON_SESSIONS : ""
-  PROFILES ||--o{ TRYON_SESSIONS : ""
 
   PROFILES {
     uuid id PK
@@ -101,17 +99,22 @@ erDiagram
     uuid id PK
     uuid category_id FK
     text slug UK
+    text brand
+    text_arr option_names
+    jsonb specifications
     product_status status
     int price_min
-    numeric rating_avg
+    numeric rating_display
     tsvector search_vector
   }
   PRODUCT_VARIANTS {
     uuid id PK
     uuid product_id FK
     text sku UK
-    text color
-    text size
+    text option1
+    text option2
+    text option3
+    text title
     int price
     variant_status status
   }

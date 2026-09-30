@@ -1,168 +1,136 @@
 "use client";
 
+import { clsx } from "clsx";
+import { AlertTriangle, Sparkles, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
-import { clsx } from "clsx";
-import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { ButtonLink } from "@/components/ui/Button";
 import { QuantityStepper } from "@/components/ui/Controls";
-import { ButtonLink, Button } from "@/components/ui/Button";
+import { Skeleton } from "@/components/ui/States";
+import { cartCopy } from "@/data/copy";
 import { formatPrice } from "@/lib/format";
-import { useCart } from "@/stores/cart";
-import { bundleOffer, cartCopy, shippingRule } from "@/data/content";
-import type { CartLine, Product } from "@/types/domain";
-import { estimateCart } from "./cartMath";
+import { MAX_PER_LINE, useCart, type CartQuoteState } from "@/stores/cart";
+import type { CartLine, QuoteLine } from "@/types/domain";
+import { cartExtraCopy as x } from "./copy";
+import { FreeShippingProgress } from "./FreeShippingProgress";
 
-export const useCartEstimate = (bundleIds: readonly string[]) => {
-  const lines = useCart((s) => s.lines);
-  return estimateCart(lines, {
-    bundleIds, bundleSize: bundleOffer.size, bundlePrice: bundleOffer.price,
-    freeThreshold: shippingRule.freeThreshold, shippingFee: shippingRule.fee,
-  });
-};
-
-export function CartLineRow({ line, large }: { line: CartLine; large?: boolean }) {
+/** One bag line. Price prefers the server quote line; the persisted snapshot is only a placeholder. */
+export function CartLineRow({ line, quoteLine, error, large, onNavigate }: {
+  line: CartLine; quoteLine?: QuoteLine; error?: string; large?: boolean; onNavigate?: () => void;
+}) {
   const update = useCart((s) => s.update);
-  const remove = useCart((s) => s.remove);
+  const max = Math.min(line.maxQuantity, quoteLine?.maxQuantity ?? MAX_PER_LINE, MAX_PER_LINE);
+  const total = quoteLine?.lineTotal ?? line.unitPrice * line.quantity;
+  const was = Math.max((quoteLine?.compareAtPrice ?? line.compareAt ?? 0) * line.quantity, quoteLine?.lineSubtotal ?? 0);
+
+  const remove = () => {
+    const removed = useCart.getState().remove(line.variantId);
+    if (!removed) return;
+    toast(x.removed(line.name), { action: { label: x.undo, onClick: () => useCart.getState().restore(removed.line, removed.index) } });
+  };
+  const image = line.image?.url ? line.image : quoteLine?.image ? { url: quoteLine.image, alt: line.name } : undefined;
+
   return (
-    <li className="flex gap-4 py-5">
-      <div className={clsx("relative shrink-0 overflow-hidden rounded-sm bg-surface-warm", large ? "h-36 w-28 sm:h-44 sm:w-36" : "h-28 w-22")}>
-        <Image src={line.image.url} alt={line.image.alt} fill sizes="144px" className="object-cover" />
+    <li className="flex gap-4 py-4">
+      <div className={clsx("relative shrink-0 overflow-hidden rounded-sm bg-surface-2", large ? "size-28 sm:size-32" : "size-22")}>
+        {image && <Image src={image.url} alt={image.alt || line.name} fill sizes="128px" className="object-cover" />}
       </div>
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className={clsx("font-medium", large ? "text-body-lg" : "text-body")}>{line.name}</p>
-            <p className="text-meta text-ink-soft">{line.color} · {line.size}</p>
+            {line.slug ? (
+              <Link href={`/products/${line.slug}`} onClick={onNavigate} className="line-clamp-2 text-body font-medium hover:underline">{line.name}</Link>
+            ) : <p className="line-clamp-2 text-body font-medium">{line.name}</p>}
+            {line.variantTitle && line.variantTitle !== "Default" && <p className="text-meta text-ink-soft">{line.variantTitle}</p>}
           </div>
-          <p className="text-body font-medium tabular-nums">{formatPrice(line.unitPrice * line.quantity)}</p>
+          <p className="text-right text-body font-medium tabular-nums">
+            {formatPrice(total)}
+            {was > total && <span className="block text-micro font-normal text-ink-muted line-through">{formatPrice(was)}</span>}
+          </p>
         </div>
         <div className="mt-auto flex items-center justify-between gap-3 pt-3">
-          <QuantityStepper label={`${cartCopy.quantity}: ${line.name}`} value={line.quantity} max={line.maxQuantity} onChange={(n) => update(line.id, n)} />
-          <button type="button" onClick={() => remove(line.id)} className="inline-flex min-h-11 items-center gap-1.5 text-meta text-ink-soft underline-offset-4 hover:text-ink hover:underline">
+          <QuantityStepper label={`${cartCopy.quantity}: ${line.name}`} value={line.quantity} max={Math.max(max, 1)} onChange={(n) => update(line.variantId, n)} />
+          <button type="button" onClick={remove} className="inline-flex min-h-11 items-center gap-1.5 rounded-pill px-2 text-meta text-ink-soft hover:bg-surface-warm hover:text-ink">
             <Trash2 className="size-3.5" aria-hidden /> {cartCopy.remove}<span className="sr-only"> {line.name}</span>
           </button>
         </div>
-        {line.quantity >= line.maxQuantity && <p className="mt-1 text-micro text-warning">{cartCopy.maxReached}</p>}
+        {error ? (
+          <p role="alert" className="mt-2 flex items-center gap-1.5 text-meta text-warning"><AlertTriangle className="size-3.5 shrink-0" aria-hidden /> {error}</p>
+        ) : line.quantity >= max && <p className="mt-1 text-micro text-ink-soft">{cartCopy.maxReached}</p>}
       </div>
     </li>
   );
 }
 
-/** Bundle nudge + free-shipping progress. */
-export function CartNudges({ bundleIds }: { bundleIds: readonly string[] }) {
-  const e = useCartEstimate(bundleIds);
-  const pct = Math.min(100, ((shippingRule.freeThreshold - e.freeShippingRemaining) / shippingRule.freeThreshold) * 100);
+/** All bag lines with their quote line + stock error. */
+export function CartLines({ q, large, onNavigate }: { q: CartQuoteState; large?: boolean; onNavigate?: () => void }) {
+  const lines = useCart((s) => s.lines);
   return (
-    <div className="space-y-3">
-      {e.itemsForBundle > 0 && (
-        <p className="flex flex-wrap items-center justify-between gap-2 rounded-sm bg-accent/25 px-3 py-2.5 text-meta font-medium text-ink">
-          {cartCopy.nudge(e.itemsForBundle)}
-          <Link href={bundleOffer.href} className="underline underline-offset-4">{cartCopy.nudgeCta}</Link>
+    <ul className="divide-y divide-line-soft">
+      {lines.map((l) => (
+        <CartLineRow key={l.variantId} line={l} large={large} onNavigate={onNavigate}
+          quoteLine={q.quote?.lines.find((ql) => ql.variantId === l.variantId)} error={q.lineErrors[l.variantId]} />
+      ))}
+    </ul>
+  );
+}
+
+/** Free-delivery meter + server offer nudges ("add 1 more to get …"). */
+export function CartNudges({ q, freeShippingThreshold }: { q: CartQuoteState; freeShippingThreshold?: number }) {
+  if (!q.quote) return null;
+  const net = q.quote.subtotal - q.quote.offerDiscount - q.quote.couponDiscount;
+  return (
+    <div className="space-y-2">
+      <FreeShippingProgress net={net} threshold={freeShippingThreshold} />
+      {q.nudges.map((n) => (
+        <p key={n.offerId} className="flex items-start gap-2 rounded-md border border-line-soft bg-surface px-4 py-3 text-meta text-ink">
+          <Sparkles className="mt-0.5 size-4 shrink-0 text-accent-deep" aria-hidden /> {n.message}
         </p>
-      )}
-      <div>
-        <p className="text-meta text-ink-soft">
-          {e.freeShippingRemaining > 0 ? cartCopy.freeShipLeft(formatPrice(e.freeShippingRemaining)) : cartCopy.freeShipDone}
-        </p>
-        <div className="mt-2 h-1 overflow-hidden rounded-pill bg-line-soft" aria-hidden>
-          <div className="h-full rounded-pill bg-ink transition-[width] duration-500" style={{ width: `${pct}%` }} />
-        </div>
-      </div>
+      ))}
     </div>
   );
 }
 
-export function CartTotals({ bundleIds, onCheckout }: { bundleIds: readonly string[]; onCheckout?: () => void }) {
-  const e = useCartEstimate(bundleIds);
+/** Server-quoted totals + the checkout CTA. */
+export function CartTotals({ q, onCheckout, hideCta }: { q: CartQuoteState; onCheckout?: () => void; hideCta?: boolean }) {
+  const t = q.quote;
   const row = "flex justify-between gap-4 text-body";
   return (
-    <div className="space-y-2.5">
-      <dl className="space-y-2">
-        <div className={row}><dt className="text-ink-soft">{cartCopy.subtotal}</dt><dd className="tabular-nums">{formatPrice(e.subtotal)}</dd></div>
-        {e.bundleDiscount > 0 && (
-          <div className={row}><dt className="text-ink-soft">{cartCopy.bundleDiscount}</dt><dd className="tabular-nums text-success">−{formatPrice(e.bundleDiscount)}</dd></div>
-        )}
-        <div className={row}><dt className="text-ink-soft">{cartCopy.shipping}</dt><dd className="tabular-nums">{e.shipping ? formatPrice(e.shipping) : cartCopy.free}</dd></div>
-        <div className={clsx(row, "border-t border-line pt-3 text-body-lg font-semibold")}><dt>{cartCopy.total}</dt><dd className="tabular-nums">{formatPrice(e.total)}</dd></div>
-      </dl>
-      <p className="text-micro text-ink-soft">{cartCopy.taxNote}</p>
-      <ButtonLink href="/checkout" full size="lg" onClick={onCheckout}>{cartCopy.checkout} · {formatPrice(e.total)}</ButtonLink>
+    <div className="space-y-3" aria-busy={q.loading}>
+      {!t ? (
+        <div className="space-y-2" aria-label={x.updating}><Skeleton className="h-5" /><Skeleton className="h-5 w-2/3" /><Skeleton className="h-7" /></div>
+      ) : (
+        <dl className={clsx("space-y-1.5 transition-opacity duration-(--dur-fast)", q.loading && "opacity-60")}>
+          <div className={row}><dt className="text-ink-soft">{cartCopy.subtotal}</dt><dd className="tabular-nums">{formatPrice(t.subtotal)}</dd></div>
+          {t.appliedDiscounts.map((d) => (
+            <div key={`${d.kind}-${d.id}`} className={row}>
+              <dt className="text-ink-soft">{d.kind === "coupon" ? cartCopy.couponApplied(d.code ?? "") : d.name ?? x.offerLabel}</dt>
+              <dd className="tabular-nums text-success">−{formatPrice(d.amount)}</dd>
+            </div>
+          ))}
+          <div className={row}><dt className="text-ink-soft">{cartCopy.shipping}</dt><dd className="tabular-nums">{t.shipping ? formatPrice(t.shipping) : cartCopy.free}</dd></div>
+          {!!t.codFee && <div className={row}><dt className="text-ink-soft">{cartCopy.codFee}</dt><dd className="tabular-nums">{formatPrice(t.codFee)}</dd></div>}
+          {!t.taxInclusive && !!t.tax && <div className={row}><dt className="text-ink-soft">{cartCopy.tax}</dt><dd className="tabular-nums">{formatPrice(t.tax)}</dd></div>}
+          <div className="flex items-baseline justify-between gap-4 border-t border-line pt-2.5">
+            <dt className="text-body-lg font-semibold">{cartCopy.total}</dt>
+            <dd className="text-body-lg font-semibold tabular-nums">{formatPrice(t.total)}</dd>
+          </div>
+          {t.taxInclusive && !!t.tax && <p className="text-micro text-ink-soft">{cartCopy.taxIncluded} {formatPrice(t.tax)}</p>}
+          {t.discount > 0 && <p className="text-meta font-medium text-success">{x.saved(formatPrice(t.discount))}</p>}
+        </dl>
+      )}
+      {q.error && <p role="status" className="text-meta text-warning">⚠ {q.error}</p>}
+      {!hideCta && (
+        <>
+          {t && !t.valid && <p role="alert" className="text-meta text-warning">⚠ {x.fixItems}</p>}
+          <ButtonLink href="/checkout" full size="lg" onClick={onCheckout} aria-disabled={t ? !t.valid : undefined}
+            className={clsx(t && !t.valid && "pointer-events-none opacity-40")}>
+            {cartCopy.checkout}{t ? ` · ${formatPrice(t.total)}` : ""}
+          </ButtonLink>
+          <p className="text-center text-micro text-ink-soft">{cartCopy.taxNote}</p>
+        </>
+      )}
     </div>
-  );
-}
-
-export function CouponForm() {
-  const coupon = useCart((s) => s.coupon);
-  const setCoupon = useCart((s) => s.setCoupon);
-  const [code, setCode] = useState("");
-  const [error, setError] = useState<string>();
-  const [loading, setLoading] = useState(false);
-
-  async function apply(e: React.FormEvent) {
-    e.preventDefault();
-    const value = code.trim().toUpperCase();
-    if (!value) return;
-    setLoading(true);
-    setError(undefined);
-    try {
-      const res = await fetch("/api/cart/coupon", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code: value }) });
-      const json: unknown = await res.json().catch(() => null);
-      const ok = res.ok && typeof json === "object" && json !== null && "ok" in json && json.ok === true;
-      if (!ok) throw new Error();
-      setCoupon(value);
-      setCode("");
-      toast.success(cartCopy.couponApplied(value));
-    } catch {
-      setError(cartCopy.couponFailed);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  if (coupon) {
-    return (
-      <div className="flex items-center justify-between gap-3 rounded-sm border border-dashed border-line px-3 py-2.5 text-meta">
-        <span><span className="font-semibold">{coupon}</span> · {cartCopy.couponNote}</span>
-        <button type="button" className="min-h-11 underline underline-offset-4" onClick={() => setCoupon(undefined)}>{cartCopy.couponRemove}</button>
-      </div>
-    );
-  }
-  return (
-    <form onSubmit={apply} noValidate>
-      <label htmlFor="coupon" className="text-meta font-medium">{cartCopy.couponLabel}</label>
-      <div className="mt-1.5 flex gap-2">
-        <input
-          id="coupon" value={code} onChange={(e) => setCode(e.target.value)} placeholder={cartCopy.couponPlaceholder} autoComplete="off"
-          aria-invalid={!!error} aria-describedby={error ? "coupon-err" : undefined}
-          className={clsx("h-11 min-w-0 flex-1 rounded-pill border bg-surface px-4 text-body uppercase placeholder:normal-case placeholder:text-ink-muted focus:border-ink focus:outline-none", error ? "border-danger" : "border-line")}
-        />
-        <Button type="submit" variant="secondary" loading={loading}>{cartCopy.couponApply}</Button>
-      </div>
-      {error && <p id="coupon-err" role="alert" className="mt-1.5 text-meta text-danger">⚠ {error}</p>}
-    </form>
-  );
-}
-
-export function CrossSells({ products, onNavigate }: { products: Product[]; onNavigate?: () => void }) {
-  if (!products.length) return null;
-  return (
-    <section aria-labelledby="xsell">
-      <h3 id="xsell" className="t-overline text-ink-soft">{cartCopy.crossSells}</h3>
-      <ul className="mt-3 grid grid-cols-3 gap-3">
-        {products.slice(0, 3).map((p) => (
-          <li key={p.id}>
-            <Link href={`/products/${p.slug}`} onClick={onNavigate} className="group block">
-              <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-surface-warm">
-                <Image src={p.images[0].url} alt={p.images[0].alt} fill sizes="120px" className="object-cover transition duration-500 group-hover:scale-105" />
-              </div>
-              <p className="mt-1.5 truncate text-meta font-medium">{p.name}</p>
-              <p className="text-micro text-ink-soft">{formatPrice(p.priceFrom)}</p>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
   );
 }

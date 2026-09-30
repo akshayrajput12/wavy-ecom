@@ -1,7 +1,10 @@
 -- =============================================================================
--- 0007 — Reviews (UGC)
--- verified_purchase is computed by trigger (0014) from a DELIVERED order item for the
--- same user + product. Any client-sent value is overwritten.
+-- 0007 — Reviews (UGC + admin-authored)
+-- source = 'customer': verified_purchase is computed by trigger (0014) from a DELIVERED order
+--   item for the same user + product; any client-sent value is overwritten.
+-- source = 'admin' | 'import': only staff with reviews.moderate (or service role) can write
+--   these; author_name / verified_purchase / status are taken as given.
+-- Approved reviews roll up into products.rating_avg / review_count (products.*_override win on display).
 -- =============================================================================
 
 create table public.reviews (
@@ -13,7 +16,8 @@ create table public.reviews (
   title             text not null default '' check (char_length(title) <= 120),
   body              text not null default '' check (char_length(body) <= 5000),
   author_name       text not null check (char_length(author_name) between 1 and 60),
-  size_feedback     text check (size_feedback in ('runs_small', 'true_to_size', 'runs_large')),
+  author_location   text check (char_length(author_location) <= 60),   -- "Pune"
+  source            public.review_source not null default 'customer',
   status            public.review_status not null default 'pending',
   verified_purchase boolean not null default false,
   helpful_count     integer not null default 0 check (helpful_count >= 0),
@@ -32,16 +36,22 @@ create index reviews_status_idx           on public.reviews (status, created_at 
 create index reviews_user_idx             on public.reviews (user_id, created_at desc);
 create index reviews_order_item_idx       on public.reviews (order_item_id) where order_item_id is not null;
 create index reviews_moderated_by_idx     on public.reviews (moderated_by) where moderated_by is not null;
+create index reviews_product_rating_idx   on public.reviews (product_id, rating) where status = 'approved';   -- star histogram
 
+-- Customer uploads live in the private review-media bucket (storage_path); admin-authored
+-- reviews may reference any public image url instead.
 create table public.review_media (
   id           uuid primary key default gen_random_uuid(),
   review_id    uuid not null references public.reviews (id) on delete cascade,
-  storage_path text not null unique,           -- review-media/<user_id>/<review_id>/<file>
-  mime_type    text not null check (mime_type in ('image/jpeg', 'image/png', 'image/webp')),
+  storage_path text unique,                    -- review-media/<user_id>/<review_id>/<file>
+  url          text,                           -- public image (admin / import)
+  alt          text not null default '',
+  mime_type    text check (mime_type in ('image/jpeg', 'image/png', 'image/webp')),
   width        integer,
   height       integer,
   sort_order   integer not null default 0,
-  created_at   timestamptz not null default now()
+  created_at   timestamptz not null default now(),
+  check (num_nonnulls(storage_path, url) >= 1)
 );
 create index review_media_review_idx on public.review_media (review_id, sort_order);
 

@@ -1,82 +1,120 @@
 "use client";
 
 import { useState } from "react";
+import { BadgeCheck, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
-import { BadgeCheck } from "lucide-react";
 import { Chip, Select } from "@/components/ui/Controls";
 import { Button } from "@/components/ui/Button";
 import { RatingStars } from "@/components/commerce/RatingStars";
 import { formatDate } from "@/lib/format";
-import { reviewsCopy as c } from "@/data/content";
-import type { Review } from "@/types/domain";
+import { reviewsCopy as c } from "@/data/copy";
+import { paginationCopy, reviewFormCopy } from "@/data/storefront";
+import type { ReviewPage } from "@/backend/reviews/repo";
+import { ReviewForm } from "./ReviewForm";
 
-type Sort = (typeof c.sorts)[number]["id"];
-const sorters: Record<Sort, (a: Review, b: Review) => number> = {
-  recent: (a, b) => b.createdAt.localeCompare(a.createdAt),
-  high: (a, b) => b.rating - a.rating,
-  low: (a, b) => a.rating - b.rating,
-};
+type Query = { sort: string; rating?: number; page: number };
 
-/** Screen 12 — summary, star histogram as filter, sort, verified markers. */
-export function Reviews({ reviews, rating, count }: { reviews: Review[]; rating: number; count: number }) {
-  const [sort, setSort] = useState<Sort>("recent");
-  const [stars, setStars] = useState<number>();
-  const hist = [5, 4, 3, 2, 1].map((s) => ({ s, n: reviews.filter((r) => r.rating === s).length }));
-  const list = reviews.filter((r) => !stars || r.rating === stars).sort(sorters[sort]);
+/** Summary + histogram filter, sort and pagination against GET /api/reviews; helpful votes; write-review dialog. */
+export function Reviews({ productId, productName, initial }: { productId: string; productName: string; initial: ReviewPage }) {
+  const [data, setData] = useState(initial);
+  const [query, setQuery] = useState<Query>({ sort: "recent", page: 1 });
+  const [loading, setLoading] = useState(false);
+  const [writing, setWriting] = useState(false);
+  const { summary } = initial;
+  const pages = Math.ceil(data.total / data.pageSize);
+
+  async function load(next: Query) {
+    setQuery(next);
+    setLoading(true);
+    try {
+      const qs = new URLSearchParams({ productId, sort: next.sort, page: String(next.page), pageSize: String(initial.pageSize) });
+      if (next.rating) qs.set("rating", String(next.rating));
+      const json = (await (await fetch(`/api/reviews?${qs}`)).json()) as { ok: boolean; data?: ReviewPage };
+      if (!json.ok || !json.data) throw new Error("reviews_failed");
+      setData(json.data);
+    } catch {
+      toast.error(reviewFormCopy.loadFailed);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function vote(id: string) {
+    const res = await fetch(`/api/reviews/${id}/vote`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ helpful: true }) });
+    if (res.status === 401) toast(c.signInToReview);
+    else if (res.ok) toast.success(reviewFormCopy.voted);
+  }
 
   return (
-    <section id="reviews" aria-labelledby="reviews-title" className="scroll-mt-24 grid gap-10 lg:grid-cols-12 lg:gap-5">
+    <section id="reviews" aria-labelledby="reviews-title" className="grid scroll-mt-24 gap-10 lg:grid-cols-12 lg:gap-12">
       <div className="lg:col-span-4">
         <h2 id="reviews-title" className="t-h1">{c.title}</h2>
-        <p className="mt-4 font-serif text-hero leading-none">{rating.toFixed(1)}</p>
-        <RatingStars rating={rating} size="md" className="mt-2" />
-        <p className="mt-1 text-meta text-ink-soft">{c.basedOn(count)}</p>
-        <ul className="mt-6 space-y-1.5">
-          {hist.map(({ s, n }) => (
-            <li key={s}>
-              <button type="button" onClick={() => setStars(stars === s ? undefined : s)} aria-pressed={stars === s}
-                className="flex w-full items-center gap-3 rounded-sm py-1 text-meta hover:bg-surface-warm aria-pressed:font-semibold">
-                <span className="w-8 tabular-nums">{s}★</span>
-                <span className="h-1.5 flex-1 overflow-hidden rounded-pill bg-line-soft" aria-hidden>
-                  <span className="block h-full rounded-pill bg-ink" style={{ width: `${reviews.length ? (n / reviews.length) * 100 : 0}%` }} />
-                </span>
-                <span className="w-6 text-right tabular-nums text-ink-soft">{n}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-        <Button variant="secondary" className="mt-6" onClick={() => toast(c.writeNote)}>{c.write}</Button>
+        {summary.count > 0 && (
+          <>
+            <p className="mt-4 font-serif text-hero leading-none">{summary.average.toFixed(1)}</p>
+            <RatingStars rating={summary.average} size="md" className="mt-2" />
+            <p className="mt-1 text-meta text-ink-soft">{c.basedOn(summary.count)}</p>
+            <ul className="mt-6 space-y-1">
+              {([5, 4, 3, 2, 1] as const).map((s) => (
+                <li key={s}>
+                  <button type="button" aria-pressed={query.rating === s} onClick={() => load({ ...query, rating: query.rating === s ? undefined : s, page: 1 })}
+                    className="flex min-h-9 w-full items-center gap-3 rounded-sm px-1 text-meta transition-colors hover:bg-surface-warm aria-pressed:font-semibold">
+                    <span className="w-9 tabular-nums">{s} ★</span>
+                    <span className="h-1.5 flex-1 overflow-hidden rounded-pill bg-line-soft" aria-hidden>
+                      <span className="block h-full origin-left rounded-pill bg-rating" style={{ transform: `scaleX(${summary.count ? summary.histogram[s] / summary.count : 0})` }} />
+                    </span>
+                    <span className="w-8 text-right tabular-nums text-ink-soft">{summary.histogram[s]}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        <Button variant="secondary" className="mt-6" onClick={() => setWriting(true)}>{c.write}</Button>
+        <ReviewForm open={writing} onClose={() => setWriting(false)} productId={productId} productName={productName} />
       </div>
 
-      <div className="lg:col-span-7 lg:col-start-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
-          <div className="flex gap-2">
-            <Chip active={!stars} onClick={() => setStars(undefined)}>{c.all}</Chip>
-            {stars && <Chip onRemove={() => setStars(undefined)}>{stars}★</Chip>}
+      <div className="lg:col-span-8" aria-busy={loading}>
+        {summary.count > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
+            <div className="flex gap-2">
+              <Chip active={!query.rating} onClick={() => load({ ...query, rating: undefined, page: 1 })}>{c.all}</Chip>
+              {query.rating && <Chip onRemove={() => load({ ...query, rating: undefined, page: 1 })}>{query.rating} ★</Chip>}
+            </div>
+            <Select label={c.sort} hideLabel value={query.sort} onChange={(e) => load({ ...query, sort: e.target.value, page: 1 })}>
+              {c.sorts.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+            </Select>
           </div>
-          <Select label={c.sort} hideLabel value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
-            {c.sorts.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
-          </Select>
-        </div>
-        {list.length === 0 ? (
+        )}
+        {data.items.length === 0 ? (
           <p className="py-10 text-body text-ink-soft">{c.empty}</p>
         ) : (
-          <ul className="divide-y divide-line">
-            {list.map((r) => (
+          <ul className={`divide-y divide-line transition-opacity duration-(--dur-base) ${loading ? "opacity-50" : ""}`}>
+            {data.items.map((r) => (
               <li key={r.id} className="py-6">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <RatingStars rating={r.rating} />
                   <time dateTime={r.createdAt} className="text-meta text-ink-soft">{formatDate(r.createdAt)}</time>
                 </div>
                 <h3 className="mt-3 text-body-lg font-semibold">{r.title}</h3>
-                <p className="mt-1.5 max-w-prose text-body text-ink-soft">{r.body}</p>
-                <p className="mt-3 flex items-center gap-2 text-meta">
-                  <span className="font-medium">{r.author}</span>
+                <p className="mt-1.5 max-w-prose whitespace-pre-line text-body text-ink-soft">{r.body}</p>
+                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-meta">
+                  <span className="font-medium">{r.author}{r.authorLocation && <span className="font-normal text-ink-soft"> · {r.authorLocation}</span>}</span>
                   {r.verifiedPurchase && <span className="inline-flex items-center gap-1 text-success"><BadgeCheck className="size-4" aria-hidden /> {c.verified}</span>}
-                </p>
+                  <button type="button" onClick={() => vote(r.id)} className="ml-auto inline-flex min-h-11 items-center gap-1.5 text-ink-soft hover:text-ink">
+                    <ThumbsUp className="size-4" aria-hidden /> {c.helpful}{r.helpfulCount > 0 && ` (${r.helpfulCount})`}
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
+        )}
+        {pages > 1 && (
+          <nav aria-label={paginationCopy.label} className="mt-6 flex items-center justify-between gap-3">
+            <Button variant="ghost" size="sm" disabled={query.page <= 1 || loading} onClick={() => load({ ...query, page: query.page - 1 })}>{paginationCopy.prev}</Button>
+            <span className="text-meta text-ink-soft">{paginationCopy.page(query.page, pages)}</span>
+            <Button variant="ghost" size="sm" disabled={query.page >= pages || loading} onClick={() => load({ ...query, page: query.page + 1 })}>{paginationCopy.next}</Button>
+          </nav>
         )}
       </div>
     </section>

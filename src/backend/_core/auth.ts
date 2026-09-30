@@ -23,7 +23,11 @@ export const getSession = cache(async (): Promise<Session | null> => {
   const { data } = await supabase.auth.getClaims();
   const c = data?.claims;
   if (!c?.sub) return null;
-  return { userId: c.sub, email: c.email as string | undefined, role: ((c.user_role as UserRole) ?? "customer") };
+  // Claim is missing when the custom_access_token_hook isn't enabled in the Supabase dashboard:
+  // fall back to the DB's effective role (same source RLS uses).
+  let role = c.user_role as UserRole | undefined;
+  if (!role) role = ((await supabase.rpc("auth_role")).data as UserRole | null) ?? "customer";
+  return { userId: c.sub, email: c.email as string | undefined, role };
 });
 
 export async function requireUser(): Promise<Session> {

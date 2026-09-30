@@ -44,14 +44,12 @@ On hosted Supabase, go to Dashboard → Authentication → Hooks → Custom Acce
 | seo.write | ✓ | ✓ | | ✓ | | |
 | reviews.moderate | ✓ | ✓ | | ✓ | | |
 | analytics.read | ✓ | | | ✓ | ✓ | |
-| tryon.read (usage metadata only, never photos) | ✓ | ✓ | | | ✓ | |
 | support.read / support.write | ✓ | | read only | | | ✓ |
 | settings.read | ✓ | | ✓ | | | |
 | settings.shipping.manage (zones, methods, COD fee) | ✓ | | ✓ | | | |
 | settings.write / settings.tax.manage / integrations.manage | ✓ | | | | | |
 | staff.manage / audit.read | ✓ | | | | | |
 
-A **customer** has no permissions. RLS lets a customer read and write only their own rows: profile (name, phone, avatar and marketing opt-in only), addresses, wishlist, cart, orders (read), payments (read), returns (create and read), reviews (create and edit, which sends the review back to moderation), support tickets, and their own try-on sessions and files.
 
 ## What happens when a customer signs up
 
@@ -117,6 +115,8 @@ Every change to `staff_members`, `role_permissions` and `profiles.role` or `prof
 | Bucket | Public | Who can read | Who can write |
 |---|---|---|---|
 | product-media | yes | everyone | `catalog.write` |
-| review-media | no | owner, `reviews.moderate`, anyone once the review is approved | owner (`<uid>/<review_id>/…`) |
-| tryon-private | no | owner only. Anonymous try-on goes through backend signed URLs | owner (`<uid>/<session_id>/…`) |
+| category-media | yes | everyone | `catalog.write` |
+| collection-media | yes | everyone | `catalog.write` |
+| content-media | yes | everyone | `content.write` or `blog.write` (home sections, blog, pages) |
+| review-media | no | owner, `reviews.moderate`, anyone once the review is approved | owner (`<uid>/<review_id>/…`), `reviews.moderate` |
 | return-evidence | no | owner, `returns.read` | owner (`<uid>/<return_id>/…`) |

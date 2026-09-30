@@ -1,4 +1,4 @@
-import { site } from "@/data/site";
+import { siteConfig as site } from "@/lib/site";
 
 /** All money is stored as integer paise. Format for display only. */
 const inr = new Intl.NumberFormat(site.locale, { style: "currency", currency: site.currency, maximumFractionDigits: 0 });

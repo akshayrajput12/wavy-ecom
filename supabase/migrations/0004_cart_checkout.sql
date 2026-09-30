@@ -83,8 +83,11 @@ create table public.cart_items (
   cart_id             uuid not null references public.carts (id) on delete cascade,
   variant_id          uuid not null references public.product_variants (id) on delete cascade,
   quantity            integer not null check (quantity between 1 and 10),
-  unit_price_snapshot integer not null default 0 check (unit_price_snapshot >= 0),  -- set by trigger; display only
-  created_at          timestamptz not null default now(),
+  -- display snapshots, set by trigger (checkout always re-prices server-side)
+  unit_price_snapshot integer not null default 0 check (unit_price_snapshot >= 0),
+  variant_title       text not null default '',           -- 'Black / M'
+  options             jsonb not null default '[]' check (jsonb_typeof(options) = 'array'),   -- [{"name":"Color","value":"Black"}]
+  created_at         timestamptz not null default now(),
   updated_at          timestamptz not null default now(),
   unique (cart_id, variant_id)
 );

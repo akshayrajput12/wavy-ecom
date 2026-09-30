@@ -1,10 +1,10 @@
-import { getAccountUser, getAddresses } from "@/backend/orders/repo";
-import { hasSupabase } from "@/lib/env";
+import { getSession } from "@/backend/_core/auth";
+import { getAccountUser, listAddresses } from "@/backend/account/repo";
+import { getStoreSettings, listPaymentOptions } from "@/backend/settings/repo";
 import { CheckoutView } from "@/views/checkout/CheckoutView";
 
 export default async function CheckoutPage() {
-  // ponytail: demo mode checks out as a guest (the primary flow); saved addresses appear with real auth
-  const user = hasSupabase ? await getAccountUser() : null;
-  const savedAddresses = user ? await getAddresses(user.id) : [];
-  return <CheckoutView user={user} savedAddresses={savedAddresses} />;
+  const [session, user, paymentOptions, settings] = await Promise.all([getSession(), getAccountUser(), listPaymentOptions(), getStoreSettings()]);
+  const savedAddresses = session ? await listAddresses(session).catch(() => []) : [];
+  return <CheckoutView user={user} savedAddresses={savedAddresses} paymentOptions={paymentOptions} settings={settings} />;
 }

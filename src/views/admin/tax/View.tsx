@@ -1,76 +1,44 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
-import { z } from "zod";
-import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Select, Toggle } from "@/components/admin/Fields";
-import { FormSection, PageHeader, Panel } from "@/components/admin/Panel";
-import type { TaxSettings } from "@/data/admin/types";
+import { PageHeader, Panel } from "@/components/admin/Panel";
+import { SETTINGS_SECTIONS } from "@/backend/admin/schemas/settings";
 import { formatPrice } from "@/lib/format";
-import { mutate } from "../api";
+import type { AdminStoreSettings } from "@/types/admin";
+import { EditorForm } from "../_kit/Chrome";
+import { useEditor } from "../_kit/useEditor";
 import { gstBreakdown } from "./components/calc";
 
-const schema = z.object({
-  gstPercent: z.number().refine((v) => [0, 5, 12, 18, 28].includes(v), "Use a GST slab: 0, 5, 12, 18 or 28"),
-  inclusive: z.boolean(),
-  gstin: z.string().toUpperCase().regex(/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/, "Invalid GSTIN format"),
-  legalName: z.string().trim().min(3), hsnDefault: z.string().regex(/^\d{4,8}$/, "4–8 digit HSN"), stateCode: z.string().regex(/^\d{2}$/),
-});
-type Form = z.infer<typeof schema>;
+const SAMPLE = 112000; // paise, preview only
 
-export function TaxView({ settings }: { settings: TaxSettings }) {
-  const { register, control, handleSubmit, setValue, reset, formState: { errors, isDirty, isSubmitting } } = useForm<Form>({ resolver: zodResolver(schema), defaultValues: settings });
-  const [sample, setSample] = useState(1299);
-  const [interstate, setInterstate] = useState(false);
-  const [rate, inclusive] = useWatch({ control, name: ["gstPercent", "inclusive"] });
-  const g = gstBreakdown(Math.round(sample * 100), Number(rate) || 0, inclusive);
-
-  const onSubmit = async (v: Form) => {
-    // TODO(backend agent): call /api/admin/settings/tax (pricing service reads this; audit-logged)
-    if (await mutate("settings/tax", v, { success: "Tax settings saved" })) reset(v);
-  };
-
+export function TaxView({ settings }: { settings: AdminStoreSettings | null }) {
+  const { v, set, errors, busy, save } = useEditor({
+    taxPercentage: String(settings?.taxPercentage ?? 0), taxInclusive: settings?.taxInclusive ?? true, gstNumber: settings?.gstNumber ?? "",
+  }, { schema: SETTINGS_SECTIONS.tax.schema, back: "/admin/tax" });
+  if (!settings) return <><PageHeader title="Tax" /><p className="text-body text-ink-soft">Store settings are unavailable. Check the Supabase connection.</p></>;
+  const rate = Number(v.taxPercentage) || 0;
+  const b = gstBreakdown(SAMPLE, rate, v.taxInclusive);
+  const submit = () => save("PATCH", "settings/tax", { taxPercentage: rate, taxInclusive: v.taxInclusive, gstNumber: v.gstNumber.trim().toUpperCase() || null }, "Tax settings saved");
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      <PageHeader title="Tax" description="GST configuration used for prices, invoices and the checkout tax line."
-        actions={<Button type="submit" size="sm" loading={isSubmitting} disabled={!isDirty}>Save changes</Button>} />
-      <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
-        <Panel>
-          <FormSection title="GST">
-            <Select label="Default GST rate" error={errors.gstPercent?.message} {...register("gstPercent", { valueAsNumber: true })}>
-              {[0, 5, 12, 18, 28].map((r) => <option key={r} value={r}>{r}%</option>)}
-            </Select>
-            <Input label="Default HSN code" error={errors.hsnDefault?.message} {...register("hsnDefault")} />
-            <div className="sm:col-span-2">
-              <Toggle label="Prices include GST" description="Indian B2C convention: listed price is what the customer pays." checked={inclusive} onChange={(v) => setValue("inclusive", v, { shouldDirty: true })} />
-            </div>
-          </FormSection>
-          <FormSection title="Business" description="Printed on every invoice.">
-            <Input label="GSTIN" error={errors.gstin?.message} {...register("gstin")} />
-            <Input label="State code" error={errors.stateCode?.message} {...register("stateCode")} />
-            <Input label="Legal name" className="sm:col-span-2" error={errors.legalName?.message} {...register("legalName")} />
-          </FormSection>
-        </Panel>
-        <Panel title="Preview" description="How a price breaks down with these settings.">
-          <div className="grid gap-4">
-            <Input label="Listed price (₹)" type="number" min={0} value={sample} onChange={(e) => setSample(Math.max(0, Number(e.target.value)))} />
-            <label className="flex items-center gap-2 text-body"><input type="checkbox" className="size-4 accent-ink" checked={interstate} onChange={(e) => setInterstate(e.target.checked)} />Ship to another state (IGST)</label>
-            <dl className="grid gap-1.5 border-t border-line pt-3 text-body" aria-live="polite">
-              <Row k="Taxable value" v={formatPrice(g.base)} />
-              {interstate ? <Row k={`IGST ${rate}%`} v={formatPrice(g.tax)} /> : <>
-                <Row k={`CGST ${Number(rate) / 2}%`} v={formatPrice(g.cgst)} />
-                <Row k={`SGST ${Number(rate) / 2}%`} v={formatPrice(g.sgst)} />
-              </>}
-              <div className="flex justify-between border-t border-line pt-1.5 font-semibold"><dt>Customer pays</dt><dd className="tabular-nums">{formatPrice(g.total)}</dd></div>
-            </dl>
+    <>
+      <PageHeader title="Tax" description="GST applied at checkout. The server computes the final amounts." />
+      <EditorForm onSave={submit} busy={busy} back="/admin/tax">
+        <Panel title="GST">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input label="GST rate (%)" type="number" step="0.01" value={v.taxPercentage} error={errors.taxPercentage} onChange={(e) => set("taxPercentage", e.target.value)} />
+            <Input label="GSTIN" hint="15 characters" value={v.gstNumber} error={errors.gstNumber} onChange={(e) => set("gstNumber", e.target.value)} />
+            <label className="flex min-h-11 items-center gap-2 text-body sm:col-span-2"><input type="checkbox" className="size-4 accent-ink" checked={v.taxInclusive} onChange={(e) => set("taxInclusive", e.target.checked)} />Prices already include tax</label>
           </div>
         </Panel>
-      </div>
-    </form>
+        <Panel title="Preview" description={`On a ${formatPrice(SAMPLE)} item`}>
+          <dl className="grid max-w-xs grid-cols-2 gap-2 text-body">
+            <dt className="text-ink-soft">Base</dt><dd className="text-right">{formatPrice(b.base)}</dd>
+            <dt className="text-ink-soft">CGST</dt><dd className="text-right">{formatPrice(b.cgst)}</dd>
+            <dt className="text-ink-soft">SGST</dt><dd className="text-right">{formatPrice(b.sgst)}</dd>
+            <dt className="font-medium">Total</dt><dd className="text-right font-medium">{formatPrice(b.total)}</dd>
+          </dl>
+        </Panel>
+      </EditorForm>
+    </>
   );
 }
-
-const Row = ({ k, v }: { k: string; v: string }) => <div className="flex justify-between text-ink-soft"><dt>{k}</dt><dd className="tabular-nums">{v}</dd></div>;

@@ -1,69 +1,52 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
-import { bundleOffer, GST_RATE } from "@/data/checkout";
+import { cartCopy } from "@/data/copy";
 import { formatPrice } from "@/lib/format";
-import type { OrderItem } from "@/types/domain";
+import type { Order } from "@/types/domain";
+import { co } from "../copy";
 
-type Line = Pick<OrderItem, "id" | "name" | "image" | "color" | "size" | "unitPrice" | "quantity">;
-export type SummaryTotals = {
-  subtotal: number; discount: number; shipping: number; tax: number; total: number;
-  bundleDiscount?: number; couponDiscount?: number; codFee?: number; appliedCoupon?: string;
-};
-
-/** Line items + totals. Pure (server-safe); pass `children` for coupon input etc. */
-export function OrderSummary({ lines, totals, shippingKnown = true, note, children }: {
-  lines: Line[]; totals: SummaryTotals; shippingKnown?: boolean; note?: string; children?: ReactNode;
-}) {
-  const splitDiscount = totals.bundleDiscount !== undefined || totals.couponDiscount !== undefined;
+/** Placed order: items + stored totals (server-safe). Used by the success page and account order detail. */
+export function OrderSummary({ order, children }: { order: Pick<Order, "items" | "totals">; children?: ReactNode }) {
+  const t = order.totals;
+  const count = order.items.reduce((s, i) => s + i.quantity, 0);
   return (
-    <section aria-labelledby="summary-h" className="rounded-md border border-line bg-surface p-5">
-      <h2 id="summary-h" className="t-h3">Order summary <span className="t-meta">({lines.reduce((s, l) => s + l.quantity, 0)} items)</span></h2>
+    <section aria-labelledby="receipt-h" className="rounded-lg border border-line bg-surface p-5 sm:p-6">
+      <h2 id="receipt-h" className="t-h3">{co.summary.title} <span className="t-meta">({co.summary.items(count)})</span></h2>
       <ul className="mt-4 divide-y divide-line-soft">
-        {lines.map((l) => (
-          <li key={l.id} className="flex gap-3 py-3">
-            <div className="relative size-16 shrink-0 overflow-hidden rounded-sm bg-surface-warm">
-              <Image src={l.image.url} alt={l.image.alt} fill sizes="64px" className="object-cover" />
-              <span className="absolute right-0.5 top-0.5 grid size-5 place-items-center rounded-full bg-ink text-micro text-on-dark">
-                {l.quantity}<span className="sr-only"> × </span>
-              </span>
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-body font-medium">{l.name}</p>
-              <p className="t-meta">{l.color} · {l.size}</p>
-            </div>
-            <p className="text-body">{formatPrice(l.unitPrice * l.quantity)}</p>
+        {order.items.map((i) => (
+          <li key={i.id} className="flex items-center gap-3 py-3">
+            <span className="relative size-14 shrink-0 overflow-hidden rounded-sm bg-surface-2">
+              {i.image?.url && <Image src={i.image.url} alt={i.image.alt || i.name} fill sizes="56px" className="object-cover" />}
+            </span>
+            <span className="min-w-0 flex-1 text-body">
+              <span className="line-clamp-1 font-medium">{i.name}</span>
+              <span className="block text-meta text-ink-soft">{i.variantTitle !== "Default" ? `${i.variantTitle} · ` : ""}{cartCopy.quantity} {i.quantity}</span>
+            </span>
+            <span className="text-body tabular-nums">{formatPrice(i.lineTotal)}</span>
           </li>
         ))}
       </ul>
       {children}
-      <dl className="mt-4 space-y-2 border-t border-line pt-4 text-body">
-        <Row label="Subtotal" value={formatPrice(totals.subtotal)} />
-        {splitDiscount ? (
-          <>
-            {!!totals.bundleDiscount && <Row label={bundleOffer.label} value={`− ${formatPrice(totals.bundleDiscount)}`} tone="success" />}
-            {!!totals.couponDiscount && <Row label={`Coupon ${totals.appliedCoupon ?? ""}`} value={`− ${formatPrice(totals.couponDiscount)}`} tone="success" />}
-          </>
-        ) : (
-          !!totals.discount && <Row label={totals.appliedCoupon ? `Discount (${totals.appliedCoupon})` : "Discount"} value={`− ${formatPrice(totals.discount)}`} tone="success" />
-        )}
-        <Row label="Shipping" value={!shippingKnown ? "Calculated next" : totals.shipping ? formatPrice(totals.shipping) : "Free"} />
-        {!!totals.codFee && <Row label="Cash on delivery fee" value={formatPrice(totals.codFee)} />}
-        <div className="flex items-baseline justify-between border-t border-line pt-3">
-          <dt className="text-body-lg font-semibold">Total</dt>
-          <dd className="t-h2">{formatPrice(totals.total)}</dd>
+      <dl className="mt-3 space-y-1.5 border-t border-line pt-3 text-body">
+        <Row label={cartCopy.subtotal} value={formatPrice(t.subtotal)} />
+        {!!t.discount && <Row label={t.appliedCoupon ? cartCopy.couponApplied(t.appliedCoupon) : cartCopy.discount} value={`−${formatPrice(t.discount)}`} good />}
+        <Row label={cartCopy.shipping} value={t.shipping ? formatPrice(t.shipping) : cartCopy.free} />
+        {!!t.codFee && <Row label={cartCopy.codFee} value={formatPrice(t.codFee)} />}
+        {!!t.tax && <Row label={cartCopy.tax} value={formatPrice(t.tax)} />}
+        <div className="flex items-baseline justify-between gap-4 border-t border-line pt-2.5">
+          <dt className="text-body-lg font-semibold">{cartCopy.total}</dt>
+          <dd className="text-body-lg font-semibold tabular-nums">{formatPrice(t.total)}</dd>
         </div>
-        <Row label={`Includes GST (${Math.round(GST_RATE * 100)}%)`} value={formatPrice(totals.tax)} muted />
       </dl>
-      {note && <p className="mt-3 t-meta">{note}</p>}
     </section>
   );
 }
 
-function Row({ label, value, tone, muted }: { label: string; value: string; tone?: "success"; muted?: boolean }) {
+function Row({ label, value, good }: { label: string; value: string; good?: boolean }) {
   return (
-    <div className={`flex justify-between gap-4 ${muted ? "t-meta" : ""}`}>
-      <dt className={tone === "success" ? "text-success" : undefined}>{label}</dt>
-      <dd className={tone === "success" ? "text-success" : undefined}>{value}</dd>
+    <div className="flex justify-between gap-4">
+      <dt className="text-ink-soft">{label}</dt>
+      <dd className={good ? "tabular-nums text-success" : "tabular-nums"}>{value}</dd>
     </div>
   );
 }

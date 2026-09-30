@@ -1,107 +1,54 @@
-"use client";
-
-import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
-import { StatusBadge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
 import { DefinitionList, PageHeader, Panel } from "@/components/admin/Panel";
-import { formatDateTime } from "@/components/admin/format";
-import { useCan } from "@/components/admin/useRole";
-import type { AdminOrder, OrderEvent } from "@/data/admin/types";
+import { StatusBadge } from "@/components/ui/Badge";
 import { formatPrice } from "@/lib/format";
-import { mutate } from "../api";
-import { Notes } from "./components/Notes";
-import { PaymentAttempts } from "./components/PaymentAttempts";
-import { RefundDialog } from "./components/RefundDialog";
-import { Timeline } from "./components/Timeline";
+import type { AdminOrderDetail } from "@/types/admin";
+import { fmtDateTime } from "../orders/components/fmt";
+import { Items } from "./components/Items";
+import { Notes, StatusHistory } from "./components/Notes";
+import { PaymentTimeline } from "./components/PaymentTimeline";
+import { RefundPanel } from "./components/RefundPanel";
+import { Shipments } from "./components/Shipments";
+import { StatusPanel } from "./components/StatusPanel";
 
-const ME = "You";
+function addressLines(a: unknown): string[] {
+  if (!a || typeof a !== "object") return [];
+  const r = a as Record<string, unknown>;
+  return ["name", "line1", "line2", "landmark", "city", "state", "postalCode", "postal_code", "phone"].map((k) => r[k]).filter((v): v is string => typeof v === "string" && !!v);
+}
 
-export function OrderDetailView({ order: initial }: { order: AdminOrder }) {
-  const [order, setOrder] = useState(initial);
-  const [refunding, setRefunding] = useState(false);
-  const canWrite = useCan("orders.write");
-  const canShip = useCan("shipments.write");
-  const canRefund = useCan("orders.refund");
-  const captured = order.paymentAttempts.find((a) => a.status === "captured")?.amount ?? 0;
-
-  /** Optimistic update + event; rolls back if the API fails. */
-  const act = (resource: string, body: unknown, patch: Partial<AdminOrder>, label: string) => {
-    const before = order;
-    const event: OrderEvent = { at: new Date().toISOString(), label, actor: ME };
-    setOrder({ ...order, ...patch, timeline: [...order.timeline, event] });
-    // TODO(backend agent): call /api/admin/orders/<number>/<action>
-    void mutate(`orders/${order.number}/${resource}`, body, { success: label, rollback: () => setOrder(before) });
-  };
-
-  const actions = (canWrite || canShip || canRefund) && (
-    <>
-      {canWrite && ["paid", "processing"].includes(order.status) && <Button size="sm" onClick={() => act("pack", {}, { status: "packed" }, "Marked packed")}>Mark packed</Button>}
-      {canShip && order.status === "packed" && !order.shipment && (
-        <Button size="sm" onClick={() => act("shipment", {}, { status: "shipped", shipment: { carrier: "Shiprocket", awb: "Pending AWB", status: "created", events: [] } }, "Shipment created")}>Create shipment</Button>
-      )}
-      {canRefund && captured > 0 && order.paymentStatus === "captured" && <Button size="sm" variant="secondary" onClick={() => setRefunding(true)}>Refund</Button>}
-    </>
-  );
-
+export function OrderDetailView({ order }: { order: AdminOrderDetail }) {
   return (
     <>
-      <PageHeader title={`Order ${order.number}`} description={`Placed ${formatDateTime(order.placedAt)}`} actions={actions} />
-      <div className="mb-6 flex flex-wrap gap-2"><StatusBadge status={order.status} /><StatusBadge status={order.paymentStatus} /></div>
-      <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
+      <PageHeader title={`Order ${order.orderNumber}`} description={`Placed ${fmtDateTime(order.placedAt)} · ${formatPrice(order.total)}`}
+        actions={<><StatusBadge status={order.status} /><Link href="/admin/orders" className="text-meta underline">All orders</Link></>} />
+      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="flex flex-col gap-6">
-          <Panel title="Items">
-            <ul className="divide-y divide-line-soft">
-              {order.items.map((i) => (
-                <li key={i.id} className="flex items-center gap-4 py-3">
-                  <Image src={i.image.url} alt="" width={48} height={60} className="h-15 w-12 rounded-sm object-cover" />
-                  <span className="flex-1"><span className="block font-medium">{i.name}</span><span className="t-meta">{i.color} · {i.size} · Qty {i.quantity}</span></span>
-                  <span className="tabular-nums">{formatPrice(i.unitPrice * i.quantity)}</span>
-                </li>
-              ))}
-            </ul>
-            <dl className="mt-3 grid gap-1 border-t border-line pt-3 text-body">
-              {([["Subtotal", order.totals.subtotal], ["Discount", -order.totals.discount], ["Shipping", order.totals.shipping], ["GST (included)", order.totals.tax]] as const).map(([k, v]) => (
-                <div key={k} className="flex justify-between text-ink-soft"><dt>{k}</dt><dd className="tabular-nums">{formatPrice(v)}</dd></div>
-              ))}
-              <div className="flex justify-between font-semibold"><dt>Total</dt><dd className="tabular-nums">{formatPrice(order.totals.total)}</dd></div>
-            </dl>
-          </Panel>
-          <PaymentAttempts attempts={order.paymentAttempts} />
-          <Panel title="Shipment">
-            {order.shipment ? (
-              <DefinitionList items={[
-                { label: "Carrier", value: order.shipment.carrier }, { label: "AWB", value: order.shipment.awb },
-                { label: "Status", value: <StatusBadge status={order.shipment.status} /> },
-                { label: "Last scan", value: order.shipment.events.at(-1)?.location ?? "Awaiting pickup" },
-              ]} />
-            ) : <p className="t-meta">No shipment yet. Mark the order packed, then create a shipment to book a Shiprocket pickup.</p>}
-          </Panel>
+          <Items order={order} />
+          <PaymentTimeline order={order} />
+          <RefundPanel order={order} />
+          <Shipments orderNumber={order.orderNumber} shipments={order.shipments} />
+          {order.returns.length > 0 && (
+            <Panel title="Returns">
+              <ul className="flex flex-col gap-2">{order.returns.map((r) => <li key={r.id} className="flex items-center gap-2 text-body">{r.rmaNumber} <StatusBadge status={r.status} /><span className="t-meta">{r.reason.replace(/_/g, " ")}</span></li>)}</ul>
+              <Link href="/admin/returns" className="mt-3 inline-block text-meta underline">Manage returns</Link>
+            </Panel>
+          )}
         </div>
         <div className="flex flex-col gap-6">
-          <Panel title="Customer" actions={<Link href={`/admin/customers/${order.customerId}`} className="text-meta underline underline-offset-4">Customer 360</Link>}>
+          <StatusPanel order={order} />
+          <Panel title="Customer">
             <DefinitionList items={[
               { label: "Name", value: order.customerName }, { label: "Email", value: order.email }, { label: "Phone", value: order.phone },
-              { label: "Ship to", value: `${order.shippingAddress.line1}, ${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.postalCode}` },
+              { label: "Ship to", value: addressLines(order.shippingAddress).join(", ") || "-" },
+              { label: "Method", value: order.shippingMethodName ?? "-" },
+              ...(order.userId ? [{ label: "Account", value: <Link href={`/admin/customers/${order.userId}`} className="underline">View customer</Link> }] : []),
             ]} />
           </Panel>
-          <Timeline events={order.timeline} />
-          <Notes notes={order.notes} disabled={!canWrite}
-            onAdd={(body) => {
-              const before = order;
-              setOrder({ ...order, notes: [...order.notes, { id: crypto.randomUUID(), at: new Date().toISOString(), author: ME, body }] });
-              void mutate(`orders/${order.number}/notes`, { body }, { success: "Note added", rollback: () => setOrder(before) });
-            }} />
+          <Notes order={order} />
+          <StatusHistory history={order.history} />
         </div>
       </div>
-      <RefundDialog open={refunding} max={captured} onClose={() => setRefunding(false)}
-        onRefund={(paise, reason) => {
-          setRefunding(false);
-          act("refund", { amount: paise, reason, idempotencyKey: crypto.randomUUID() },
-            { paymentStatus: paise === captured ? "refunded" : "partially_refunded", status: paise === captured ? "refunded" : order.status },
-            `Refunded ${formatPrice(paise)} (${reason})`);
-        }} />
     </>
   );
 }

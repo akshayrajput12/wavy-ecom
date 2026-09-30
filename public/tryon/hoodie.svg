@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <!-- Placeholder overlay: shoulders at x=268/756, y=146; hips at y~878 -->
-  <path d="M392 160 Q370 6 512 10 Q654 6 632 160 Z" fill="#8a847d" fill-opacity="0.92"/>
-  <path d="M268 146 L420 140 Q512 210 604 140 L756 146 L860 300 L910 880 L800 900 L760 430 L754 1012 L270 1012 L264 430 L224 900 L114 880 L164 300 Z"
-        fill="#a39c94" fill-opacity="0.92" stroke="#000" stroke-opacity="0.3" stroke-width="6" stroke-linejoin="round"/>
-  <path d="M372 640 L652 640 L700 860 L324 860 Z" fill="#000" fill-opacity="0.12"/>
-  <path d="M490 200 L480 330 M534 200 L544 330" stroke="#fcfaf7" stroke-width="8" stroke-linecap="round"/>
-</svg>

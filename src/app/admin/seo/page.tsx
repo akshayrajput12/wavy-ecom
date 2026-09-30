@@ -1,8 +1,9 @@
-import { getSeo } from "@/backend/admin/repo";
+import { listRedirects, listSeoOverrides } from "@/backend/admin/repo";
 import { SeoView } from "@/views/admin/seo/View";
 
 export const metadata = { title: "SEO" };
 
 export default async function Page() {
-  return <SeoView data={await getSeo()} />;
+  const [overrides, redirects] = await Promise.all([listSeoOverrides(), listRedirects()]);
+  return <SeoView overrides={overrides} redirects={redirects} />;
 }

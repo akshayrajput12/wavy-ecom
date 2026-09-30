@@ -6,7 +6,8 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { authCopy } from "@/data/account";
+import { authCopy } from "@/data/copy";
+import { ac } from "@/views/account/copy";
 import { resetPassword } from "./actions";
 import { AuthShell, FormAlert } from "./components/AuthShell";
 import { resetSchema, type AuthResult, type ResetValues } from "./schema";
@@ -19,11 +20,11 @@ export function ForgotPasswordView() {
 
   return (
     <AuthShell title={authCopy.forgot.title} body={authCopy.forgot.body}
-      footer={<Link href="/login" className="font-medium text-ink underline underline-offset-4">Back to log in</Link>}>
+      footer={<Link href="/login" className="font-medium text-ink underline underline-offset-4">{ac.auth.backToLogin}</Link>}>
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid gap-4">
         <FormAlert {...result} />
-        <Input label="Email" type="email" autoComplete="email" error={errors.email?.message} {...register("email")} />
-        <Button type="submit" full loading={pending}>Send reset link</Button>
+        <Input label={ac.auth.email} type="email" autoComplete="email" error={errors.email?.message} {...register("email")} />
+        <Button type="submit" full loading={pending}>{ac.auth.sendLink}</Button>
       </form>
     </AuthShell>
   );

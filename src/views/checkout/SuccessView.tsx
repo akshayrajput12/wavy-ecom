@@ -1,49 +1,59 @@
-import { CheckCircle2 } from "lucide-react";
+import { Truck } from "lucide-react";
 import { ButtonLink } from "@/components/ui/Button";
-import { checkoutCopy } from "@/data/checkout";
-import type { AccountOrder } from "@/data/orders";
+import { cartCopy, checkoutCopy } from "@/data/copy";
+import { formatDate } from "@/lib/format";
+import type { Order } from "@/types/domain";
 import { OrderSummary } from "./components/OrderSummary";
-import { StoredSummary } from "./components/StoredSummary";
+import { SuccessCelebration } from "./components/SuccessCelebration";
+import { co } from "./copy";
 
-export function SuccessView({ number, order, guest }: { number: string; order?: AccountOrder; guest: boolean }) {
+const DAY = 86_400_000;
+const eta = (placedAt: string, d: { minDays: number; maxDays: number }) => {
+  const t = new Date(placedAt).getTime();
+  return `${formatDate(new Date(t + d.minDays * DAY))} - ${formatDate(new Date(t + d.maxDays * DAY))}`;
+};
+
+/** Order confirmation. `order` is null when the viewer can't be verified (no token): show the number only. */
+export function SuccessView({ number, order, token, days, signedIn }: {
+  number: string; order: Order | null; token?: string; days?: { minDays: number; maxDays: number }; signedIn: boolean;
+}) {
+  const trackToken = order?.trackingToken ?? token;
+  const pending = order?.status === "pending_payment";
+  const a = order?.shippingAddress;
   return (
-    <div className="mx-auto grid max-w-3xl gap-8 py-10 sm:py-16">
+    <div className="mx-auto grid max-w-2xl gap-8 py-10 sm:py-14">
       <header className="grid justify-items-center gap-3 text-center">
-        <CheckCircle2 className="size-10 text-success" aria-hidden />
-        <p className="t-overline text-ink-soft">Order confirmed</p>
-        <h1 className="t-display">{checkoutCopy.successTitle}</h1>
-        <p className="text-body-lg">Order number <span className="font-semibold">{number}</span></p>
-        {order && <p className="t-meta">A confirmation has been sent to {order.email}</p>}
+        <SuccessCelebration />
+        <p className="t-overline text-accent-deep">{co.success.overline}</p>
+        <h1 className="t-display text-balance">{checkoutCopy.successTitle}</h1>
+        <p className="text-body-lg">{co.success.number} <span className="font-semibold tabular-nums">{number}</span></p>
+        {order && <p className="t-meta">{co.success.emailed(order.email)}</p>}
+        {pending && <p role="status" className="rounded-md bg-warning/10 px-4 py-2 text-meta text-warning">{co.success.pending}</p>}
       </header>
 
-      <ol className="grid gap-3 sm:grid-cols-3">
-        {checkoutCopy.successNext.map((s, i) => (
-          <li key={s.title} className="rounded-md border border-line bg-surface p-4">
-            <p className="t-overline text-ink-soft">Step {i + 1}</p>
-            <p className="mt-1 font-medium">{s.title}</p>
-            <p className="t-meta">{s.body}</p>
-          </li>
-        ))}
-      </ol>
+      {order && (
+        <dl className="grid gap-4 rounded-lg border border-line bg-surface p-5 sm:grid-cols-3">
+          {(order.shipment?.eta || days) && (
+            <div><dt className="t-meta">{co.success.eta}</dt><dd className="font-medium">{order.shipment?.eta ? formatDate(order.shipment.eta) : eta(order.placedAt, days!)}</dd></div>
+          )}
+          {a && <div><dt className="t-meta">{co.success.shipTo}</dt><dd className="font-medium">{a.name}, {a.city}</dd></div>}
+          <div><dt className="t-meta">{order.shippingMethodName ?? cartCopy.shipping}</dt><dd className="font-medium">{co.success.paidWith[order.paymentProvider]}</dd></div>
+        </dl>
+      )}
 
-      {order
-        ? <OrderSummary lines={order.items} totals={order.totals} />
-        : <StoredSummary number={number} />}
+      {order && <OrderSummary order={order} />}
 
-      {guest ? (
-        <section className="grid gap-3 rounded-md bg-surface-warm p-6 text-center">
-          <p className="t-h3">Save this order to an account</p>
+      <div className="flex flex-wrap justify-center gap-3">
+        {trackToken && <ButtonLink href={`/track/${trackToken}`} size="lg"><Truck className="size-4" aria-hidden /> {co.success.track}</ButtonLink>}
+        {signedIn && <ButtonLink href={`/account/orders/${number}`} size="lg" variant="secondary">{co.success.viewOrder}</ButtonLink>}
+        <ButtonLink href="/" size="lg" variant="ghost">{cartCopy.continue}</ButtonLink>
+      </div>
+
+      {!signedIn && (
+        <section className="grid justify-items-center gap-3 rounded-lg bg-surface-warm p-6 text-center">
           <p className="text-body text-ink-soft">{checkoutCopy.guestPrompt}</p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <ButtonLink href="/signup">Create account</ButtonLink>
-            <ButtonLink href="/" variant="ghost">Continue shopping</ButtonLink>
-          </div>
+          <ButtonLink href="/signup" variant="secondary">{co.success.createAccount}</ButtonLink>
         </section>
-      ) : (
-        <div className="flex flex-wrap justify-center gap-3">
-          <ButtonLink href={`/account/orders/${number}`}>View order</ButtonLink>
-          <ButtonLink href="/" variant="secondary">Continue shopping</ButtonLink>
-        </div>
       )}
     </div>
   );

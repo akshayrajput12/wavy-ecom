@@ -39,17 +39,14 @@ No-results message; suggested searches; category shortcuts; New In CTA.
 08
 Product / Default
 Storefront
-Gallery; title; price; rating; swatches; size; try-on; purchase CTAs; delivery check; details; reviews; recommendations.
 09
 Product / Size Finder
 Storefront
 Height/chest/waist/preferred fit inputs; recommended size; explanation; Use Size.
 10
-Product / Try-On
 Storefront
 Visual-assistance entry; source-image guidance; privacy note; generate action.
 11
-Product / Try-On Result
 Storefront
 Result image; product context; visualization disclaimer; add to bag/continue.
 12
@@ -229,16 +226,13 @@ Admin / Integrations
 Admin
 Razorpay; Shiprocket; Resend; GA4; PostHog; AI provider; status/config.
 56
-Admin / AI Try-On Analytics
 Admin
-Generations; completion; Try-On ATC; Try-On Purchase; funnel; provider; usage/cost; TTL.
 2. Global screen rules
 Every screen maps to one or more PRD/SRS requirements.
 Related screens reuse the same shell, navigation, components, content terms and visual tokens.
 Underlying features expose loading, empty, error and disabled states where applicable.
 Mobile screens preserve the same information architecture as desktop.
 Admin screens use a light content canvas with operational data density appropriate to the task.
-AI try-on screens retain the visualization disclaimer and temporary-asset requirements.
 3. Navigation requirements
 Zone
 Navigation
@@ -249,7 +243,6 @@ Menu + Search + Wishlist + Account + Bag; contextual collection/product navigati
 Customer account
 Account, Orders, Addresses/Profile, Returns, Logout.
 Admin
-Dashboard, Products, Inventory, Orders, Customers, Reviews, Testimonials, Coupons, Analytics, Campaigns, Shipping, Integrations, AI Try-On Analytics.
 4. Screen-to-requirement mapping
 #
 Screen
@@ -282,10 +275,8 @@ PRD-001 to PRD-008
 Product / Size Finder
 PRD-005, PRD-006, PRD-004
 10
-Product / Try-On
 PRD-005, PRD-006, PRD-004
 11
-Product / Try-On Result
 PRD-005, PRD-006, PRD-004
 12
 Product / Reviews
@@ -420,5 +411,4 @@ PRD-012 to PRD-017
 Admin / Integrations
 PRD-012 to PRD-017
 56
-Admin / AI Try-On Analytics
 PRD-015, PRD-006

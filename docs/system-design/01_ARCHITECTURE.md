@@ -14,13 +14,9 @@ process and database but not code paths, error boundaries or failure modes.
 | Proxy | `src/proxy.ts` (Next 16 successor to `middleware.ts`) | request id (`x-request-id`), session refresh (`@supabase/ssr`), `/admin/**` + `/account/**` gate, visitor id cookie `bb_vid` |
 | Rendering | React Server Components, Cache Components (`"use cache"`) | storefront pages, admin pages |
 | API | `src/app/api/**/route.ts` via `route(svc, handler)` | thin HTTP adapters: parse (zod) → call service → `ok()` / `ApiError` |
-| Services | `src/backend/{catalog,cart,pricing,checkout,payments,orders,shipping,returns,reviews,content,marketing,analytics,settings,notifications,integrations,support,tryon}` | business logic (`service.ts`), data access (`repo.ts`), inputs (`schema.ts`), external adapters (`providers/`) |
 | Data | Supabase Postgres 17 + Supavisor | source of truth, RLS, SQL functions for atomic inventory/coupon ops, `pg_cron`, `pg_net` |
 | Auth | Supabase Auth | customer email/password + magic link, staff invite, JWT with `app_metadata.role` |
-| Storage | Supabase Storage | `product-media` (public, CDN), `review-media` (public after moderation), `return-evidence` (private), `tryon-inputs` / `tryon-results` (private, signed URLs, TTL) |
-| Jobs | `pg_cron` → SQL functions or `pg_net` → `/api/cron/*` | reservation expiry, payment reconciliation, Shiprocket sync, outbox flush, try-on expiry, integration health |
 | Providers | Razorpay, PayU, Shiprocket, Resend, PostHog, GA4, cloud VTON (optional) | each behind an adapter in `src/backend/<svc>/providers/` |
-| Try-on | MediaPipe Tasks Vision (in browser) | pose/segmentation on device; cloud VTON only if enabled in admin |
 
 ## 2. Service map and failure isolation
 
@@ -48,7 +44,6 @@ Rules that keep modules isolated:
 2. **Services call each other through exported functions in `service.ts` only**, never each other's `repo.ts`. Cross-service writes that must be atomic live in one Postgres function (e.g. `place_order()`, `confirm_payment()`), not in JS.
 3. **Side effects go through the outbox.** `orders` writes a row to `outbox` in the same transaction; `notifications`, `analytics` and `shipping` consume it. If Resend is down, the order still commits; the email retries.
 4. **Every provider call has a timeout and a status.** Default 8 s (`AbortSignal.timeout`), 2 retries with jitter for idempotent GETs only. Failures flip `integration_configs.status` to `needs_attention` after 3 consecutive errors (see 05).
-5. **Non-critical reads degrade.** Recommendations, reviews, testimonials and try-on are wrapped in `<Suspense>` + error boundaries on the page, so a failing module renders an empty slot, not a broken page.
 6. **Const fallback** (`hasSupabase === false`) returns `src/data/*` so the storefront renders in local dev and preview without a DB.
 
 ## 3. Request lifecycle
@@ -123,9 +118,7 @@ Admin mutations call `updateTag()` inside Server Actions (read-your-writes for t
 | `reconcile-payments` | every 5 min | `pg_net` → `GET /api/cron/reconcile-payments` | polls provider for attempts `initiated`/`authorized` older than 10 min (see 03) |
 | `outbox-flush` | every 1 min | `pg_net` → `/api/cron/outbox` | delivers emails, PostHog server events, Shiprocket order creation; exponential backoff, max 8 tries → `dead` |
 | `shiprocket-sync` | every 30 min | `/api/cron/shiprocket-sync` | pulls tracking for shipments without a webhook in 6 h |
-| `tryon-expire` | hourly | SQL + Storage API | deletes try-on assets past TTL (24 h), marks `expired` |
 | `integration-health` | every 10 min | `/api/cron/integration-health` | cheap auth-check call per provider, updates `integration_configs.status` |
-| `daily-metrics` | 00:15 IST | SQL | rolls up revenue, AOV, conversion, try-on funnel into `daily_metrics` |
 
 Cron endpoints require `Authorization: Bearer $CRON_SECRET` and are excluded from `proxy.ts`
 session logic. `pg_cron` is used instead of Vercel Cron because it runs per-minute on every

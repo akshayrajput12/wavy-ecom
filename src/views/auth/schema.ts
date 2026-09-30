@@ -11,6 +11,7 @@ export const signupSchema = z.object({
   phone: z.string().trim().regex(/^[6-9]\d{9}$/, "Enter a 10-digit Indian mobile number"),
   password: z.string().min(8, "Use at least 8 characters"),
   terms: z.literal(true, "Please accept the terms to continue"),
+  next: z.string().optional(),
 });
 export const resetSchema = z.object({ email: z.email("Enter a valid email address") });
 

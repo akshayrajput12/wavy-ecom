@@ -8,48 +8,52 @@
  */
 
 :root {
-  /* ---------- Color palette ---------- */
-  --ink: #111111;
-  --ink-soft: #494540;
-  --ink-muted: #8a847d;
-  --canvas: #fcfaf7;
+  /* ---------- Color palette: calm warm-neutral + one soft sage accent ---------- */
+  --ink: #1d1c1a;          /* 16.2:1 on canvas */
+  --ink-soft: #57534d;     /* 7.3:1 */
+  --ink-muted: #85807a;    /* 3.7:1 (placeholders / disabled only) */
+  --canvas: #faf9f6;
   --surface: #ffffff;
-  --surface-warm: #f7f0e9;
-  --line: #e6ddd5;
-  --line-soft: #f0e9e3;
-  --accent: #ffa273;
-  --accent-hover: #f47a4a;
-  --accent-deep: #c9532e;
-  --success: #258653;
-  --warning: #b7791f;
-  --danger: #c43d3d;
-  --info: #4669a8;
-  --rating: #f2a93b;
-  --black: #080808;
-  --on-dark: #fcfaf7;
+  --surface-2: #f4f3ef;    /* subtle neutral fill: image wells, table heads, inset panels */
+  --surface-warm: #f6f2ec; /* soft sections, ghost hover, neutral badge */
+  --line: #e6e3dd;
+  --line-soft: #efede8;
+  --accent: #bcd4c5;       /* fill only, with ink text (10.8:1) */
+  --accent-hover: #a7c6b3;
+  --accent-soft: #e7efe9;  /* accent tint: selected rows, promo panels */
+  --accent-deep: #3d6853;  /* accent as text / link / focus: 6.0:1 (AA body) */
+  --success: #2d7a4f;
+  --warning: #94600f;
+  --danger: #b43c3c;
+  --info: #41639a;
+  --rating: #e0a13a;
+  --black: #151413;
+  --on-dark: #faf9f6;
+  --overlay: color-mix(in srgb, var(--ink) 32%, transparent);
+  --focus-ring: var(--accent-deep);
 
   /* ---------- Typography ---------- */
   /* font vars are injected by next/font in app/layout.tsx */
-  --font-ui: var(--font-instrument-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-editorial: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-ui: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-editorial: var(--font-newsreader), ui-serif, Georgia, serif;
 
   /* fluid type scale: min → max between 390px and 1440px viewports */
-  --text-hero: clamp(2.75rem, 1.6rem + 4.8vw, 5.5rem);   /* 44 → 88 */
-  --text-display: clamp(2.25rem, 1.5rem + 3vw, 3.5rem);  /* 36 → 56 */
-  --text-h1: clamp(1.875rem, 1.4rem + 1.8vw, 2.5rem);    /* 30 → 40 */
-  --text-h2: clamp(1.5rem, 1.3rem + 0.8vw, 1.75rem);     /* 24 → 28 */
-  --text-h3: 1.25rem;   /* 20 */
-  --text-body-lg: 1rem; /* 16 */
-  --text-body: 0.875rem;/* 14 */
-  --text-meta: 0.75rem; /* 12 */
-  --text-micro: 0.6875rem; /* 11 */
-  --text-overline: 0.625rem; /* 10 (docs said 9 — bumped for legibility) */
+  --text-hero: clamp(2.5rem, 1.9rem + 2.4vw, 4rem);        /* 40 → 64 */
+  --text-display: clamp(2rem, 1.6rem + 1.6vw, 3rem);       /* 32 → 48 */
+  --text-h1: clamp(1.75rem, 1.5rem + 1vw, 2.25rem);        /* 28 → 36 */
+  --text-h2: clamp(1.375rem, 1.25rem + 0.5vw, 1.625rem);   /* 22 → 26 */
+  --text-h3: 1.1875rem;     /* 19 */
+  --text-body-lg: 1rem;     /* 16 */
+  --text-body: 0.9375rem;   /* 15 */
+  --text-meta: 0.8125rem;   /* 13 */
+  --text-micro: 0.75rem;    /* 12 */
+  --text-overline: 0.6875rem; /* 11 */
 
-  --leading-tight: 1.05;
-  --leading-snug: 1.25;
-  --leading-body: 1.55;
-  --tracking-tight: -0.02em;
-  --tracking-wide: 0.14em;
+  --leading-tight: 1.12;
+  --leading-snug: 1.3;
+  --leading-body: 1.6;
+  --tracking-tight: -0.012em;
+  --tracking-wide: 0.12em;
 
   /* ---------- Spacing (8px rhythm) ---------- */
   --space-1: 0.25rem; /* 4 */
@@ -66,34 +70,40 @@
   --container: 1440px;
   --header-h: 64px;
 
-  /* ---------- Shape & elevation ---------- */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
+  /* ---------- Shape & elevation (soft, diffuse) ---------- */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
   --radius-pill: 999px;
-  --shadow-sm: 0 1px 2px color-mix(in srgb, var(--ink) 6%, transparent);
-  --shadow-md: 0 8px 24px -8px color-mix(in srgb, var(--ink) 14%, transparent);
-  --shadow-lg: 0 24px 60px -20px color-mix(in srgb, var(--ink) 25%, transparent);
+  --shadow-sm: 0 1px 2px color-mix(in srgb, var(--ink) 4%, transparent), 0 2px 6px color-mix(in srgb, var(--ink) 4%, transparent);
+  --shadow-md: 0 12px 32px -12px color-mix(in srgb, var(--ink) 12%, transparent);
+  --shadow-lg: 0 28px 70px -24px color-mix(in srgb, var(--ink) 20%, transparent);
 
   /* ---------- Motion ---------- */
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --dur-fast: 150ms;
-  --dur-base: 280ms;
-  --dur-slow: 600ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);  /* enters, reveals */
+  --ease-soft: cubic-bezier(0.32, 0.72, 0, 1); /* hovers, sheets, carousels */
+  /* gentle spring (about 4% overshoot) as CSS linear(): drawers and modals, no JS */
+  --ease-spring: linear(0, 0.2 5%, 0.58 14%, 0.87 24%, 1.02 36%, 1.04 44%, 1.02 56%, 1 70%, 0.998 84%, 1);
+  --dur-fast: 180ms;
+  --dur-base: 320ms;
+  --dur-slow: 640ms;
 }
 
-/* Expose tokens as Tailwind utilities: bg-canvas, text-ink, border-line, rounded-md, text-h1 … */
+/* Expose tokens as Tailwind utilities: bg-canvas, text-ink, border-line, rounded-md, text-h1, ease-soft … */
 @theme inline {
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
   --color-ink-muted: var(--ink-muted);
   --color-canvas: var(--canvas);
   --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
   --color-surface-warm: var(--surface-warm);
   --color-line: var(--line);
   --color-line-soft: var(--line-soft);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
   --color-accent-deep: var(--accent-deep);
   --color-success: var(--success);
   --color-warning: var(--warning);
@@ -102,6 +112,8 @@
   --color-rating: var(--rating);
   --color-black: var(--black);
   --color-on-dark: var(--on-dark);
+  --color-overlay: var(--overlay);
+  --color-focus: var(--focus-ring);
 
   --font-sans: var(--font-ui);
   --font-serif: var(--font-editorial);
@@ -120,11 +132,17 @@
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
   --radius-pill: var(--radius-pill);
   --shadow-sm: var(--shadow-sm);
   --shadow-md: var(--shadow-md);
   --shadow-lg: var(--shadow-lg);
   --ease-out: var(--ease-out);
+  --ease-soft: var(--ease-soft);
+  --ease-spring: var(--ease-spring);
+  /* bare `transition` / `transition-colors` pick these up */
+  --default-transition-duration: var(--dur-fast);
+  --default-transition-timing-function: var(--ease-soft);
 }
 
 /* ---------- Base ---------- */
@@ -140,12 +158,23 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 :focus-visible {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 ::selection {
   background: var(--accent);
   color: var(--ink);
+}
+
+/* `lift`: the Tilt helper. Subtle hover lift for cards, CSS only (transform + shadow). */
+@utility lift {
+  transition: translate var(--dur-base) var(--ease-soft), box-shadow var(--dur-base) var(--ease-soft);
+  @media (hover: hover) {
+    &:hover {
+      translate: 0 -4px;
+      box-shadow: var(--shadow-md);
+    }
+  }
 }
 
 /* ---------- Semantic typography (swap any heading style here) ---------- */
@@ -156,6 +185,7 @@ body {
     line-height: var(--leading-tight);
     letter-spacing: var(--tracking-tight);
     font-weight: 400;
+    text-wrap: balance;
   }
   .t-display {
     font-family: var(--font-editorial);
@@ -163,12 +193,14 @@ body {
     line-height: var(--leading-tight);
     letter-spacing: var(--tracking-tight);
     font-weight: 400;
+    text-wrap: balance;
   }
   .t-h1 {
     font-size: var(--text-h1);
     line-height: var(--leading-snug);
     letter-spacing: var(--tracking-tight);
     font-weight: 600;
+    text-wrap: balance;
   }
   .t-h2 {
     font-size: var(--text-h2);

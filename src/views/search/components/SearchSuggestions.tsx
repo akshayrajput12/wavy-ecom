@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useSyncExternalStore } from "react";
-import { Clock, TrendingUp } from "lucide-react";
-import { searchCopy } from "@/data/content";
+import { Clock } from "lucide-react";
+import { searchCopy } from "@/data/copy";
 
 const KEY = "wavy-recent-searches";
 const EVENT = "wavy:recent-searches";
@@ -31,33 +31,21 @@ export function RecordSearch({ q }: { q: string }) {
   return null;
 }
 
-/** Recent (this device) + popular searches. */
+/** Recent searches on this device (nothing renders until there are some). */
 export function SearchSuggestions() {
   const recent = parse(useSyncExternalStore(subscribe, read, () => "[]"));
-
+  if (!recent.length) return null;
   return (
-    <div className="grid gap-8 sm:grid-cols-2">
-      {recent.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between">
-            <h2 className="t-overline text-ink-soft">{searchCopy.recentTitle}</h2>
-            <button type="button" className="min-h-9 text-meta underline underline-offset-4" onClick={() => write([])}>{searchCopy.clearRecent}</button>
-          </div>
-          <ul className="mt-3 flex flex-wrap gap-2">
-            {recent.map((r) => (
-              <li key={r}><Link href={`/search?q=${encodeURIComponent(r)}`} className={chip}><Clock className="size-3.5 text-ink-soft" aria-hidden />{r}</Link></li>
-            ))}
-          </ul>
-        </div>
-      )}
-      <div>
-        <h2 className="t-overline text-ink-soft">{searchCopy.popularTitle}</h2>
-        <ul className="mt-3 flex flex-wrap gap-2">
-          {searchCopy.popular.map((p) => (
-            <li key={p}><Link href={`/search?q=${encodeURIComponent(p)}`} className={chip}><TrendingUp className="size-3.5 text-ink-soft" aria-hidden />{p}</Link></li>
-          ))}
-        </ul>
+    <div>
+      <div className="flex items-center justify-between">
+        <h2 className="t-overline text-ink-soft">{searchCopy.recentTitle}</h2>
+        <button type="button" className="min-h-11 text-meta underline underline-offset-4" onClick={() => write([])}>{searchCopy.clearRecent}</button>
       </div>
+      <ul className="mt-3 flex flex-wrap gap-2">
+        {recent.map((r) => (
+          <li key={r}><Link href={`/search?q=${encodeURIComponent(r)}`} className={chip}><Clock className="size-3.5 text-ink-soft" aria-hidden />{r}</Link></li>
+        ))}
+      </ul>
     </div>
   );
 }

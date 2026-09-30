@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { MapPin } from "lucide-react";
-import { deliveryCopy as c } from "@/data/content";
+import { deliveryCopy as c } from "@/data/copy";
 
-// ponytail: mock serviceability by pincode prefix; swap for GET /api/shipping/serviceability when Shiprocket is wired
+/** Pincode serviceability via GET /api/shipping/serviceability (Shiprocket). */
 export function DeliveryCheck() {
   const [pin, setPin] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
@@ -29,7 +29,7 @@ export function DeliveryCheck() {
           ? `${availability.estimatedDays.min} days`
           : `${availability.estimatedDays.min}–${availability.estimatedDays.max} days`
         : null;
-      const payment = availability.codAvailable ? c.codAvailable : availability.prepaidAvailable ? c.prepaidOnly : c.paymentUnavailable;
+      const payment = availability.codAvailable ? c.codAvailable : c.prepaidOnly;
       setMsg({ ok: true, text: c.result(days, payment) });
     } catch {
       setMsg({ ok: false, text: c.unavailable });
@@ -47,7 +47,7 @@ export function DeliveryCheck() {
           inputMode="numeric" autoComplete="postal-code" placeholder={c.placeholder} aria-describedby={msg ? "pincode-msg" : undefined} aria-invalid={msg && !msg.ok}
           className="h-11 min-w-0 flex-1 rounded-sm border border-line bg-canvas px-3 text-body tabular-nums focus:border-ink focus:outline-none"
         />
-        <button type="submit" disabled={loading} className="h-11 min-w-20 rounded-sm border border-ink px-4 text-meta font-semibold hover:bg-ink hover:text-on-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60">{loading ? c.loading : c.cta}</button>
+        <button type="submit" disabled={loading} className="h-11 min-w-20 rounded-sm border border-ink px-4 text-meta font-semibold hover:bg-ink hover:text-on-dark focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-60">{loading ? c.loading : c.cta}</button>
       </div>
       {msg && <p id="pincode-msg" role="status" className={msg.ok ? "mt-2 text-meta text-success" : "mt-2 text-meta text-danger"}>{msg.ok ? "✓ " : "⚠ "}{msg.text}</p>}
     </form>

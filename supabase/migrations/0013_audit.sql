@@ -89,9 +89,16 @@ create trigger audit_role_permissions   after insert or update or delete on publ
 create trigger audit_shipping_methods   after insert or update or delete on public.shipping_methods   for each row execute function public.audit_row_change();
 create trigger audit_products_status    after update of status on public.products
   for each row when (old.status is distinct from new.status) execute function public.audit_row_change();
-create trigger audit_variant_prices     after update of price, compare_at on public.product_variants
-  for each row when (old.price is distinct from new.price or old.compare_at is distinct from new.compare_at)
+create trigger audit_variant_prices     after update of price, compare_at_price, cost_price on public.product_variants
+  for each row when (old.price is distinct from new.price or old.compare_at_price is distinct from new.compare_at_price
+                     or old.cost_price is distinct from new.cost_price)
   execute function public.audit_row_change();
+-- marketing overrides of the public rating are always traceable
+create trigger audit_products_rating_override after update of rating_override, review_count_override on public.products
+  for each row when (old.rating_override is distinct from new.rating_override
+                     or old.review_count_override is distinct from new.review_count_override)
+  execute function public.audit_row_change();
+create trigger audit_home_sections      after insert or update or delete on public.home_sections      for each row execute function public.audit_row_change();
 create trigger audit_profile_role       after update of role, status on public.profiles
   for each row when (old.role is distinct from new.role or old.status is distinct from new.status)
   execute function public.audit_row_change();

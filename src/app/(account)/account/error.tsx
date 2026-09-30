@@ -2,7 +2,8 @@
 
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/States";
+import { pageStates } from "@/data/copy";
 
 export default function AccountError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
-  return <EmptyState title="We couldn't load your account" body="Please try again in a moment." action={<Button onClick={reset}>Try again</Button>} />;
+  return <EmptyState title={pageStates.error.title} body={pageStates.error.body} action={<Button onClick={reset}>{pageStates.error.retry}</Button>} />;
 }

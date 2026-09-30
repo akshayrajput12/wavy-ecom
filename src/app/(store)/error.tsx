@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, ButtonLink } from "@/components/ui/Button";
-import { pageStates } from "@/data/content";
+import { pageStates } from "@/data/copy";
 
 // Server-side failures are already logged by Next with the digest; this only renders recovery UI.
 export default function StoreError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {

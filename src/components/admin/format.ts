@@ -1,4 +1,4 @@
-import type { Kpi } from "@/data/admin/types";
+import type { Kpi } from "@/types/admin";
 import { formatPrice } from "@/lib/format";
 
 const num = new Intl.NumberFormat("en-IN");

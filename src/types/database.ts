@@ -1,7 +1,8 @@
 /**
- * Supabase Database types generated from supabase/migrations.
- * Regenerate with `npm run db:types` (local stack) or `supabase gen types typescript --project-id <ref>`.
- * Do not edit by hand.
+ * Supabase Database types for supabase/migrations (public schema).
+ * Hand-maintained to match the migrations until a local stack is available; regenerate with
+ * `npm run db:types` (local stack) or `supabase gen types typescript --project-id <ref>`.
+ * Contract + RPC docs: docs/database/SCHEMA.md.
  */
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -150,7 +151,6 @@ export type Database = {
           id: string;
           code: string;
           name: string;
-          applies_to: string;
           is_filterable: boolean;
           sort_order: number;
           created_at: string;
@@ -160,7 +160,6 @@ export type Database = {
           id?: string;
           code: string;
           name: string;
-          applies_to?: string;
           is_filterable?: boolean;
           sort_order?: number;
           created_at?: string;
@@ -170,7 +169,6 @@ export type Database = {
           id?: string;
           code?: string;
           name?: string;
-          applies_to?: string;
           is_filterable?: boolean;
           sort_order?: number;
           created_at?: string;
@@ -499,6 +497,8 @@ export type Database = {
           variant_id: string;
           quantity: number;
           unit_price_snapshot: number;
+          variant_title: string;
+          options: Json;
           created_at: string;
           updated_at: string;
         };
@@ -508,6 +508,8 @@ export type Database = {
           variant_id: string;
           quantity: number;
           unit_price_snapshot?: number;
+          variant_title?: string;
+          options?: Json;
           created_at?: string;
           updated_at?: string;
         };
@@ -517,6 +519,8 @@ export type Database = {
           variant_id?: string;
           quantity?: number;
           unit_price_snapshot?: number;
+          variant_title?: string;
+          options?: Json;
           created_at?: string;
           updated_at?: string;
         };
@@ -580,8 +584,11 @@ export type Database = {
           description: string | null;
           image_url: string | null;
           image_alt: string | null;
+          banner_url: string | null;
+          banner_alt: string | null;
           sort_order: number;
           is_active: boolean;
+          show_on_home: boolean;
           seo_title: string | null;
           seo_description: string | null;
           og_image_url: string | null;
@@ -598,8 +605,11 @@ export type Database = {
           description?: string | null;
           image_url?: string | null;
           image_alt?: string | null;
+          banner_url?: string | null;
+          banner_alt?: string | null;
           sort_order?: number;
           is_active?: boolean;
+          show_on_home?: boolean;
           seo_title?: string | null;
           seo_description?: string | null;
           og_image_url?: string | null;
@@ -616,8 +626,11 @@ export type Database = {
           description?: string | null;
           image_url?: string | null;
           image_alt?: string | null;
+          banner_url?: string | null;
+          banner_alt?: string | null;
           sort_order?: number;
           is_active?: boolean;
+          show_on_home?: boolean;
           seo_title?: string | null;
           seo_description?: string | null;
           og_image_url?: string | null;
@@ -708,19 +721,19 @@ export type Database = {
         Row: {
           collection_id: string;
           product_id: string;
-          sort_order: number;
+          position: number;
           created_at: string;
         };
         Insert: {
           collection_id: string;
           product_id: string;
-          sort_order?: number;
+          position?: number;
           created_at?: string;
         };
         Update: {
           collection_id?: string;
           product_id?: string;
-          sort_order?: number;
+          position?: number;
           created_at?: string;
         };
         Relationships: [
@@ -736,9 +749,11 @@ export type Database = {
           description: string | null;
           image_url: string | null;
           image_alt: string | null;
+          banner_url: string | null;
+          banner_alt: string | null;
           sort_order: number;
           is_active: boolean;
-          is_featured: boolean;
+          show_on_home: boolean;
           starts_at: string | null;
           ends_at: string | null;
           seo_title: string | null;
@@ -756,9 +771,11 @@ export type Database = {
           description?: string | null;
           image_url?: string | null;
           image_alt?: string | null;
+          banner_url?: string | null;
+          banner_alt?: string | null;
           sort_order?: number;
           is_active?: boolean;
-          is_featured?: boolean;
+          show_on_home?: boolean;
           starts_at?: string | null;
           ends_at?: string | null;
           seo_title?: string | null;
@@ -776,9 +793,11 @@ export type Database = {
           description?: string | null;
           image_url?: string | null;
           image_alt?: string | null;
+          banner_url?: string | null;
+          banner_alt?: string | null;
           sort_order?: number;
           is_active?: boolean;
-          is_featured?: boolean;
+          show_on_home?: boolean;
           starts_at?: string | null;
           ends_at?: string | null;
           seo_title?: string | null;
@@ -960,6 +979,7 @@ export type Database = {
           offer_id: string | null;
           mode: Database["public"]["Enums"]["target_mode"];
           product_id: string | null;
+          variant_id: string | null;
           category_id: string | null;
           collection_id: string | null;
           created_at: string;
@@ -970,6 +990,7 @@ export type Database = {
           offer_id?: string | null;
           mode?: Database["public"]["Enums"]["target_mode"];
           product_id?: string | null;
+          variant_id?: string | null;
           category_id?: string | null;
           collection_id?: string | null;
           created_at?: string;
@@ -980,6 +1001,7 @@ export type Database = {
           offer_id?: string | null;
           mode?: Database["public"]["Enums"]["target_mode"];
           product_id?: string | null;
+          variant_id?: string | null;
           category_id?: string | null;
           collection_id?: string | null;
           created_at?: string;
@@ -990,6 +1012,7 @@ export type Database = {
           { foreignKeyName: "discount_targets_coupon_id_fkey"; columns: ["coupon_id"]; isOneToOne: false; referencedRelation: "coupons"; referencedColumns: ["id"] },
           { foreignKeyName: "discount_targets_offer_id_fkey"; columns: ["offer_id"]; isOneToOne: false; referencedRelation: "offers"; referencedColumns: ["id"] },
           { foreignKeyName: "discount_targets_product_id_fkey"; columns: ["product_id"]; isOneToOne: false; referencedRelation: "products"; referencedColumns: ["id"] },
+          { foreignKeyName: "discount_targets_variant_id_fkey"; columns: ["variant_id"]; isOneToOne: false; referencedRelation: "product_variants"; referencedColumns: ["id"] },
         ];
       };
       faqs: {
@@ -1024,6 +1047,53 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [
+        ];
+      };
+      home_sections: {
+        Row: {
+          id: string;
+          type: Database["public"]["Enums"]["home_section_type"];
+          title: string | null;
+          subtitle: string | null;
+          config: Json;
+          sort_order: number;
+          is_active: boolean;
+          starts_at: string | null;
+          ends_at: string | null;
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          type: Database["public"]["Enums"]["home_section_type"];
+          title?: string | null;
+          subtitle?: string | null;
+          config?: Json;
+          sort_order?: number;
+          is_active?: boolean;
+          starts_at?: string | null;
+          ends_at?: string | null;
+          updated_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          type?: Database["public"]["Enums"]["home_section_type"];
+          title?: string | null;
+          subtitle?: string | null;
+          config?: Json;
+          sort_order?: number;
+          is_active?: boolean;
+          starts_at?: string | null;
+          ends_at?: string | null;
+          updated_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          { foreignKeyName: "home_sections_updated_by_fkey"; columns: ["updated_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
         ];
       };
       integration_configs: {
@@ -1082,7 +1152,6 @@ export type Database = {
           on_hand: number;
           reserved: number;
           available: number | null;
-          low_stock_threshold: number;
           updated_at: string;
         };
         Insert: {
@@ -1090,7 +1159,6 @@ export type Database = {
           on_hand?: number;
           reserved?: number;
           available?: never;
-          low_stock_threshold?: number;
           updated_at?: string;
         };
         Update: {
@@ -1098,7 +1166,6 @@ export type Database = {
           on_hand?: number;
           reserved?: number;
           available?: never;
-          low_stock_threshold?: number;
           updated_at?: string;
         };
         Relationships: [
@@ -1441,11 +1508,14 @@ export type Database = {
           variant_id: string | null;
           sku: string;
           product_name: string;
-          color: string;
-          size: string;
+          brand: string | null;
+          variant_title: string;
+          options: Json;
+          hsn_code: string | null;
+          return_window_days: number;
           image_url: string | null;
           unit_price: number;
-          compare_at: number | null;
+          compare_at_price: number | null;
           quantity: number;
           line_subtotal: number;
           discount_allocated: number;
@@ -1459,11 +1529,14 @@ export type Database = {
           variant_id?: string | null;
           sku: string;
           product_name: string;
-          color: string;
-          size: string;
+          brand?: string | null;
+          variant_title: string;
+          options?: Json;
+          hsn_code?: string | null;
+          return_window_days?: number;
           image_url?: string | null;
           unit_price: number;
-          compare_at?: number | null;
+          compare_at_price?: number | null;
           quantity: number;
           line_subtotal: number;
           discount_allocated?: number;
@@ -1477,11 +1550,14 @@ export type Database = {
           variant_id?: string | null;
           sku?: string;
           product_name?: string;
-          color?: string;
-          size?: string;
+          brand?: string | null;
+          variant_title?: string;
+          options?: Json;
+          hsn_code?: string | null;
+          return_window_days?: number;
           image_url?: string | null;
           unit_price?: number;
-          compare_at?: number | null;
+          compare_at_price?: number | null;
           quantity?: number;
           line_subtotal?: number;
           discount_allocated?: number;
@@ -1982,14 +2058,14 @@ export type Database = {
           id: string;
           product_id: string;
           variant_id: string | null;
-          color: string | null;
+          option_value: string | null;
           media_type: string;
           url: string;
           storage_path: string | null;
           alt: string;
           width: number | null;
           height: number | null;
-          sort_order: number;
+          position: number;
           is_primary: boolean;
           created_at: string;
           updated_at: string;
@@ -1998,14 +2074,14 @@ export type Database = {
           id?: string;
           product_id: string;
           variant_id?: string | null;
-          color?: string | null;
+          option_value?: string | null;
           media_type?: string;
           url: string;
           storage_path?: string | null;
           alt?: string;
           width?: number | null;
           height?: number | null;
-          sort_order?: number;
+          position?: number;
           is_primary?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -2014,14 +2090,14 @@ export type Database = {
           id?: string;
           product_id?: string;
           variant_id?: string | null;
-          color?: string | null;
+          option_value?: string | null;
           media_type?: string;
           url?: string;
           storage_path?: string | null;
           alt?: string;
           width?: number | null;
           height?: number | null;
-          sort_order?: number;
+          position?: number;
           is_primary?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -2037,15 +2113,18 @@ export type Database = {
           product_id: string;
           sku: string;
           barcode: string | null;
-          color: string;
+          option1: string | null;
+          option2: string | null;
+          option3: string | null;
+          title: string;
           color_hex: string | null;
-          size: string;
-          size_sort: number;
           price: number;
-          compare_at: number | null;
+          compare_at_price: number | null;
+          cost_price: number | null;
           weight_grams: number | null;
+          low_stock_threshold: number | null;
           status: Database["public"]["Enums"]["variant_status"];
-          sort_order: number;
+          position: number;
           created_at: string;
           updated_at: string;
         };
@@ -2054,15 +2133,18 @@ export type Database = {
           product_id: string;
           sku: string;
           barcode?: string | null;
-          color: string;
+          option1?: string | null;
+          option2?: string | null;
+          option3?: string | null;
+          title?: string;
           color_hex?: string | null;
-          size: string;
-          size_sort?: number;
           price: number;
-          compare_at?: number | null;
+          compare_at_price?: number | null;
+          cost_price?: number | null;
           weight_grams?: number | null;
+          low_stock_threshold?: number | null;
           status?: Database["public"]["Enums"]["variant_status"];
-          sort_order?: number;
+          position?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -2071,15 +2153,18 @@ export type Database = {
           product_id?: string;
           sku?: string;
           barcode?: string | null;
-          color?: string;
+          option1?: string | null;
+          option2?: string | null;
+          option3?: string | null;
+          title?: string;
           color_hex?: string | null;
-          size?: string;
-          size_sort?: number;
           price?: number;
-          compare_at?: number | null;
+          compare_at_price?: number | null;
+          cost_price?: number | null;
           weight_grams?: number | null;
+          low_stock_threshold?: number | null;
           status?: Database["public"]["Enums"]["variant_status"];
-          sort_order?: number;
+          position?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -2093,23 +2178,38 @@ export type Database = {
           category_id: string;
           name: string;
           slug: string;
-          descriptor: string;
+          brand: string | null;
+          short_description: string;
           description: string;
-          material: string | null;
-          fit: string | null;
-          care: string | null;
+          highlights: string[];
+          specifications: Json;
+          tags: string[];
           badges: string[];
-          search_keywords: string | null;
+          option_names: string[];
+          size_chart: Json | null;
+          weight_grams: number | null;
+          length_mm: number | null;
+          width_mm: number | null;
+          height_mm: number | null;
+          hsn_code: string | null;
+          country_of_origin: string;
+          warranty: string | null;
+          returnable: boolean;
+          return_window_days: number | null;
+          return_policy: string | null;
           status: Database["public"]["Enums"]["product_status"];
           published_at: string | null;
-          try_on_enabled: boolean;
-          size_chart: Json | null;
-          hsn_code: string | null;
+          is_featured: boolean;
+          sort_order: number;
           price_min: number | null;
           price_max: number | null;
           compare_at_min: number | null;
           rating_avg: number;
           review_count: number;
+          rating_override: number | null;
+          review_count_override: number | null;
+          rating_display: number | null;
+          review_count_display: number | null;
           seo_title: string | null;
           seo_description: string | null;
           og_image_url: string | null;
@@ -2125,23 +2225,38 @@ export type Database = {
           category_id: string;
           name: string;
           slug: string;
-          descriptor?: string;
+          brand?: string | null;
+          short_description?: string;
           description?: string;
-          material?: string | null;
-          fit?: string | null;
-          care?: string | null;
+          highlights?: string[];
+          specifications?: Json;
+          tags?: string[];
           badges?: string[];
-          search_keywords?: string | null;
+          option_names?: string[];
+          size_chart?: Json | null;
+          weight_grams?: number | null;
+          length_mm?: number | null;
+          width_mm?: number | null;
+          height_mm?: number | null;
+          hsn_code?: string | null;
+          country_of_origin?: string;
+          warranty?: string | null;
+          returnable?: boolean;
+          return_window_days?: number | null;
+          return_policy?: string | null;
           status?: Database["public"]["Enums"]["product_status"];
           published_at?: string | null;
-          try_on_enabled?: boolean;
-          size_chart?: Json | null;
-          hsn_code?: string | null;
+          is_featured?: boolean;
+          sort_order?: number;
           price_min?: number | null;
           price_max?: number | null;
           compare_at_min?: number | null;
           rating_avg?: number;
           review_count?: number;
+          rating_override?: number | null;
+          review_count_override?: number | null;
+          rating_display?: never;
+          review_count_display?: never;
           seo_title?: string | null;
           seo_description?: string | null;
           og_image_url?: string | null;
@@ -2157,23 +2272,38 @@ export type Database = {
           category_id?: string;
           name?: string;
           slug?: string;
-          descriptor?: string;
+          brand?: string | null;
+          short_description?: string;
           description?: string;
-          material?: string | null;
-          fit?: string | null;
-          care?: string | null;
+          highlights?: string[];
+          specifications?: Json;
+          tags?: string[];
           badges?: string[];
-          search_keywords?: string | null;
+          option_names?: string[];
+          size_chart?: Json | null;
+          weight_grams?: number | null;
+          length_mm?: number | null;
+          width_mm?: number | null;
+          height_mm?: number | null;
+          hsn_code?: string | null;
+          country_of_origin?: string;
+          warranty?: string | null;
+          returnable?: boolean;
+          return_window_days?: number | null;
+          return_policy?: string | null;
           status?: Database["public"]["Enums"]["product_status"];
           published_at?: string | null;
-          try_on_enabled?: boolean;
-          size_chart?: Json | null;
-          hsn_code?: string | null;
+          is_featured?: boolean;
+          sort_order?: number;
           price_min?: number | null;
           price_max?: number | null;
           compare_at_min?: number | null;
           rating_avg?: number;
           review_count?: number;
+          rating_override?: number | null;
+          review_count_override?: number | null;
+          rating_display?: never;
+          review_count_display?: never;
           seo_title?: string | null;
           seo_description?: string | null;
           og_image_url?: string | null;
@@ -2286,9 +2416,12 @@ export type Database = {
           provider_refund_id: string | null;
           idempotency_key: string;
           initiated_by: string | null;
+          failure_code: string | null;
           failure_reason: string | null;
+          raw_request: Json | null;
           raw_response: Json | null;
           processed_at: string | null;
+          failed_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -2304,9 +2437,12 @@ export type Database = {
           provider_refund_id?: string | null;
           idempotency_key: string;
           initiated_by?: string | null;
+          failure_code?: string | null;
           failure_reason?: string | null;
+          raw_request?: Json | null;
           raw_response?: Json | null;
           processed_at?: string | null;
+          failed_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -2322,9 +2458,12 @@ export type Database = {
           provider_refund_id?: string | null;
           idempotency_key?: string;
           initiated_by?: string | null;
+          failure_code?: string | null;
           failure_reason?: string | null;
+          raw_request?: Json | null;
           raw_response?: Json | null;
           processed_at?: string | null;
+          failed_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -2497,8 +2636,10 @@ export type Database = {
         Row: {
           id: string;
           review_id: string;
-          storage_path: string;
-          mime_type: string;
+          storage_path: string | null;
+          url: string | null;
+          alt: string;
+          mime_type: string | null;
           width: number | null;
           height: number | null;
           sort_order: number;
@@ -2507,8 +2648,10 @@ export type Database = {
         Insert: {
           id?: string;
           review_id: string;
-          storage_path: string;
-          mime_type: string;
+          storage_path?: string | null;
+          url?: string | null;
+          alt?: string;
+          mime_type?: string | null;
           width?: number | null;
           height?: number | null;
           sort_order?: number;
@@ -2517,8 +2660,10 @@ export type Database = {
         Update: {
           id?: string;
           review_id?: string;
-          storage_path?: string;
-          mime_type?: string;
+          storage_path?: string | null;
+          url?: string | null;
+          alt?: string;
+          mime_type?: string | null;
           width?: number | null;
           height?: number | null;
           sort_order?: number;
@@ -2562,7 +2707,8 @@ export type Database = {
           title: string;
           body: string;
           author_name: string;
-          size_feedback: string | null;
+          author_location: string | null;
+          source: Database["public"]["Enums"]["review_source"];
           status: Database["public"]["Enums"]["review_status"];
           verified_purchase: boolean;
           helpful_count: number;
@@ -2582,7 +2728,8 @@ export type Database = {
           title?: string;
           body?: string;
           author_name: string;
-          size_feedback?: string | null;
+          author_location?: string | null;
+          source?: Database["public"]["Enums"]["review_source"];
           status?: Database["public"]["Enums"]["review_status"];
           verified_purchase?: boolean;
           helpful_count?: number;
@@ -2602,7 +2749,8 @@ export type Database = {
           title?: string;
           body?: string;
           author_name?: string;
-          size_feedback?: string | null;
+          author_location?: string | null;
+          source?: Database["public"]["Enums"]["review_source"];
           status?: Database["public"]["Enums"]["review_status"];
           verified_purchase?: boolean;
           helpful_count?: number;
@@ -2989,7 +3137,6 @@ export type Database = {
           return_window_days: number;
           reservation_ttl_minutes: number;
           low_stock_default: number;
-          tryon_ttl_hours: number;
           support_email: string | null;
           support_phone: string | null;
           updated_by: string | null;
@@ -3012,7 +3159,6 @@ export type Database = {
           return_window_days?: number;
           reservation_ttl_minutes?: number;
           low_stock_default?: number;
-          tryon_ttl_hours?: number;
           support_email?: string | null;
           support_phone?: string | null;
           updated_by?: string | null;
@@ -3035,7 +3181,6 @@ export type Database = {
           return_window_days?: number;
           reservation_ttl_minutes?: number;
           low_stock_default?: number;
-          tryon_ttl_hours?: number;
           support_email?: string | null;
           support_phone?: string | null;
           updated_by?: string | null;
@@ -3187,89 +3332,6 @@ export type Database = {
           { foreignKeyName: "testimonials_product_id_fkey"; columns: ["product_id"]; isOneToOne: false; referencedRelation: "products"; referencedColumns: ["id"] },
         ];
       };
-      tryon_sessions: {
-        Row: {
-          id: string;
-          user_id: string | null;
-          anonymous_id: string | null;
-          visitor_session_id: string | null;
-          product_id: string;
-          variant_id: string | null;
-          status: Database["public"]["Enums"]["tryon_status"];
-          provider: string | null;
-          provider_job_id: string | null;
-          source_path: string | null;
-          result_path: string | null;
-          source_mime: string | null;
-          source_bytes: number | null;
-          consent_at: string | null;
-          cost_paise: number | null;
-          latency_ms: number | null;
-          error_class: Database["public"]["Enums"]["tryon_error_class"] | null;
-          error_message: string | null;
-          expires_at: string;
-          completed_at: string | null;
-          deleted_at: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id?: string | null;
-          anonymous_id?: string | null;
-          visitor_session_id?: string | null;
-          product_id: string;
-          variant_id?: string | null;
-          status?: Database["public"]["Enums"]["tryon_status"];
-          provider?: string | null;
-          provider_job_id?: string | null;
-          source_path?: string | null;
-          result_path?: string | null;
-          source_mime?: string | null;
-          source_bytes?: number | null;
-          consent_at?: string | null;
-          cost_paise?: number | null;
-          latency_ms?: number | null;
-          error_class?: Database["public"]["Enums"]["tryon_error_class"] | null;
-          error_message?: string | null;
-          expires_at?: string;
-          completed_at?: string | null;
-          deleted_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string | null;
-          anonymous_id?: string | null;
-          visitor_session_id?: string | null;
-          product_id?: string;
-          variant_id?: string | null;
-          status?: Database["public"]["Enums"]["tryon_status"];
-          provider?: string | null;
-          provider_job_id?: string | null;
-          source_path?: string | null;
-          result_path?: string | null;
-          source_mime?: string | null;
-          source_bytes?: number | null;
-          consent_at?: string | null;
-          cost_paise?: number | null;
-          latency_ms?: number | null;
-          error_class?: Database["public"]["Enums"]["tryon_error_class"] | null;
-          error_message?: string | null;
-          expires_at?: string;
-          completed_at?: string | null;
-          deleted_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [
-          { foreignKeyName: "tryon_sessions_product_id_fkey"; columns: ["product_id"]; isOneToOne: false; referencedRelation: "products"; referencedColumns: ["id"] },
-          { foreignKeyName: "tryon_sessions_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
-          { foreignKeyName: "tryon_sessions_variant_id_fkey"; columns: ["variant_id"]; isOneToOne: false; referencedRelation: "product_variants"; referencedColumns: ["id"] },
-          { foreignKeyName: "tryon_sessions_visitor_session_id_fkey"; columns: ["visitor_session_id"]; isOneToOne: false; referencedRelation: "visitor_sessions"; referencedColumns: ["id"] },
-        ];
-      };
       visitor_sessions: {
         Row: {
           id: string;
@@ -3378,22 +3440,23 @@ export type Database = {
     };
     Views: { [_ in never]: never };
     Functions: {
+      admin_upsert_product: { Args: { p_doc: Json }; Returns: Json };
       adjust_inventory: { Args: { p_variant_id: string; p_delta: number; p_reason?: Database["public"]["Enums"]["inventory_reason"]; p_note?: string; p_reference_type?: string; p_reference_id?: string }; Returns: Database["public"]["Tables"]["inventory"]["Row"] };
       apply_coupon: { Args: { p_cart_id: string; p_code: string }; Returns: Json };
       auth_role: { Args: Record<PropertyKey, never>; Returns: Database["public"]["Enums"]["user_role"] };
       bootstrap_super_admin: { Args: { p_email: string }; Returns: string };
       cancel_order: { Args: { p_order_id: string; p_reason?: string }; Returns: Json };
+      category_descendants: { Args: { p_category_id: string }; Returns: string[] };
       category_path: { Args: { p_category_id: string }; Returns: string[] };
-      cleanup_expired_tryon_sessions: { Args: { p_limit?: number }; Returns: { session_id: string; source_path: string; result_path: string }[] };
       commit_order_inventory: { Args: { p_order_id: string }; Returns: number };
       compute_pricing: { Args: { p_items: Json; p_coupon_code?: string; p_user_id?: string; p_email?: string; p_shipping_method_id?: string; p_payment_provider?: Database["public"]["Enums"]["payment_provider"]; p_state?: string; p_lock?: boolean }; Returns: Json };
       confirm_order_side_effects: { Args: { p_order_id: string }; Returns: undefined };
       custom_access_token_hook: { Args: { event: Json }; Returns: Json };
-      discount_target_match: { Args: { p_coupon_id: string; p_offer_id: string; p_product_id: string; p_category_path: string[]; p_collection_ids: string[] }; Returns: boolean };
-      ensure_analytics_partition: { Args: { p_month: string }; Returns: string };
+      discount_target_match: { Args: { p_coupon_id: string; p_offer_id: string; p_product_id: string; p_variant_id: string; p_category_path: string[]; p_collection_ids: string[] }; Returns: boolean };
       get_customer_journey: { Args: { p_user_id: string; p_limit?: number }; Returns: { occurred_at: string; kind: string; summary: string; ref_id: string; detail: Json }[] };
       get_order_tracking: { Args: { p_token: string }; Returns: Json };
       has_permission: { Args: { p_permission: string }; Returns: boolean };
+      immutable_array_to_string: { Args: { p_arr: string[] }; Returns: string };
       is_service_role: { Args: Record<PropertyKey, never>; Returns: boolean };
       is_staff: { Args: Record<PropertyKey, never>; Returns: boolean };
       mark_payment_captured: { Args: { p_order_id: string; p_attempt_id: string; p_provider_payment_id: string; p_amount: number; p_method?: Database["public"]["Enums"]["payment_method"]; p_raw?: Json; p_method_details?: Json }; Returns: Json };
@@ -3408,11 +3471,13 @@ export type Database = {
       release_inventory: { Args: { p_reservation_id: string; p_status?: Database["public"]["Enums"]["reservation_status"] }; Returns: boolean };
       release_order_inventory: { Args: { p_order_id: string; p_status?: Database["public"]["Enums"]["reservation_status"] }; Returns: number };
       reserve_inventory: { Args: { p_variant_id: string; p_quantity: number; p_order_id?: string; p_checkout_session_id?: string; p_ttl?: string }; Returns: string };
+      restock_return: { Args: { p_return_request_id: string }; Returns: number };
       start_payment_attempt: { Args: { p_order_id: string; p_provider: Database["public"]["Enums"]["payment_provider"]; p_provider_order_id?: string; p_method?: Database["public"]["Enums"]["payment_method"]; p_raw_request?: Json; p_client_ip?: string; p_user_agent?: string }; Returns: Json };
+      variant_options: { Args: { p_variant_id: string }; Returns: Json };
     };
     Enums: {
       account_status: "active" | "blocked" | "deleted";
-      analytics_event_name: "page_view" | "search_submitted" | "product_viewed" | "size_finder_opened" | "size_recommendation_generated" | "try_on_opened" | "try_on_started" | "try_on_completed" | "try_on_failed" | "add_to_cart" | "wishlist_added" | "checkout_started" | "payment_initiated" | "payment_succeeded" | "payment_failed" | "order_created" | "shipment_created" | "order_delivered" | "return_requested" | "review_submitted" | "coupon_applied" | "campaign_viewed";
+      analytics_event_name: "page_view" | "search_submitted" | "product_viewed" | "category_viewed" | "collection_viewed" | "add_to_cart" | "remove_from_cart" | "wishlist_added" | "checkout_started" | "payment_initiated" | "payment_succeeded" | "payment_failed" | "order_created" | "shipment_created" | "order_delivered" | "return_requested" | "review_submitted" | "coupon_applied" | "campaign_viewed" | "home_section_clicked";
       blog_status: "draft" | "scheduled" | "published" | "archived";
       campaign_status: "draft" | "scheduled" | "live" | "paused" | "completed" | "archived";
       cart_status: "active" | "converted" | "merged" | "abandoned";
@@ -3421,6 +3486,7 @@ export type Database = {
       coupon_status: "draft" | "active" | "paused" | "expired" | "archived";
       coupon_type: "percent" | "fixed" | "free_shipping";
       gateway_mode: "test" | "live";
+      home_section_type: "hero_carousel" | "category_grid" | "collection_rail" | "product_carousel" | "floating_showcase" | "promo_banner" | "testimonials" | "blog_rail" | "newsletter";
       integration_status: "connected" | "needs_attention" | "disconnected";
       inventory_reason: "initial" | "restock" | "adjustment" | "reservation" | "release" | "sale" | "cancellation" | "return" | "damage" | "correction";
       notification_status: "queued" | "sent" | "delivered" | "bounced" | "failed" | "complained";
@@ -3435,16 +3501,15 @@ export type Database = {
       redemption_status: "reserved" | "applied" | "reversed";
       refund_status: "pending" | "processing" | "processed" | "failed";
       reservation_status: "active" | "released" | "consumed" | "expired";
-      return_reason: "size_too_small" | "size_too_large" | "defective" | "wrong_item" | "not_as_described" | "changed_mind" | "other";
+      return_reason: "size_too_small" | "size_too_large" | "defective" | "damaged_in_transit" | "wrong_item" | "missing_parts" | "not_as_described" | "changed_mind" | "other";
       return_status: "requested" | "approved" | "rejected" | "pickup_scheduled" | "received" | "refunded" | "closed";
+      review_source: "customer" | "admin" | "import";
       review_status: "pending" | "approved" | "rejected" | "hidden";
       shipment_status: "created" | "picked_up" | "in_transit" | "out_for_delivery" | "delivered" | "exception" | "cancelled";
       staff_status: "invited" | "active" | "suspended";
       target_mode: "include" | "exclude";
       ticket_priority: "low" | "normal" | "high" | "urgent";
       ticket_status: "open" | "pending_customer" | "pending_internal" | "resolved" | "closed";
-      tryon_error_class: "input_invalid" | "unsupported_type" | "input_too_large" | "no_person_detected" | "moderation_blocked" | "provider_error" | "provider_timeout" | "quota_exceeded" | "internal";
-      tryon_status: "created" | "uploading" | "queued" | "processing" | "completed" | "failed" | "expired" | "deleted";
       user_role: "customer" | "super_admin" | "catalog_manager" | "order_manager" | "marketing_manager" | "analyst" | "support_agent";
       variant_status: "active" | "out_of_stock" | "disabled";
     };

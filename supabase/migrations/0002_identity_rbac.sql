@@ -87,13 +87,12 @@ insert into public.permissions (code, module, description) values
   ('offers.write',              'marketing',   'Create/edit offers (bundles, BOGO, tiers)'),
   ('campaigns.write',           'marketing',   'Create/edit campaigns'),
   ('testimonials.write',        'content',     'Create/edit testimonials'),
-  ('content.write',             'content',     'Edit FAQ, About, Lookbook and content pages'),
+  ('content.write',             'content',     'Edit home page sections, FAQ, About, Lookbook and content pages'),
   ('seo.write',                 'content',     'Edit SEO overrides and redirects'),
   ('blog.write',                'content',     'Create/edit blog drafts'),
   ('blog.publish',              'content',     'Publish or schedule blog posts'),
   ('reviews.moderate',          'content',     'Approve/reject/hide reviews'),
   ('analytics.read',            'analytics',   'View analytics dashboards and events'),
-  ('tryon.read',                'analytics',   'View try-on usage metadata (never customer photos)'),
   ('support.read',              'support',     'View support tickets and notification log'),
   ('support.write',             'support',     'Reply to / assign / resolve support tickets'),
   ('settings.read',             'settings',    'View store settings and integration status'),
@@ -110,14 +109,14 @@ select 'super_admin', code from public.permissions
 union all
 select r.role::public.user_role, p.perm from (values
   ('catalog_manager',   array['catalog.read','catalog.write','catalog.publish','inventory.read','inventory.write',
-                              'reviews.moderate','tryon.read','seo.write']),
+                              'reviews.moderate','seo.write']),
   ('order_manager',     array['catalog.read','inventory.read','orders.read','orders.write','orders.refund',
                               'shipments.write','returns.read','returns.write','customers.read','journey.read',
                               'payments.read','support.read','settings.read','settings.shipping.manage']),
   ('marketing_manager', array['catalog.read','marketing.read','coupons.write','offers.write','campaigns.write',
                               'testimonials.write','content.write','seo.write','blog.write','blog.publish',
                               'reviews.moderate','analytics.read']),
-  ('analyst',           array['catalog.read','marketing.read','analytics.read','tryon.read','orders.read']),
+  ('analyst',           array['catalog.read','marketing.read','analytics.read','orders.read']),
   ('support_agent',     array['catalog.read','orders.read','customers.read','journey.read','payments.read',
                               'returns.read','returns.write','support.read','support.write'])
 ) as r(role, perms)

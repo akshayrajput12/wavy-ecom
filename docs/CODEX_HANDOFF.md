@@ -5,9 +5,7 @@
 
 ## Resume update — 2026-09-26
 
-The resumed Codex pass reviewed this guide, the try-on docs, the home components, and `Downloads/BHMR/src/components/home/sections`. BHMR uses pinned scroll timelines and staggered media cards; wavy now has a short, reduced-motion-aware pinned hero expansion and touch-native horizontal product rails. The current in-house try-on remains a browser-only MediaPipe overlay. `/api/v1/tryon` and `/api/v1/tryon/assets/{productId}` describe that local feature; the legacy photo-generation route is disabled (410), so no paid try-on provider is called. Unmapped products no longer display an unrelated fallback tee.
 
-This does **not** complete Wave 2 backend wiring below. The pricing, checkout/payment, shipping, notifications, analytics, Supabase repo branches and admin mutations in §6 remain unimplemented and must not be treated as production-ready. Try-on limitations and the exact API contract are documented in `docs/api/TRYON_V1.md` and `docs/tryon/IMPLEMENTATION.md`.
 
 ---
 
@@ -15,7 +13,6 @@ This does **not** complete Wave 2 backend wiring below. The pricing, checkout/pa
 
 **wavy** (renamed from "FORM/01"; the shop name is now "wavy") is a single-store, premium, editorial fashion e-commerce site for **clothing and sneakers** in India (INR, GST). It has:
 
-- a storefront with an editorial home, collections with filters, search, PDP, size finder, virtual try-on, reviews, wishlist, cart drawer and cart;
 - guest-first checkout;
 - customer account (orders, returns, addresses) and public order tracking;
 - content (FAQ, About, Lookbook, Journal/blog);
@@ -30,7 +27,6 @@ This does **not** complete Wave 2 backend wiring below. The pricing, checkout/pa
 | Motion and UI | Framer Motion, Lenis (smooth scroll), lucide-react, clsx, sonner (toasts) |
 | Forms and state | zod, react-hook-form + @hookform/resolvers, zustand (cart and wishlist UI state) |
 | Backend / DB | Supabase via `@supabase/supabase-js` 2.117 and `@supabase/ssr` 0.12: Postgres, Auth, Storage, RLS |
-| Integrations | razorpay SDK, resend, posthog-js, recharts (admin charts), @mediapipe/tasks-vision (try-on), `server-only` |
 | Dev | `supabase` CLI 2.118, vitest 4, prettier (+ tailwind plugin) |
 
 **Architecture:**
@@ -52,7 +48,6 @@ The user's overall goal: build the full production-grade wavy e-commerce platfor
 - payments with detailed failure tracking and admin-toggleable gateways;
 - shipping and tracking, offers, admin tax, SEO/blog management;
 - customer-journey tracking for support;
-- try-on, docs and system design.
 
 **The exact task in progress when this session stopped was "Wave 2: backend wiring".** Two background agents were launched for it but produced **no files** (the session ended first; see §5 and §8):
 1. **Commerce backend**: `src/proxy.ts`, the Supabase branches in the repos, pricing/cart APIs, checkout, payment adapters and webhooks, orders/returns/tracking APIs, Shiprocket, Resend notifications and crons, analytics ingestion, rate limiting, and `docs/api/API_REFERENCE.md`.
@@ -72,13 +67,11 @@ What happened in this session, in order:
    - `logger.ts`, `env.ts`, `format.ts`, Supabase clients, `backend/_core/http.ts`;
    - `types/domain.ts` (shared contract) and UI primitives;
    - `docs/CONVENTIONS.md`, README, `.env.example`, `next.config.ts`, npm scripts.
-4. **Wave 1 (6 parallel agents, all completed):** DB/migrations, system-design docs, try-on, storefront UI, checkout/account UI, admin UI.
 5. Integration checks:
    - added `vitest.config.ts` (`@` alias);
    - ran a production build and smoke-tested routes with `next start` (all 200; admin dynamic routes that 500'd on an agent's dev server work in prod);
    - enabled the JWT hook in `supabase/config.toml`;
    - wrote `src/backend/_core/auth.ts`.
-6. **Wave 2 (2 parallel agents)** was launched, then the session ended. **Neither agent wrote anything**: no `src/proxy.ts`, no `src/backend/{pricing,checkout,payments,shipping,...}`, no `src/app/api/**` except `api/tryon`, and all 48 `TODO(backend agent)` markers are still present.
 7. This session (after resuming): only verification plus writing this handoff.
 
 **Verification at hand-off time (2026-09-26):**
@@ -113,7 +106,6 @@ What happened in this session, in order:
 | `package.json` scripts | `typecheck`, `test`, `db:start`, `db:reset`, `db:types`. |
 
 ### 4.2 Database (wave-1 DB agent): DONE, validated in PGlite only
-- `supabase/migrations/0001…0017` (17 files): extensions/enums, identity/RBAC, catalog, cart/checkout, orders/payments, shipping/returns, reviews, marketing/offers, content/SEO/blog, analytics/support, settings/integrations, try-on, audit, functions/triggers, commerce RPCs, RLS policies, storage.
 - Size: 69 tables (plus monthly partitions of `analytics_events`), 36 enums, about 448 indexes, 55 functions, 187 RLS/storage policies.
 - **Reference data lives in the migrations, not the seed:** permissions, role map, payment gateways (Razorpay on, PayU off, COD on), store settings (GST 12%) and integration rows. `supabase/seed.sql` holds demo data only.
 - (Removed later at the user's request.) `supabase/tests/pglite.mjs` provides stubs for the Supabase `auth` and `storage` schemas and the roles. `validate.mjs` runs all migrations and the seed, then 23 invariant asserts. `gen-types.mjs` generates `src/types/database.ts`.
@@ -124,18 +116,10 @@ What happened in this session, in order:
 - `docs/system-design/01_ARCHITECTURE` … `08_ADMIN_MODULES.md`, plus `README.md` and `images/*.svg` (architecture, payment-flow, payment-failure-states, order-state-machine).
 - `docs/design/DESIGN_SYSTEM.md` and `docs/design/SCREENS.md` (Stitch screen → route → view folder map).
 
-### 4.4 Try-on (wave-1): Phase 1 DONE, not tested in a real browser with a camera
-- `src/tryon/**`:
   - `engine/poseTracker.ts`: MediaPipe PoseLandmarker; wasm pinned to jsDelivr `@mediapipe/tasks-vision@1.0.1`; EMA smoothing.
   - `engine/garmentFit.ts` + `garmentFit.test.ts`.
-  - `components/TryOnLauncher.tsx`: loads the modal via `next/dynamic` with `ssr:false`.
-  - `components/TryOnModal.tsx`: consent, camera states, canvas overlay, snapshot, disclaimer.
-  - `data/tryonAssets.ts`, `data/copy.ts`.
   - `analytics.ts`: sendBeacon to `/api/analytics/events`, which doesn't exist yet and fails silently.
   - `index.ts`.
-- `/api/v1/tryon` returns the in-house capability contract; `/api/v1/tryon/assets/[productId]` returns registered garment metadata. Legacy `/api/tryon` photo jobs return 410 and no paid provider code remains.
-- `public/tryon/{tee,hoodie,trousers}.svg` are placeholder overlays.
-- `docs/tryon/RESEARCH.md`, `IMPLEMENTATION.md`.
 
 ### 4.5 Storefront UI (wave-1): DONE (demo data)
 - Routes in `src/app/(store)`: `/`, `/editorial`, `/collections`, `/collections/[slug]`, `/new-in`, `/search`, `/products/[slug]` (static params, metadata, Product JSON-LD), `/wishlist`, `/cart`, `/faq` (FAQ JSON-LD), `/about`, `/lookbook`, `/journal`, `/journal/[slug]`, plus `loading.tsx`, `error.tsx` and `not-found.tsx`. `src/app/sitemap.ts` and `robots.ts` exist.
@@ -156,7 +140,6 @@ What happened in this session, in order:
 - `src/views/checkout/placeOrder.ts` defines the client contract for `POST /api/checkout` (see §10.3).
 
 ### 4.7 Admin UI (wave-1): DONE (demo data, mutations client-side only)
-- 31 routes under `/admin`: dashboard, products (list, new, `[id]`), categories, inventory, orders (list, `[number]`), customers (list, `[id]`), reviews (list, new), testimonials, coupons, offers, analytics, campaigns, shipping, payments, tax, integrations, seo, blog (list, new, `[id]`), staff, audit-log, tryon-analytics, settings. `/admin` redirects to `/admin/dashboard`, and the layout sets noindex.
 - `src/components/admin/*`: AdminShell (black rail and dev-only role switcher), DataTable, StatCard, ChartCard, TrendChart, Bars, Dialog, Fields, Panel, SeoFields, `useRole`, format.
 - `src/views/admin/<screen>/View.tsx`. `src/views/admin/rbac.ts` imports `_core/permissions.ts`. `src/views/admin/api.ts` is the `adminApi` helper; it treats a 404 as a local success.
 - `src/data/admin.ts` re-exports `src/data/admin/{catalog,insights,marketing,orders,settings,types}.ts`.
@@ -179,9 +162,7 @@ What happened in this session, in order:
 | Coupon / quote API | UI calls `/api/cart/coupon` and handles failure | `POST /api/cart/quote`, `POST /api/cart/coupon` | `src/components/commerce/cart/CartParts.tsx:110`, RPCs `quote_cart` and `apply_coupon` (both take `p_cart_id`) |
 | Returns API | UI posts multipart and falls back to demo | `POST /api/returns` | `src/views/returns/components/ReturnForm.tsx:45` |
 | Tracking API | Page reads the repo (demo) | `GET /api/track/[token]` via the RPC `get_order_tracking` | `src/backend/orders/repo.ts:getOrderByTrackingToken` |
-| Analytics ingest | Client beacons exist in try-on | `POST /api/analytics/events` plus `src/lib/analytics.ts` | `src/tryon/analytics.ts` |
 | Admin mutations | UI is optimistic and calls `adminApi(resource, body)` | `/api/admin/**` routes | 48 `TODO(backend agent)` markers across `src/views/admin/**`, `src/components/admin/useRole.ts`, `src/app/admin/layout.tsx` |
-| Try-on | Local MediaPipe overlay; versioned capability and asset API; photo jobs disabled | Self-host model/WASM files if desired; live device verification; optional photo synthesis requires explicit provider approval | `src/tryon/**`, `src/app/api/v1/tryon/**`, `docs/api/TRYON_V1.md` |
 
 Find every stub with `grep -rn "TODO(backend agent)" src` (48 hits) and `grep -rn "ponytail:" src` (19 deliberate shortcuts).
 
@@ -233,7 +214,6 @@ Find every stub with `grep -rn "TODO(backend agent)" src` (48 hits) and `grep -r
 13. **Customer 360** (`/admin/customers/[id]`): profile, orders, payment attempts with failure stages, shipments, tickets and journey (RPC `get_customer_journey`, gated by `journey.read`).
 14. **Demo data alignment:** see §8.9.
 15. **Rate limiting:** `src/backend/_core/rateLimit.ts` as an in-memory sliding window, with a `ponytail:` comment noting it is per-instance and should move to Upstash or Postgres later. Apply it to checkout, coupon, auth and analytics.
-16. **Docs:** `docs/api/API_REFERENCE.md`, `ADMIN_API.md` and `TRYON_V1.md` now document live routes and backend gaps. Update them alongside each API implementation. Add new env names such as `CRON_SECRET` to `.env.example`.
 17. **Promote shared checkout/account components to `src/components`**, since they are used in 2+ views: `AddressForm`, `OrderSummary`, `Timeline`, `OrderRow` (also candidates: `Stepper`, `AuthShell`, `FormAlert`). Move the `PaymentAttempt`, `AccountOrder` and `ReturnRequest` types into `types/domain.ts`.
 18. Run the full verification in §17.
 
@@ -261,11 +241,9 @@ Find every stub with `grep -rn "TODO(backend agent)" src` (48 hits) and `grep -r
   - Enforced in four layers: `proxy.ts`, the admin layout, backend `requirePermission`, and RLS.
 - **Reference data (gateways, settings, permissions) lives in migrations**, so production gets it; `seed.sql` holds demo data only.
 - **New SQL functions are not callable by anon/authenticated unless explicitly granted.** Commerce RPCs are service-role only, so call them with `adminClient()` from the backend after your own checks.
-- **Try-on:**
   - The enabled path is the in-house on-device MediaPipe overlay; no camera photo is uploaded and no paid provider is active.
   - Photo synthesis is disabled and provider code has been removed; do not re-add a paid provider without approval and updated privacy/retention requirements.
   - Rejected: open-source VTON models (non-commercial licences), DeepAR ($500–1,000/mo), Snap Camera Kit (a custom lens per product).
-  - No sneaker try-on in Phase 1 (needs foot tracking and 3D); keep `tryOnEnabled=false` for sneakers.
   - Always show the disclaimer "Visual preview only — not a size or fit guarantee".
 - **Other decisions:**
   - The Shiprocket webhook path is `/api/hooks/courier-status`.
@@ -293,11 +271,9 @@ Find every stub with `grep -rn "TODO(backend agent)" src` (48 hits) and `grep -r
 
    Consequences:
    - Once Supabase is on, persisted zustand carts holding `v_…` ids will be invalid, so clear or migrate localStorage.
-   - The try-on asset map guessed 3 slugs (`src/tryon/data/tryonAssets.ts`); anything unmapped falls back to the tee overlay.
 
    Recommended: make `seed.sql` mirror `src/data/products.ts` (or the reverse) and point admin demo data at the storefront data.
 10. **The `outbox` table is referenced in the system-design docs but doesn't exist in the migrations.** Open.
-11. **The try-on mediapipe wasm version is hardcoded to 1.0.1** in `poseTracker.ts`. Keep it in sync with the installed package.
 12. **Lint warnings:** `_l` and `_m` unused in `src/lib/logger.ts:40`. Cosmetic.
 13. **MCP limitations:**
     - There is no Sketch MCP. The user mentioned Sketch but the Stitch project was used: id `11414759065021159242`, "FORM/01 Fashion Commerce System", 32 screens plus a logo. Note that Stitch's numbering differs: Stitch "49" is catalogue #51 Coupons, and there is no Stitch design for #49 Review Composer.
@@ -323,16 +299,12 @@ docs/specs/               PRD, SRS, UI/UX DS, 56-screen catalogue, Data/API reqs
 docs/system-design/       01–08 + README + images/*.svg
 docs/database/            SCHEMA, ERD, RBAC, INDEXING, PAYMENTS_DATA
 docs/design/              DESIGN_SYSTEM.md, SCREENS.md (Stitch map)
-docs/tryon/               RESEARCH.md, IMPLEMENTATION.md
-docs/api/                 API_REFERENCE.md, ADMIN_API.md and TRYON_V1.md (keep synchronized with implementation)
-public/tryon/             garment overlay SVGs
 src/app/layout.tsx        root layout (fonts, Lenis, Toaster)
 src/app/globals.css       ALL design tokens
 src/app/(store)/          storefront routes (+ layout with Header/Footer/CartDrawer)
 src/app/(account)/        login/signup/forgot, account/**, track/[token]
 src/app/checkout/         checkout + success
 src/app/admin/            admin routes (layout = AdminShell, noindex)
-src/app/api/tryon/        compatibility photo route (410); /api/v1/tryon is the in-house capability API
 src/app/sitemap.ts, robots.ts
 src/views/<page>/         page views + page-only components (admin/* per screen)
 src/components/ui|layout|commerce|admin|providers   global components
@@ -342,7 +314,6 @@ src/backend/_core/        http.ts, auth.ts, permissions.ts
 src/backend/{catalog,content,orders,admin}/repo.ts   data access (Supabase branches are TODO)
 src/lib/                  logger, env, format, supabase clients
 src/types/domain.ts       shared contract; database.ts generated DB types
-src/tryon/                all try-on code
 ```
 
 ---
@@ -356,15 +327,12 @@ src/tryon/                all try-on code
 - **Fulfilment:** shipping methods and zones, shipments, shipment_events, return_requests and return_items.
 - **Marketing and content:** coupons, coupon_redemptions, offers (including `bundle_fixed_price`) and redemptions, campaigns, testimonials, content_pages, faqs, lookbook, blog_posts and categories/tags, seo_overrides, redirects, reviews (+ media, votes; `verified_purchase` is set by a trigger only).
 - **Analytics and support:** visitor_sessions, analytics_events (partitioned by month), support_tickets and messages.
-- **Ops:** store_settings, integration_configs, notification_log, audit_logs (immutable), tryon_sessions.
-- **Storage buckets:** product-media (public); review-media, tryon-private and return-evidence (private).
 
 ### 10.2 RPCs to use (in `0015_commerce_rpcs.sql` unless noted)
 - **Pricing:** `quote_cart(p_cart_id, p_shipping_method_id, p_payment_provider, p_state)`, `compute_pricing`, `apply_coupon(p_cart_id, p_code)`.
 - **Orders:** `place_order(p_idempotency_key, p_payload jsonb)`, which is idempotent, advisory-locked, and returns `order_json` (`orderId`, `orderNumber`, `status`, `paymentStatus`, `total`, `trackingToken`, `paymentId`, `replayed`). Also `cancel_order` and `order_status_allowed`.
 - **Payments:** `start_payment_attempt(p_order_id, p_provider, p_provider_order_id, p_method, p_raw_request, p_client_ip, …)`, `record_payment_failure(p_attempt_id, p_stage, p_code, p_reason, p_source, p_raw, …)`, `mark_payment_captured(p_order_id, p_attempt_id, p_provider_payment_id, p_amount, p_method, p_raw, …)`, `reconcile_order_payment(p_order_id)`.
 - **Inventory:** `reserve_inventory`, `release_inventory`, `commit_order_inventory`, `release_expired_reservations`, `adjust_inventory`.
-- **Tracking, journey, content:** `get_order_tracking(p_token)` (safe public fields), `get_customer_journey` (needs `journey.read`), `publish_scheduled_posts`, `cleanup_expired_tryon_sessions` (returns storage paths; the backend must delete them via the Storage API).
 
 ### 10.3 Client contracts already in the UI
 - `POST /api/checkout`:
@@ -374,19 +342,14 @@ src/tryon/                all try-on code
   - in demo mode a 404 or 501 becomes a mock order, and an email containing `+fail` simulates `bank_declined`.
 - `POST /api/cart/coupon` with `{ code }` (CartParts.tsx).
 - `POST /api/returns` with multipart (ReturnForm.tsx).
-- `POST /api/analytics/events` (try-on beacons).
 - `POST /api/admin/<resource>` via `adminApi` (`src/views/admin/api.ts`), which never throws and treats a 404 as success until the routes exist.
-- `/api/v1/tryon`: capability response; `/api/v1/tryon/assets/{productId}`: mapped garment config.
-- `/api/tryon`: legacy photo POST/GET returns 410 (after request validation).
 
 ### 10.4 Existing repo functions
 - `catalog`: `getProducts`, `searchProducts`, `getProductBySlug`, `getProductsByIds`, `getRecommendations`, `getCategories`, `getCollections`, `getCollection`, `getNewIn`, `getFacets`, `getReviews`.
 - `content`: `getFaqs`, `getLookbook`, `getBlogPosts`, `getBlogPost`, `getTestimonials`.
 - `orders`: `getAccountUser`, `getOrdersForUser`, `getOrderByNumber`, `getOrderByTrackingToken`, `getAddresses`, `getReturnsForUser` (the last one should move to `backend/returns`).
-- `admin`: `getDashboard`, `getProducts`, `getProduct`, `getCategories`, `getCollections`, `getInventoryReasons`, `getOrders`, `getOrder`, `getCustomers`, `getCustomer`, `getReviews`, `getTestimonials`, `getCoupons`, `getOffers`, `getCampaigns`, `getBlogPosts`, `getBlogPost`, `getAnalytics`, `getTryOnMetrics`, `getShipping`, `getGateways`, `getTax`, `getIntegrations`, `getSeo`, `getStaff`, `getAuditLog`, `getStoreSettings`, `getCurrentStaff`.
 
 ### 10.5 Integrations (not yet implemented in code)
-Razorpay (+ webhook secret), PayU (key/salt; the gateway is disabled by default), COD, Shiprocket, Resend, PostHog and GA4. Try-on currently runs in the browser without an inference provider.
 
 ---
 
@@ -408,7 +371,6 @@ Razorpay (+ webhook secret), PayU (key/salt; the gateway is disabled by default)
   - The admin customer journey panel is not gated by `journey.read`.
   - The dev-only role switcher in AdminShell must stay dev-only.
   - The components listed in §6 step 17 need promoting.
-  - Visual QA against the Stitch screens hasn't been done screen by screen, and the try-on camera flow is untested on a device.
 
 ---
 
@@ -420,7 +382,6 @@ Env var **names** (from `.env.example`):
 - **Payments:** `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `PAYU_MERCHANT_KEY`, `PAYU_MERCHANT_SALT`, `PAYU_BASE_URL`.
 - **Shipping:** `SHIPROCKET_EMAIL`, `SHIPROCKET_PASSWORD`, `SHIPROCKET_WEBHOOK_TOKEN`.
 - **Email and analytics:** `RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`, `NEXT_PUBLIC_GA4_ID`.
-- **Try-on:** no secret required; browser pose model/WASM currently load from public CDNs.
 - **To add:** `CRON_SECRET`, and probably `NEXT_PUBLIC_RAZORPAY_KEY_ID` for Checkout.js.
 
 **Demo mode:** leave the Supabase vars empty. `.env.local` does not exist; create it with `cp .env.example .env.local`. `.gitignore` from create-next-app ignores `.env*`.
@@ -493,7 +454,6 @@ There is no `vercel.json` yet.
   10. **Full RBAC:** super admin, staff roles, customer. Staff access designed and implemented in detail. Define what gets set when a user or staff member is created.
   11. **Detailed, interlinked, heavily indexed SQL** so everything is fast, with more tables and columns where needed.
   12. **Const data** so the UI works before the SQL is run, and real-time data after it is.
-  13. **Try-on:** live camera, garment follows the user in real time, free or cheap. All code in a `tryon` folder.
   14. **System design and capacity** (requests and payments handled), with images in `docs/`.
 - **Design:**
   - Reference sites: Dryrobe, Peregrine Clothing, 2nd STREET USA, Refashion, Readymag.
@@ -514,7 +474,6 @@ There is no `vercel.json` yet.
 - Don't re-scaffold Next.js, reinstall the libraries, re-run `supabase init`, or re-rebrand the docs. All of that is done.
 - Don't re-create the design tokens, fonts, logger, `http.ts`, `auth.ts`, the Supabase clients, `domain.ts` or the UI primitives. Extend them instead.
 - Don't rewrite the migrations from scratch. Add new numbered migrations (`0018_…`) for changes, and verify with `supabase db reset` or `db push`.
-- Don't redo the try-on research, the system-design docs, or the storefront, checkout/account and admin UIs; they are complete on demo data.
 - Don't chase the dev-server 500s on admin dynamic routes; prod works.
 - Don't try `supabase start` without Docker; use PGlite validation or a hosted project.
 - Don't rely on the wave-2 agents' output: none exists.
@@ -537,7 +496,6 @@ npx next start -p 3300              # smoke test, then STOP the server
 Smoke URLs:
 - Storefront: `/`, `/collections/clothing`, `/products/essential-crew-tee`, `/cart`, `/checkout`, `/track/bad` (404), `/account`.
 - Admin: `/admin` (307 to the dashboard), `/admin/dashboard`, `/admin/orders/BB-10421`, `/admin/products/p-core-tee`, `/admin/customers/c-aarav`.
-- API: `/api/v1/tryon` and `/api/v1/tryon/assets/p_001`; legacy `/api/tryon` returns 410 for generation jobs.
 
 After backend work, also curl:
 - `/api/cart/quote` and `/api/cart/coupon`;
@@ -548,7 +506,6 @@ After backend work, also curl:
 
 **Manual checks:**
 - Walk the checkout (the `+fail` email tests the failure and retry path).
-- Try-on on a real device with a camera.
 - Switch admin roles with the dev role switcher to confirm "No access" states.
 - Against a hosted Supabase: sign up (profile gets `customer`), invite staff, confirm the JWT carries `user_role`, and confirm RLS blocks cross-customer reads.
 

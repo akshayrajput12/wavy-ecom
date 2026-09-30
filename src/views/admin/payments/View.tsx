@@ -1,77 +1,68 @@
-"use client";
+import { clsx } from "clsx";
+import Link from "next/link";
+import { PageHeader } from "@/components/admin/Panel";
+import { StatusBadge } from "@/components/ui/Badge";
+import { formatPrice } from "@/lib/format";
+import type { AdminGateway, AdminPayment, AdminPaymentAttempt, AdminPaymentEvent, Paginated } from "@/types/admin";
+import { PAYMENT_PROVIDER } from "@/types/domain";
+import { fmtDateTime } from "../orders/components/fmt";
+import { FilterBar, opts, Pager, SimpleTable, type Col } from "../orders/components/list";
+import { Gateways } from "./components/Gateways";
+import { Reconcile } from "./components/Reconcile";
 
-import { useState } from "react";
-import { toast } from "sonner";
-import { Badge } from "@/components/ui/Badge";
-import { BarList } from "@/components/admin/Bars";
-import { Toggle } from "@/components/admin/Fields";
-import { PageHeader, Panel } from "@/components/admin/Panel";
-import { useCan } from "@/components/admin/useRole";
-import { formatNumber } from "@/components/admin/format";
-import { failureStageLabels } from "@/data/admin/settings";
-import type { Gateway } from "@/data/admin/types";
-import { mutate } from "../api";
+export type PaymentData =
+  | { kind: "payments"; data: Paginated<AdminPayment> }
+  | { kind: "attempts"; data: Paginated<AdminPaymentAttempt> }
+  | { kind: "events"; data: Paginated<AdminPaymentEvent> };
 
-export function PaymentsView({ gateways }: { gateways: Gateway[] }) {
-  const [items, setItems] = useState(gateways);
-  const canManage = useCan("payments.gateway.manage");
+const order = (n: string | null) => (n ? <Link href={`/admin/orders/${n}`} className="font-medium hover:underline">{n}</Link> : "-");
+const ids = (o: string | null, p: string | null) => <span className="t-meta break-all">{o ?? "-"}<br />{p ?? "-"}</span>;
 
-  const update = (id: Gateway["id"], patch: (g: Gateway) => Partial<Gateway>, label: string, all = false) => {
-    const before = items;
-    setItems(items.map((g) => (g.id === id ? { ...g, ...patch(g) } : all ? { ...g, isDefault: false } : g)));
-    // TODO(backend agent): call /api/admin/payments/gateways (secrets stay server-side; writes audit log)
-    void mutate(`payments/gateways/${id}`, patch(items.find((g) => g.id === id)!), { success: label, rollback: () => setItems(before) });
-  };
+const paymentCols: Col<AdminPayment>[] = [
+  { header: "Order", cell: (p) => order(p.orderNumber) }, { header: "Provider", cell: (p) => `${p.provider}${p.method ? ` · ${p.method}` : ""}` },
+  { header: "Status", cell: (p) => <StatusBadge status={p.status} /> },
+  { header: "Amount", right: true, cell: (p) => formatPrice(p.amount) }, { header: "Refunded", right: true, cell: (p) => formatPrice(p.amountRefunded) },
+  { header: "Last failure", cell: (p) => (p.lastFailureStage ? `${p.lastFailureStage} · ${p.lastFailureCode ?? "-"} · ${p.lastFailureReason ?? ""}` : "-") },
+  { header: "Provider ids", cell: (p) => ids(p.providerOrderId, p.providerPaymentId) }, { header: "Created", cell: (p) => fmtDateTime(p.createdAt) },
+];
+const attemptCols: Col<AdminPaymentAttempt>[] = [
+  { header: "Order", cell: (a) => order(a.orderNumber) }, { header: "Attempt", cell: (a) => `#${a.attemptNo} ${a.provider}${a.method ? ` · ${a.method}` : ""}` },
+  { header: "Status", cell: (a) => <StatusBadge status={a.status} /> },
+  { header: "Failure", cell: (a) => (a.failureStage || a.failureCode ? `${a.failureStage ?? "-"} · ${a.failureCode ?? "-"} · ${a.failureReason ?? ""}` : "-") },
+  { header: "Amount", right: true, cell: (a) => formatPrice(a.amount) },
+  { header: "Provider ids", cell: (a) => ids(a.providerOrderId, a.providerPaymentId) }, { header: "Started", cell: (a) => fmtDateTime(a.startedAt) },
+];
+const eventCols: Col<AdminPaymentEvent>[] = [
+  { header: "Order", cell: (e) => order(e.orderNumber) }, { header: "Event", cell: (e) => <>{e.eventType}<span className="t-meta block">{e.provider} · {e.source}</span></> },
+  { header: "Processing", cell: (e) => <><StatusBadge status={e.processingStatus} />{e.processingError && <span className="t-meta block">{e.processingError}</span>}</> },
+  { header: "Signature", cell: (e) => (e.signatureValid === false ? "Invalid" : e.signatureValid ? "Valid" : "-") },
+  { header: "Provider ids", cell: (e) => ids(e.providerEventId, e.providerPaymentId) }, { header: "Received", cell: (e) => fmtDateTime(e.receivedAt) },
+];
 
-  const toggle = (g: Gateway, enabled: boolean) => {
-    if (!enabled && g.isDefault) return void toast.error("Pick another default gateway before disabling this one.");
-    if (!enabled && items.filter((x) => x.enabled).length === 1) return void toast.error("At least one payment method must stay enabled.");
-    update(g.id, () => ({ enabled }), `${g.name} ${enabled ? "enabled" : "disabled"}`);
-  };
-  const setMode = (g: Gateway, mode: Gateway["mode"]) => {
-    if (mode === "live" && !window.confirm(`Switch ${g.name} to LIVE? Real customer payments will be charged.`)) return;
-    update(g.id, () => ({ mode }), `${g.name} switched to ${mode} mode`);
-  };
+const KINDS = ["payments", "attempts", "events"] as const;
 
+export function PaymentsView({ gateways, list }: { gateways: AdminGateway[]; list: PaymentData }) {
+  const d = list.data;
   return (
     <>
-      <PageHeader title="Payments" description="Gateways, modes and last-24h health. Keys are managed in Integrations and never shown here." />
-      <div className="grid gap-6 xl:grid-cols-3">
-        {items.map((g) => {
-          const failed = Object.values(g.failures).reduce((a, b) => a + b, 0);
-          return (
-            <Panel key={g.id} title={g.name} actions={<span className="flex gap-1.5">{g.isDefault && <Badge tone="dark">Default</Badge>}<Badge tone={g.mode === "live" ? "success" : "warning"} dot>{g.mode} mode</Badge></span>}>
-              <div className="flex flex-col gap-4">
-                <Toggle label="Enabled at checkout" checked={g.enabled} onChange={(v) => toggle(g, v)} disabled={!canManage} />
-                <fieldset disabled={!canManage} className="disabled:opacity-50">
-                  <legend className="mb-1.5 text-meta font-medium">Mode</legend>
-                  <div className="inline-flex rounded-pill border border-line p-0.5">
-                    {(["test", "live"] as const).map((m) => (
-                      <button key={m} type="button" aria-pressed={g.mode === m} onClick={() => g.mode !== m && setMode(g, m)}
-                        className={g.mode === m ? "h-8 rounded-pill bg-ink px-4 text-meta text-on-dark" : "h-8 rounded-pill px-4 text-meta hover:bg-surface-warm"}>{m}</button>
-                    ))}
-                  </div>
-                </fieldset>
-                <label className="flex items-center gap-2 text-body">
-                  <input type="radio" name="default-gateway" checked={g.isDefault} disabled={!g.enabled || !canManage} className="size-4 accent-ink"
-                    onChange={() => update(g.id, () => ({ isDefault: true }), `${g.name} is now the default`, true)} />
-                  Default gateway
-                </label>
-                <div>
-                  <p className="mb-1.5 text-meta font-medium">Supported methods</p>
-                  <ul className="flex flex-wrap gap-1.5">{g.methods.map((m) => <li key={m}><Badge>{m}</Badge></li>)}</ul>
-                </div>
-                <div className="rounded-sm bg-canvas p-3">
-                  <p className="t-overline text-ink-soft">Last 24 hours</p>
-                  <p className="mt-1 text-h3 font-semibold tabular-nums">{g.successRate24h}% <span className="text-meta font-normal text-ink-soft">success · {formatNumber(g.attempts24h)} attempts</span></p>
-                  <p className="t-meta mt-3 mb-2">Failures by stage ({failed})</p>
-                  <BarList items={(Object.keys(g.failures) as (keyof Gateway["failures"])[]).map((k) => ({ label: failureStageLabels[k], value: g.failures[k], display: String(g.failures[k]) }))} />
-                </div>
-              </div>
-            </Panel>
-          );
-        })}
-      </div>
+      <PageHeader title="Payments" description="Gateways, payments, attempts and webhook events. Failures show stage, code and reason." />
+      <Gateways gateways={gateways} />
+      <Reconcile />
+      <nav aria-label="Payment records" className="mb-3 flex gap-2">
+        {KINDS.map((k) => (
+          <Link key={k} href={`/admin/payments?kind=${k}`} aria-current={list.kind === k ? "page" : undefined}
+            className={clsx("inline-flex h-9 items-center rounded-pill border px-4 text-meta capitalize", list.kind === k ? "border-ink bg-ink text-on-dark" : "border-line hover:border-ink")}>{k}</Link>
+        ))}
+      </nav>
+      <FilterBar key={list.kind} filters={[
+        { key: "orderNumber", label: "Order number" }, { key: "provider", label: "Provider", options: opts(PAYMENT_PROVIDER) },
+        { key: "status", label: "Status" }, ...(list.kind === "attempts" ? [{ key: "failureStage", label: "Failure stage" }] : []),
+        { key: "from", label: "From", type: "date" as const }, { key: "to", label: "To", type: "date" as const },
+      ]} />
+      {list.kind === "payments" && <SimpleTable caption="Payments" rows={list.data.items} cols={paymentCols} getId={(r) => r.id} empty="No payments match" />}
+      {list.kind === "attempts" && <SimpleTable caption="Payment attempts" rows={list.data.items} cols={attemptCols} getId={(r) => r.id} empty="No attempts match" />}
+      {list.kind === "events" && <SimpleTable caption="Payment events" rows={list.data.items} cols={eventCols} getId={(r) => r.id} empty="No events match" />}
+      <Pager page={d.page} pageSize={d.pageSize} total={d.total} />
     </>
   );
 }

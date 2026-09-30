@@ -1,61 +1,59 @@
-import Image from "next/image";
 import Link from "next/link";
 import { clsx } from "clsx";
-import { Sparkles } from "lucide-react";
-import { Badge, type Tone } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/Badge";
+import { productCopy } from "@/data/copy";
 import type { Product } from "@/types/domain";
+import { ImageWell } from "./ImageWell";
 import { PriceTag } from "./PriceTag";
+import { QuickViewButton } from "./QuickView";
 import { RatingStars } from "./RatingStars";
 import { WishlistButton } from "./WishlistButton";
+import { swatchesOf, totalStock } from "./variantSelect";
 
-const BADGE_TONE: Record<string, Tone> = { New: "dark", Limited: "dark", Sale: "accent" };
+const MAX_SWATCHES = 5;
 
-export const swatchesOf = (p: Product) => [...new Map(p.variants.map((v) => [v.color, v.colorHex])).entries()];
-export const stockOf = (p: Product) => p.variants.reduce((n, v) => n + v.stock, 0);
+/** Generic product card for any category: second image on hover, soft lift, quick view, wishlist. */
+export function ProductCard({ product: p, sizes = "(min-width: 1024px) 25vw, 50vw", preload, className }: {
+  product: Product; sizes?: string; preload?: boolean; className?: string;
+}) {
+  const soldOut = totalStock(p) === 0;
+  const swatches = swatchesOf(p).filter((s) => s.colorHex);
+  const [first, second] = p.images;
 
-export function ProductCard({ product: p, sizes = "(min-width: 1024px) 25vw, 50vw", priority, className }: { product: Product; sizes?: string; priority?: boolean; className?: string }) {
-  const stock = stockOf(p);
-  const swatches = swatchesOf(p);
-  const href = `/products/${p.slug}`;
   return (
-    <article className={clsx("group relative", className)}>
-      <Link href={href} className="block rounded-md focus-visible:outline-offset-4">
-        <div className="relative aspect-[4/5] overflow-hidden rounded-md bg-surface-warm">
-          <Image
-            src={p.images[0].url} alt={p.images[0].alt} fill sizes={sizes} priority={priority}
-            className={clsx("object-cover transition duration-700 ease-out group-hover:scale-[1.03]", stock === 0 && "opacity-60")}
-          />
-          {p.images[1] && (
-            <Image src={p.images[1].url} alt="" fill sizes={sizes} className="object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+    <article className={clsx("group relative flex h-full flex-col rounded-md", className)}>
+      <div className="lift relative rounded-md">
+        <Link href={`/products/${p.slug}`} className="block rounded-md focus-visible:outline-offset-4" aria-label={p.name}>
+          <ImageWell media={first} alt={first?.alt || p.name} sizes={sizes} preload={preload} className="aspect-[4/5] rounded-md"
+            imgClassName={clsx("transition-[opacity,scale] duration-(--dur-slow) ease-soft group-hover:scale-[1.02]", soldOut && "opacity-60")} />
+          {second?.url && (
+            <ImageWell media={second} alt="" sizes={sizes} className="pointer-events-none absolute! inset-0 rounded-md opacity-0 transition-opacity duration-(--dur-slow) ease-soft max-md:hidden md:group-hover:opacity-100" />
           )}
-          <div className="absolute left-2.5 top-2.5 flex flex-wrap gap-1.5">
-            {stock === 0 ? <Badge tone="dark">Sold out</Badge> : p.badges.slice(0, 1).map((b) => <Badge key={b} tone={BADGE_TONE[b] ?? "neutral"}>{b}</Badge>)}
-          </div>
-          {p.tryOnEnabled && stock > 0 && (
-            <span className="absolute bottom-2.5 left-2.5 inline-flex items-center gap-1 rounded-pill bg-surface/85 px-2.5 py-1 text-micro font-medium backdrop-blur-sm">
-              <Sparkles className="size-3" aria-hidden /> Try-on
-            </span>
-          )}
+        </Link>
+        <div className="pointer-events-none absolute left-2.5 top-2.5 flex flex-wrap gap-1.5">
+          {soldOut ? <Badge tone="dark">{productCopy.soldOut}</Badge> : p.badges.slice(0, 2).map((b) => <Badge key={b} tone="accent">{b}</Badge>)}
         </div>
-        <div className="mt-3 flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h3 className="truncate text-body font-medium">{p.name}</h3>
-            <p className="truncate text-meta text-ink-soft">{p.descriptor}</p>
-          </div>
-          <PriceTag price={p.priceFrom} compareAt={p.compareAtFrom} className="shrink-0 justify-end text-right" />
-        </div>
-        <div className="mt-2 flex items-center justify-between gap-2">
-          <span className="flex items-center gap-1.5">
-            {swatches.slice(0, 4).map(([name, hex]) => (
-              <span key={name} title={name} className="size-3 rounded-full border border-ink/15" style={{ backgroundColor: hex }} />
+        <WishlistButton productId={p.id} name={p.name} className="absolute right-2 top-2" />
+        <QuickViewButton product={p} className="absolute bottom-2.5 right-2.5 md:left-1/2 md:right-auto md:-translate-x-1/2 md:translate-y-1 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:focus-visible:translate-y-0 md:focus-visible:opacity-100" />
+      </div>
+
+      <div className="mt-3 flex flex-1 flex-col gap-1">
+        {p.brand && <p className="truncate text-micro font-medium uppercase tracking-wide text-ink-soft">{p.brand}</p>}
+        <h3 className="line-clamp-2 text-body font-medium">
+          <Link href={`/products/${p.slug}`} tabIndex={-1} className="hover:underline hover:underline-offset-4">{p.name}</Link>
+        </h3>
+        {p.reviewCount > 0 && <RatingStars rating={p.rating} count={p.reviewCount} />}
+        <PriceTag price={p.priceFrom} compareAt={p.compareAtFrom} className="mt-auto pt-1" />
+        {swatches.length > 1 && (
+          <p className="flex items-center gap-1.5 pt-1">
+            {swatches.slice(0, MAX_SWATCHES).map((s) => (
+              <span key={s.value} title={s.value} className="size-3.5 rounded-pill border border-ink/15" style={{ backgroundColor: s.colorHex }} aria-hidden />
             ))}
-            <span className="sr-only">{swatches.length} colours: {swatches.map(([n]) => n).join(", ")}</span>
-            {swatches.length > 4 && <span className="text-micro text-ink-soft">+{swatches.length - 4}</span>}
-          </span>
-          {stock > 0 && stock <= 12 ? <span className="text-micro font-medium text-warning">Few left</span> : <RatingStars rating={p.rating} count={p.reviewCount} />}
-        </div>
-      </Link>
-      <WishlistButton productId={p.id} name={p.name} className="absolute right-2 top-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:aria-pressed:opacity-100" />
+            {swatches.length > MAX_SWATCHES && <span className="text-micro text-ink-soft" aria-hidden>+{swatches.length - MAX_SWATCHES}</span>}
+            <span className="sr-only">{swatches.map((s) => s.value).join(", ")}</span>
+          </p>
+        )}
+      </div>
     </article>
   );
 }

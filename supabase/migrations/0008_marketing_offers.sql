@@ -71,23 +71,29 @@ create index offers_active_idx on public.offers (priority desc) where status = '
 create index offers_status_idx on public.offers (status, created_at desc);
 create index offers_created_by_idx on public.offers (created_by);
 
--- Include/exclude rules shared by coupons and offers. No include rows = applies to everything.
+-- Include/exclude rules shared by coupons and offers (discount_target_match, 0015):
+--   no include rows  -> every item is eligible
+--   include rows     -> item must match at least one
+--   exclude rows     -> item matching any is never eligible (exclude beats include)
+-- A row targets exactly one of: product, variant, category (matches descendants), collection.
 create table public.discount_targets (
   id            uuid primary key default gen_random_uuid(),
   coupon_id     uuid references public.coupons (id) on delete cascade,
   offer_id      uuid references public.offers (id) on delete cascade,
   mode          public.target_mode not null default 'include',
   product_id    uuid references public.products (id) on delete cascade,
+  variant_id    uuid references public.product_variants (id) on delete cascade,
   category_id   uuid references public.categories (id) on delete cascade,   -- matches descendants too
   collection_id uuid references public.collections (id) on delete cascade,
   created_at    timestamptz not null default now(),
   check (num_nonnulls(coupon_id, offer_id) = 1),
-  check (num_nonnulls(product_id, category_id, collection_id) = 1),
-  unique nulls not distinct (coupon_id, offer_id, mode, product_id, category_id, collection_id)
+  check (num_nonnulls(product_id, variant_id, category_id, collection_id) = 1),
+  unique nulls not distinct (coupon_id, offer_id, mode, product_id, variant_id, category_id, collection_id)
 );
 create index discount_targets_coupon_idx     on public.discount_targets (coupon_id) where coupon_id is not null;
 create index discount_targets_offer_idx      on public.discount_targets (offer_id) where offer_id is not null;
 create index discount_targets_product_idx    on public.discount_targets (product_id) where product_id is not null;
+create index discount_targets_variant_idx    on public.discount_targets (variant_id) where variant_id is not null;
 create index discount_targets_category_idx   on public.discount_targets (category_id) where category_id is not null;
 create index discount_targets_collection_idx on public.discount_targets (collection_id) where collection_id is not null;
 

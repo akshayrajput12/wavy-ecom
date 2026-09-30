@@ -30,6 +30,20 @@ export async function parse<T>(req: Request, schema: ZodType<T>): Promise<T> {
   return schema.parse(json);
 }
 
+/** Query string -> object for zod (repeated keys become arrays). */
+export function searchParamsObject(sp: URLSearchParams): Record<string, string | string[]> {
+  const out: Record<string, string | string[]> = {};
+  for (const k of new Set(sp.keys())) { const all = sp.getAll(k); out[k] = all.length > 1 ? all : all[0]; }
+  return out;
+}
+
+const IP = /^(\d{1,3}(\.\d{1,3}){3}|[0-9a-f:]+)$/i;
+/** Caller IP (first x-forwarded-for hop, validated so it casts to inet) + user agent, for payment/audit rows. */
+export function clientContext(req: Request): { ip?: string; userAgent?: string } {
+  const ip = (req.headers.get("x-forwarded-for")?.split(",")[0] ?? req.headers.get("x-real-ip") ?? "").trim();
+  return { ip: IP.test(ip) ? ip : undefined, userAgent: req.headers.get("user-agent")?.slice(0, 500) ?? undefined };
+}
+
 type Handler<P> = (ctx: { req: NextRequest; params: P; log: Logger; requestId: string }) => Promise<Response>;
 
 export function route<P = Record<string, string>>(svc: string, handler: Handler<P>) {

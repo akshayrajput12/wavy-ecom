@@ -46,7 +46,6 @@ Legend: ● full, ◐ read-only, blank = none.
 | `marketing.coupons` / `marketing.offers` | ● | | | ● | | | |
 | `marketing.campaigns` | ● | | | ● | | | |
 | `seo.manage` | ● | ◐ (product SEO fields ●) | | ● | | | |
-| `analytics.read` (commerce + try-on) | ● | ◐ (catalog) | ◐ (ops) | ● | ● | | |
 | `settings.shipping` | ● | | ● | | | | |
 | `settings.payments` / `settings.tax` | ● | | | | | | |
 | `integrations.manage` | ● | | | | | | |
@@ -98,7 +97,6 @@ Lint rule: `import "@/lib/supabase/admin"` is only allowed under `src/backend/**
 | Shiprocket | `POST /api/hooks/courier-status` | static token header vs `SHIPROCKET_WEBHOOK_TOKEN`; the payload is treated as a hint and state only moves forward (04 §4) |
 | Resend | `POST /api/notifications/resend/webhook`, `/api/support/inbound` | Svix signature (`svix-id`, `svix-timestamp`, `svix-signature`), timestamp within 5 min |
 | Cron | `/api/cron/*` | `Authorization: Bearer CRON_SECRET` |
-| VTON provider | `POST /api/tryon/callback` | provider HMAC, or else a per-session random callback token |
 
 All webhook handlers:
 - read the raw body;
@@ -120,20 +118,16 @@ limits (e.g. 30 sign-ins per 5 min per IP) and CAPTCHA (Turnstile) after 3 faile
 | A02 Cryptographic failures | TLS everywhere (HSTS `max-age=63072000; includeSubDomains; preload`); no card data; tracking tokens are 128-bit random; Vault for runtime secrets |
 | A03 Injection | Supabase query builder / parameterised SQL functions only; no string-built SQL; zod on every input; React escapes output; blog Markdown rendered with a sanitiser (no raw HTML) |
 | A04 Insecure design | Server-authoritative pricing; idempotency keys; state machines reject invalid transitions; abuse limits on coupons |
-| A05 Security misconfiguration | Headers in `next.config.ts`: CSP (`default-src 'self'`; `script-src 'self' 'nonce-…' checkout.razorpay.com *.posthog.com www.googletagmanager.com`; `frame-src api.razorpay.com`; `form-action 'self' secure.payu.in test.payu.in`; `img-src 'self' data: <supabase>.supabase.co`), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(self)` (try-on only), `frame-ancestors 'none'`; Supabase: disable signups for the staff domain, restrict redirect URLs |
 | A06 Vulnerable components | Dependabot + `npm audit --omit=dev` in CI; pinned Next/React; weekly update window |
 | A07 Identification and auth failures | Supabase Auth, leaked-password check, TOTP MFA for staff, session revocation on role change, CAPTCHA after failures |
 | A08 Software and data integrity | Webhook signatures; lockfile; Vercel deployment protection on previews; migrations reviewed before merge; no `eval` |
 | A09 Logging and monitoring failures | Structured logs with request ids (05); `auth.denied`, `payment.signature_mismatch` alerts; `audit_logs` for high-impact admin actions (actor, action, entity, before/after, ip, ua, at), append-only (`REVOKE UPDATE, DELETE`) |
 | A10 SSRF | No user-supplied URLs are fetched server-side; image URLs restricted to `images.remotePatterns` (Supabase host only); the provider base URLs are constants |
 
-Uploads (reviews, return evidence, try-on):
 - signed upload URLs only;
 - MIME and magic-byte check;
-- ≤ 8 MB (try-on ≤ 10 MB);
 - EXIF stripped on processing;
 - private buckets use signed read URLs with 5 min expiry;
-- try-on assets expire after 24 h (NFR-005).
 
 ## 8. PCI DSS scope
 
@@ -149,4 +143,3 @@ Uploads (reviews, return evidence, try-on):
 - Data protection (DPDP Act 2023):
   - consent banner;
   - `/account/privacy` export and delete request, handled within 30 days;
-  - deletion anonymises `orders` (kept 8 years for GST records) and deletes the profile, addresses, wishlist and try-on assets.

@@ -4,7 +4,6 @@ wavy Reusable Fashion Commerce Platform
 wavy Fashion Commerce System | Requirements Pack v1.0 | 25 Sep 2026
 Scope: Defines what must be built: product capabilities, user-visible behavior, data, integrations, visual requirements, screen inventory and acceptance conditions. It does not define implementation approach, framework choice or project schedule.
 1. Product Definition
-wavy is a single-store fashion commerce platform for clothing and sneakers. It includes a premium storefront, responsive mobile experience, customer account and post-purchase journeys, editorial content, an authenticated admin console, commerce analytics, marketing operations, shipping/payment integrations and optional AI try-on.
 2. Primary users
 User
 Needs
@@ -34,7 +33,6 @@ Read-only analytics
 Module
 Must contain
 Storefront
-Home, editorial home, collection, filtered collection, search, empty search, PDP, size finder, try-on, reviews, wishlist, cart drawer, cart.
 Checkout
 Contact, address, shipping, payment, order success; guest-first.
 Mobile
@@ -46,7 +44,6 @@ FAQ, About, Lookbook, editorial blocks, testimonials.
 Admin
 Dashboard, products, editor, inventory, orders, order detail, customers, reviews, testimonials, coupons, analytics, campaigns, shipping, integrations, AI analytics.
 Integrations
-Razorpay, Shiprocket, Resend, GA4, PostHog, configured AI try-on provider.
 4. Product requirements
 ID
 Area
@@ -66,14 +63,12 @@ Query, recent/popular suggestions, results, filters, sort, empty state.
 Must
 PRD-004
 PDP
-Gallery, identity, price, rating, variants, size, try-on, purchase actions, delivery check, details, reviews and recommendations.
 Must
 PRD-005
 Size finder
 Height/chest/waist/preferred fit; suggested size; explanation; Use Size.
 Must
 PRD-006
-AI try-on
 Visual assistance only; input validation; processing/result/failure; disclaimer that it is not a sizing/fit guarantee.
 Must
 PRD-007
@@ -110,7 +105,6 @@ Coupons, campaigns, testimonials and content publishing.
 Must
 PRD-015
 Analytics
-Revenue, orders, AOV, conversion, product/category performance, try-on funnel.
 Must
 PRD-016
 Integrations
@@ -133,8 +127,6 @@ Prices are variant-level and displayed in INR with ₹ formatting.
 Inventory is tracked at sellable-variant level; unavailable variants cannot be purchased.
 Coupon validation is server-authoritative and must honor validity, usage and restriction rules.
 Verified purchase review state is derived from eligible completed orders and cannot be fabricated in content.
-AI try-on is a visualization, not a sizing or fit guarantee.
-Temporary try-on assets have explicit retention/expiry/deletion states.
 High-impact admin changes are auditable.
 6. Out of scope for v1
 Multi-vendor marketplace

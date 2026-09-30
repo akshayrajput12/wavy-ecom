@@ -1,17 +1,10 @@
-import { announcements } from "@/data/navigation";
+import { getStoreSettings } from "@/backend/settings/repo";
+import { layoutCopy } from "@/data/storefront";
+import { formatPrice } from "@/lib/format";
 
-/** Thin scrolling strip above the header. CSS-only marquee; static for reduced-motion users (global rule). */
-export function AnnouncementBar() {
-  const items = [...announcements, ...announcements];
-  return (
-    <div className="overflow-hidden bg-black py-2 text-micro font-medium tracking-wide text-on-dark">
-      <p className="sr-only">{announcements.join(". ")}</p>
-      <div aria-hidden className="flex w-max animate-[marquee_40s_linear_infinite] gap-12 whitespace-nowrap motion-reduce:animate-none">
-        {[...items, ...items].map((a, i) => (
-          <span key={i} className="flex items-center gap-12">{a}<span className="text-accent">✦</span></span>
-        ))}
-      </div>
-      <style>{`@keyframes marquee { to { transform: translateX(-50%); } }`}</style>
-    </div>
-  );
+/** Thin calm strip above the header, from store settings; renders nothing when there is nothing to announce. */
+export async function AnnouncementBar() {
+  const threshold = (await getStoreSettings())?.freeShippingThreshold;
+  if (!threshold) return null;
+  return <p className="bg-accent-soft px-4 py-2 text-center text-micro font-medium text-ink">{layoutCopy.freeShipping(formatPrice(threshold))}</p>;
 }

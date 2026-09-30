@@ -1,49 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
 import { StatusBadge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { PageHeader, Panel } from "@/components/admin/Panel";
-import type { Offer } from "@/data/admin/types";
-import type { Collection } from "@/types/domain";
-import { mutate } from "../api";
+import { ButtonLink } from "@/components/ui/Button";
+import { DataTable, type Column } from "@/components/admin/DataTable";
+import { PageHeader } from "@/components/admin/Panel";
+import { formatPrice } from "@/lib/format";
+import type { AdminOffer } from "@/types/admin";
+import { COUPON_STATUS } from "@/types/domain";
 import { describeOffer } from "./components/describe";
-import { OfferBuilder } from "./components/OfferBuilder";
 
-export function OffersView({ offers, collections }: { offers: Offer[]; collections: Collection[] }) {
-  const [items, setItems] = useState(offers);
-  const [building, setBuilding] = useState(false);
+const columns: Column<AdminOffer>[] = [
+  { key: "name", header: "Offer", sort: (o) => o.name, cell: (o) => <Link href={`/admin/offers/${o.id}/edit`} className="font-medium hover:underline">{o.name}</Link> },
+  { key: "rule", header: "Rule", cell: (o) => <>{describeOffer(o)}{o.badgeText && <span className="t-meta block">Badge: {o.badgeText}</span>}</> },
+  { key: "targets", header: "Targets", cell: (o) => (o.targets.length ? `${o.targets.filter((t) => t.mode === "include").length} included, ${o.targets.filter((t) => t.mode === "exclude").length} excluded` : "Everything") },
+  { key: "used", header: "Applied", align: "right", sort: (o) => o.stats.applied, cell: (o) => <>{o.stats.applied}<span className="t-meta block">{formatPrice(o.stats.discountGiven)} given</span></> },
+  { key: "status", header: "Status", sort: (o) => o.status, cell: (o) => <StatusBadge status={o.status} /> },
+];
 
-  const toggle = (o: Offer) => {
-    const before = items;
-    const status = o.status === "active" ? "paused" : "active";
-    setItems(items.map((x) => (x.id === o.id ? { ...x, status } : x)));
-    void mutate(`offers/${o.id}/status`, { status }, { success: `${o.name} ${status}`, rollback: () => setItems(before) });
-  };
-  const create = (o: Offer) => {
-    const before = items;
-    setItems([o, ...items]);
-    setBuilding(false);
-    // TODO(backend agent): call /api/admin/offers — pricing service applies offers server-side (never trust client totals)
-    void mutate("offers", o, { success: `Offer “${o.name}” created`, rollback: () => setItems(before) });
-  };
-
+export function OffersView({ offers }: { offers: AdminOffer[] }) {
   return (
     <>
-      <PageHeader title="Offers" description="Automatic cart deals: bundles, BOGO and spend tiers. Applied by the server at checkout."
-        actions={!building && <Button size="sm" onClick={() => setBuilding(true)}>New offer</Button>} />
-      {building && <div className="mb-6"><OfferBuilder collections={collections} onCancel={() => setBuilding(false)} onSave={create} /></div>}
-      <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {items.map((o) => (
-          <li key={o.id}>
-            <Panel title={o.name} actions={<StatusBadge status={o.status} />} className="h-full">
-              <p className="t-overline text-ink-soft">{o.kind === "bundle" ? "Bundle" : o.kind === "bogo" ? "Buy X get Y" : "Tiered discount"}</p>
-              <p className="mt-1 text-body">{describeOffer(o, collections)}</p>
-              <Button size="sm" variant="secondary" className="mt-4" onClick={() => toggle(o)}>{o.status === "active" ? "Pause" : "Activate"}</Button>
-            </Panel>
-          </li>
-        ))}
-      </ul>
+      <PageHeader title="Offers" description="Automatic bundle, buy-X-get-Y and tiered discounts." actions={<ButtonLink href="/admin/offers/new" size="sm">New offer</ButtonLink>} />
+      <DataTable caption="Offers" rows={offers} columns={columns} getId={(o) => o.id} search={(o) => `${o.name} ${o.slug}`} searchPlaceholder="Search offers"
+        filters={[{ key: "status", label: "Status", options: COUPON_STATUS.map((s) => ({ value: s, label: s })), match: (o, v) => o.status === v }]}
+        empty={{ title: "No offers yet", action: <ButtonLink href="/admin/offers/new" size="sm">Create an offer</ButtonLink> }} />
     </>
   );
 }

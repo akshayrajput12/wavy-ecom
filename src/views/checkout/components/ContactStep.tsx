@@ -2,36 +2,34 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { checkoutCopy } from "@/data/checkout";
+import { checkoutCopy } from "@/data/copy";
+import { co } from "../copy";
 import { contactSchema, type ContactValues } from "../schema";
 
-export function ContactStep({ defaultValues, signedIn, onDone }: {
-  defaultValues?: Partial<ContactValues>; signedIn: boolean; onDone: (v: ContactValues) => void;
+export function ContactStep({ defaultValues, signedIn, onChange, onDone }: {
+  defaultValues: Partial<ContactValues>; signedIn: boolean;
+  onChange: (v: Partial<ContactValues>) => void; onDone: (v: ContactValues) => void;
 }) {
-  const { register, handleSubmit, formState: { errors } } = useForm<ContactValues>({
-    resolver: zodResolver(contactSchema),
-    mode: "onTouched",
-    defaultValues: { marketing: false, ...defaultValues },
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<ContactValues>({
+    resolver: zodResolver(contactSchema), mode: "onTouched", defaultValues,
   });
+  useEffect(() => { const s = watch((v) => onChange(v)); return () => s.unsubscribe(); }, [watch, onChange]);
 
   return (
     <form onSubmit={handleSubmit(onDone)} noValidate className="grid gap-4">
       {!signedIn && (
-        <p className="text-body text-ink-soft">
+        <p className="rounded-md bg-surface-warm px-4 py-3 text-body text-ink-soft">
           {checkoutCopy.loginPrompt}{" "}
           <Link href="/login?next=/checkout" className="font-medium text-ink underline underline-offset-4">{checkoutCopy.loginCta}</Link>
         </p>
       )}
-      <Input label="Email" type="email" autoComplete="email" hint="Order confirmation goes here" error={errors.email?.message} {...register("email")} />
-      <Input label="Mobile number" type="tel" inputMode="numeric" maxLength={10} autoComplete="tel-national"
-        hint="10 digits, for delivery and OTP updates" error={errors.phone?.message} {...register("phone")} />
-      <label className="flex min-h-11 items-center gap-3 text-body">
-        <input type="checkbox" className="size-4 accent-ink" {...register("marketing")} /> Email me about new drops and offers
-      </label>
-      <Button type="submit" className="justify-self-start">Continue to address</Button>
+      <Input label={co.contact.email} type="email" autoComplete="email" inputMode="email" hint={co.contact.emailHint} error={errors.email?.message} {...register("email")} />
+      <Input label={co.contact.phone} type="tel" inputMode="tel" maxLength={13} autoComplete="tel-national" hint={co.contact.phoneHint} error={errors.phone?.message} {...register("phone")} />
+      <Button type="submit" size="lg" className="sm:justify-self-start">{co.contact.cta}</Button>
     </form>
   );
 }

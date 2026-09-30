@@ -1,81 +1,89 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Heart } from "lucide-react";
-import { toast } from "sonner";
 import { Button, ButtonLink } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
-import { EmptyState } from "@/components/ui/States";
-import { PriceTag } from "@/components/commerce/PriceTag";
+import { EmptyState, Skeleton } from "@/components/ui/States";
+import { ProductCard } from "@/components/commerce/ProductCard";
+import { addToBag } from "@/components/commerce/addToBag";
+import { inStock } from "@/components/commerce/variantSelect";
 import { useWishlist } from "@/stores/wishlist";
-import { toCartLine, useCart } from "@/stores/cart";
-import { wishlistCopy as c } from "@/data/content";
+import { wishlistCopy as c } from "@/data/copy";
 import type { Product } from "@/types/domain";
+import { resolveWishlist } from "./actions";
 
-/** Screen 13. `products` is the catalogue the saved ids resolve against (guest wishlist lives in localStorage). */
-export function WishlistView({ products }: { products: Product[] }) {
+const unsave = (productId: string) => {
+  useWishlist.getState().remove(productId);
+  void fetch("/api/account/wishlist", { method: "DELETE", headers: { "content-type": "application/json" }, body: JSON.stringify({ productId }) }).catch(() => undefined);
+};
+
+/** Account wishlist (server) merged with this device's saved ids (resolved via a server action). */
+export function WishlistView({ signedIn, accountProducts }: { signedIn: boolean; accountProducts: Product[] }) {
   const ids = useWishlist((s) => s.ids);
-  const saved = ids.map((id) => products.find((p) => p.id === id)).filter((p): p is Product => !!p);
+  const [local, setLocal] = useState<Product[] | null>(null);
+  const [removed, setRemoved] = useState<string[]>([]);
+
+  useEffect(() => { void useWishlist.persist.rehydrate(); }, []);
+  useEffect(() => {
+    const missing = ids.filter((id) => !accountProducts.some((p) => p.id === id));
+    let live = true;
+    resolveWishlist(missing).then((r) => live && setLocal(r), () => live && setLocal([]));
+    return () => { live = false; };
+  }, [ids, accountProducts]);
+
+  const products = useMemo(
+    () => [...new Map([...accountProducts, ...(local ?? [])].map((p) => [p.id, p])).values()].filter((p) => !removed.includes(p.id) && (ids.includes(p.id) || accountProducts.includes(p))),
+    [accountProducts, local, removed, ids],
+  );
+  const remove = (id: string) => { unsave(id); setRemoved((r) => [...r, id]); };
 
   return (
     <div className="container-x pb-24">
       <header className="border-b border-line py-10 lg:py-16">
-        <h1 className="t-hero">{c.title} <span className="text-ink-soft">({saved.length})</span></h1>
-        <p className="mt-3 text-body-lg text-ink-soft">{c.intro}</p>
+        <h1 className="t-hero">{c.title} {local !== null && <span className="text-ink-soft">({products.length})</span>}</h1>
+        {!signedIn && <p className="mt-3 text-body-lg text-ink-soft">{c.guestNote}</p>}
       </header>
-      {saved.length === 0 ? (
+      {local === null ? (
+        <ul className="mt-10 grid grid-cols-2 gap-x-3 gap-y-10 sm:gap-x-5 md:grid-cols-3 lg:grid-cols-4" aria-busy>
+          {Array.from({ length: 4 }, (_, i) => <li key={i}><Skeleton className="aspect-[4/5] w-full rounded-md" /><Skeleton className="mt-3 h-4 w-3/4" /></li>)}
+        </ul>
+      ) : products.length === 0 ? (
         <div className="mt-10">
-          <EmptyState icon={<Heart className="size-7" aria-hidden />} title={c.empty.title} body={c.empty.body} action={<ButtonLink href="/new-in">{c.emptyCta}</ButtonLink>} />
+          <EmptyState icon={<Heart className="size-7" aria-hidden />} title={c.empty.title} body={c.empty.body} action={<ButtonLink href="/collections">{c.emptyCta}</ButtonLink>} />
         </div>
       ) : (
         <ul className="mt-10 grid grid-cols-2 gap-x-3 gap-y-12 sm:gap-x-5 md:grid-cols-3 lg:grid-cols-4">
-          {saved.map((p) => <WishlistItem key={p.id} product={p} />)}
+          {products.map((p) => <WishlistItem key={p.id} product={p} onRemove={() => remove(p.id)} />)}
         </ul>
       )}
     </div>
   );
 }
 
-function WishlistItem({ product: p }: { product: Product }) {
-  const inStock = p.variants.filter((v) => v.stock > 0);
-  const [variantId, setVariantId] = useState(inStock[0]?.id ?? "");
-  const remove = useWishlist((s) => s.remove);
-  const add = useCart((s) => s.add);
-  const setOpen = useCart((s) => s.setOpen);
-
-  function moveToBag() {
-    const v = inStock.find((x) => x.id === variantId);
+function WishlistItem({ product: p, onRemove }: { product: Product; onRemove: () => void }) {
+  const available = p.variants.filter(inStock);
+  const [variantId, setVariantId] = useState(available[0]?.id ?? "");
+  const moveToBag = () => {
+    const v = available.find((x) => x.id === variantId);
     if (!v) return;
-    add(toCartLine(p, v));
-    remove(p.id);
-    setOpen(true);
-    toast.success(`${p.name} moved to your bag`);
-  }
-
+    addToBag(p, v);
+    onRemove();
+  };
   return (
-    <li className="flex flex-col">
-      <Link href={`/products/${p.slug}`} className="group relative block aspect-[4/5] overflow-hidden rounded-md bg-surface-warm">
-        <Image src={p.images[0].url} alt={p.images[0].alt} fill sizes="(min-width: 1024px) 25vw, 50vw" className="object-cover transition duration-700 group-hover:scale-[1.03]" />
-        {!inStock.length && <span className="absolute left-2.5 top-2.5"><Badge tone="dark">{c.soldOut}</Badge></span>}
-      </Link>
-      <div className="mt-3 flex items-start justify-between gap-2">
-        <Link href={`/products/${p.slug}`} className="min-w-0 truncate text-body font-medium hover:underline">{p.name}</Link>
-        <PriceTag price={p.priceFrom} compareAt={p.compareAtFrom} className="shrink-0" />
-      </div>
-      {inStock.length > 0 && (
+    <li className="flex flex-col gap-3">
+      <ProductCard product={p} sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw" />
+      {available.length > 1 && (
         <>
-          <label htmlFor={`w-${p.id}`} className="sr-only">{c.chooseSize}</label>
+          <label htmlFor={`w-${p.id}`} className="sr-only">{p.optionNames.join(" / ")}</label>
           <select id={`w-${p.id}`} value={variantId} onChange={(e) => setVariantId(e.target.value)}
-            className="mt-3 h-11 rounded-sm border border-line bg-surface px-3 text-meta focus:border-ink focus:outline-none">
-            {inStock.map((v) => <option key={v.id} value={v.id}>{v.color} · {v.size}</option>)}
+            className="h-11 rounded-sm border border-line bg-surface px-3 text-meta focus:border-ink focus:outline-none">
+            {available.map((v) => <option key={v.id} value={v.id}>{v.title}</option>)}
           </select>
         </>
       )}
-      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2">
-        {inStock.length > 0 && <Button size="sm" className="flex-1" onClick={moveToBag}>{c.moveToBag}</Button>}
-        <button type="button" onClick={() => remove(p.id)} className="min-h-9 text-meta text-ink-soft underline underline-offset-4 hover:text-ink">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        {available.length > 0 ? <Button size="sm" className="flex-1" onClick={moveToBag}>{c.moveToBag}</Button> : <span className="flex-1 text-meta font-medium text-danger">{c.soldOut}</span>}
+        <button type="button" onClick={onRemove} className="min-h-11 text-meta text-ink-soft underline underline-offset-4 hover:text-ink">
           {c.remove}<span className="sr-only"> {p.name}</span>
         </button>
       </div>

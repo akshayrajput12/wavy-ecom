@@ -1,102 +1,105 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
+import { clsx } from "clsx";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useForm, useWatch } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
+import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/Button";
-import { evidenceRules, returnReasons } from "@/data/account";
-import type { OrderItem } from "@/types/domain";
+import { returnReasonLabels } from "@/data/copy";
+import { formatDate } from "@/lib/format";
+import { api } from "@/stores/http";
+import { RETURN_REASON, type Order, type OrderItem, type ReturnReason, type ReturnRequest } from "@/types/domain";
+import { ac } from "@/views/account/copy";
+import { returnDeadline } from "../eligibility";
 
-const schema = z.object({
-  itemId: z.string("Select the item to return"),
-  reason: z.enum(returnReasons, "Select a reason"),
-  notes: z.string().max(500, "Keep notes under 500 characters").optional(),
-  evidence: z.custom<FileList | undefined>().superRefine((files, ctx) => {
-    const list = Array.from(files ?? []);
-    if (list.length > evidenceRules.maxFiles) ctx.addIssue({ code: "custom", message: `Attach up to ${evidenceRules.maxFiles} photos` });
-    if (list.some((f) => !evidenceRules.types.includes(f.type))) ctx.addIssue({ code: "custom", message: "Photos must be JPG, PNG or WebP" });
-    if (list.some((f) => f.size > evidenceRules.maxBytes)) ctx.addIssue({ code: "custom", message: "Each photo must be under 5 MB" });
-  }),
-});
-type Values = z.infer<typeof schema>;
+type Resolution = keyof typeof ac.resolutions;
+const field = "h-11 rounded-sm border bg-surface px-3 text-body focus:border-ink focus:outline-none";
 
-export function ReturnForm({ orderNumber, items, preselect }: { orderNumber: string; items: OrderItem[]; preselect?: string }) {
+/** POST /api/returns. The DB enforces window, ownership and quantity; errors come back as shopper text. */
+export function ReturnForm({ order, items, preselect }: { order: Order; items: OrderItem[]; preselect?: string }) {
   const router = useRouter();
-  const { register, handleSubmit, control, formState: { errors, isSubmitting } } = useForm<Values>({
-    resolver: zodResolver(schema), mode: "onTouched",
-    defaultValues: { itemId: preselect ?? (items.length === 1 ? items[0].id : undefined), notes: "" },
-  });
-  const files = Array.from(useWatch({ control, name: "evidence" }) ?? []);
-  const reason = useWatch({ control, name: "reason" });
-  const needsPhotos = reason === "Damaged or defective" || reason === "Received wrong item";
+  const [qty, setQty] = useState<Record<string, number>>(() => (preselect ? { [preselect]: 1 } : items.length === 1 ? { [items[0].id]: 1 } : {}));
+  const [reason, setReason] = useState<ReturnReason | "">("");
+  const [resolution, setResolution] = useState<Resolution>("refund");
+  const [note, setNote] = useState("");
+  const [errors, setErrors] = useState<{ items?: string; reason?: string; form?: string }>({});
+  const [busy, setBusy] = useState(false);
 
-  const onSubmit = async (v: Values) => {
-    const body = new FormData();
-    body.set("orderNumber", orderNumber);
-    body.set("itemId", v.itemId);
-    body.set("reason", v.reason);
-    body.set("notes", v.notes ?? "");
-    Array.from(v.evidence ?? []).forEach((f) => body.append("evidence", f));
-    let ref: string | undefined;
-    try {
-      const res = await fetch("/api/returns", { method: "POST", body });
-      if (res.ok) ref = ((await res.json()) as { data?: { ref?: string } }).data?.ref;
-      else if (res.status !== 404 && res.status !== 501) return void toast.error("We couldn't submit your request. Please try again.");
-    } catch { /* offline or API not built yet: fall through to demo */ }
-    // ponytail: demo fallback until backend builds POST /api/returns
-    ref ??= `RT-${orderNumber.slice(-4)}${Math.floor(Math.random() * 90 + 10)}`;
-    router.push(`/account/returns/success/${ref}?order=${orderNumber}`);
-  };
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    const picked = Object.entries(qty).filter(([, n]) => n > 0);
+    const next = { items: picked.length ? undefined : ac.pickItem, reason: reason ? undefined : ac.selectReason };
+    setErrors(next);
+    if (next.items || next.reason) return;
+    setBusy(true);
+    const r = await api<ReturnRequest>("/api/returns", {
+      body: { orderNumber: order.number, reason, resolution, customerNote: note.trim() || undefined, items: picked.map(([orderItemId, quantity]) => ({ orderItemId, quantity })) },
+    });
+    if (!r.ok) { setBusy(false); return setErrors({ form: r.error.message }); }
+    router.push(`/account/returns/success/${encodeURIComponent(r.data.rmaNumber)}?order=${encodeURIComponent(order.number)}`);
+  }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid gap-6">
-      <fieldset className="grid gap-2" aria-describedby={errors.itemId ? "item-msg" : undefined}>
-        <legend className="mb-2 text-body font-medium">Which item?</legend>
-        {items.map((i) => (
-          <label key={i.id} className="flex cursor-pointer items-center gap-3 rounded-sm border border-line bg-surface p-3 has-[:checked]:border-ink">
-            <input type="radio" value={i.id} className="accent-ink" {...register("itemId")} />
-            <span className="relative size-14 shrink-0 overflow-hidden rounded-sm bg-surface-warm">
-              <Image src={i.image.url} alt={i.image.alt} fill sizes="56px" className="object-cover" />
-            </span>
-            <span className="text-body"><span className="font-medium">{i.name}</span><span className="block t-meta">{i.color} · {i.size} · Qty {i.quantity}</span></span>
-          </label>
-        ))}
-        {errors.itemId && <p id="item-msg" className="text-meta text-danger">⚠ {errors.itemId.message}</p>}
+    <form onSubmit={submit} noValidate className="grid gap-6">
+      <fieldset className="grid gap-2" aria-describedby={errors.items ? "items-msg" : undefined}>
+        <legend className="mb-2 text-body font-medium">{ac.whichItems}</legend>
+        {items.map((i) => {
+          const on = (qty[i.id] ?? 0) > 0;
+          const end = returnDeadline(order, i);
+          return (
+            <div key={i.id} className={clsx("flex flex-wrap items-center gap-3 rounded-md border bg-surface p-3", on ? "border-ink bg-accent-soft" : "border-line")}>
+              <label className="flex min-h-11 flex-1 cursor-pointer items-center gap-3">
+                <input type="checkbox" className="size-5 accent-ink" checked={on} onChange={(e) => setQty((q) => ({ ...q, [i.id]: e.target.checked ? 1 : 0 }))} />
+                <span className="relative size-14 shrink-0 overflow-hidden rounded-sm bg-surface-2">
+                  {i.image?.url && <Image src={i.image.url} alt={i.image.alt || i.name} fill sizes="56px" className="object-cover" />}
+                </span>
+                <span className="text-body">
+                  <span className="font-medium">{i.name}</span>
+                  <span className="block t-meta">{i.variantTitle !== "Default" ? `${i.variantTitle} · ` : ""}{end && ac.returnWindow(formatDate(end))}</span>
+                </span>
+              </label>
+              {on && i.quantity > 1 && (
+                <label className="flex items-center gap-2 text-meta">{ac.qty}
+                  <select className={clsx(field, "border-line")} value={qty[i.id]} onChange={(e) => setQty((q) => ({ ...q, [i.id]: Number(e.target.value) }))}>
+                    {Array.from({ length: Math.min(i.quantity, 10) }, (_, n) => <option key={n} value={n + 1}>{n + 1}</option>)}
+                  </select>
+                </label>
+              )}
+            </div>
+          );
+        })}
+        {errors.items && <p id="items-msg" className="text-meta text-danger">⚠ {errors.items}</p>}
       </fieldset>
 
       <div className="grid gap-1.5">
-        <label htmlFor="reason" className="text-meta font-medium">Reason</label>
-        <select id="reason" defaultValue="" aria-invalid={!!errors.reason} aria-describedby={errors.reason ? "reason-msg" : undefined}
-          className={`h-11 rounded-sm border bg-surface px-3 text-body focus:border-ink focus:outline-none ${errors.reason ? "border-danger" : "border-line"}`}
-          {...register("reason")}>
-          <option value="" disabled>Select a reason</option>
-          {returnReasons.map((r) => <option key={r} value={r}>{r}</option>)}
+        <label htmlFor="reason" className="text-meta font-medium">{ac.reason}</label>
+        <select id="reason" value={reason} onChange={(e) => setReason(e.target.value as ReturnReason)} aria-invalid={!!errors.reason}
+          aria-describedby={errors.reason ? "reason-msg" : undefined} className={clsx(field, errors.reason ? "border-danger" : "border-line")}>
+          <option value="">{ac.selectReason}</option>
+          {RETURN_REASON.map((r) => <option key={r} value={r}>{returnReasonLabels[r]}</option>)}
         </select>
-        {errors.reason && <p id="reason-msg" className="text-meta text-danger">⚠ {errors.reason.message}</p>}
+        {errors.reason && <p id="reason-msg" className="text-meta text-danger">⚠ {errors.reason}</p>}
       </div>
+
+      <fieldset className="grid gap-2">
+        <legend className="mb-2 text-meta font-medium">{ac.resolution}</legend>
+        <div className="flex flex-wrap gap-2">
+          {(Object.keys(ac.resolutions) as Resolution[]).map((k) => (
+            <label key={k} className="flex min-h-11 cursor-pointer items-center gap-2 rounded-pill border border-line bg-surface px-4 has-[:checked]:border-ink has-[:checked]:bg-accent-soft">
+              <input type="radio" name="resolution" value={k} checked={resolution === k} onChange={() => setResolution(k)} className="size-4 accent-ink" /> {ac.resolutions[k]}
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       <div className="grid gap-1.5">
-        <label htmlFor="notes" className="text-meta font-medium">Notes (optional)</label>
-        <textarea id="notes" rows={4} placeholder="Tell us what went wrong — it helps us fix it."
-          className="rounded-sm border border-line bg-surface p-3 text-body focus:border-ink focus:outline-none" {...register("notes")} />
-        {errors.notes && <p className="text-meta text-danger">⚠ {errors.notes.message}</p>}
+        <label htmlFor="note" className="text-meta font-medium">{ac.notes}</label>
+        <textarea id="note" rows={4} maxLength={2000} value={note} onChange={(e) => setNote(e.target.value)}
+          className="rounded-sm border border-line bg-surface p-3 text-body focus:border-ink focus:outline-none" />
       </div>
 
-      <div className="grid gap-1.5">
-        <label htmlFor="evidence" className="text-meta font-medium">Photos {needsPhotos ? "(recommended)" : "(optional)"}</label>
-        <input id="evidence" type="file" multiple accept={evidenceRules.types.join(",")} aria-describedby="evidence-msg"
-          className="text-body file:mr-3 file:min-h-11 file:rounded-pill file:border file:border-ink file:bg-surface file:px-4 file:text-body"
-          {...register("evidence")} />
-        <p id="evidence-msg" className={`text-meta ${errors.evidence ? "text-danger" : "text-ink-soft"}`}>
-          {errors.evidence ? `⚠ ${errors.evidence.message}` : `Up to ${evidenceRules.maxFiles} JPG, PNG or WebP photos, 5 MB each.`}
-        </p>
-        {files.length > 0 && <ul className="t-meta">{files.map((f) => <li key={f.name}>{f.name} · {(f.size / 1024 / 1024).toFixed(1)} MB</li>)}</ul>}
-      </div>
-
-      <Button type="submit" loading={isSubmitting} className="justify-self-start">Submit return request</Button>
+      {errors.form && <p role="alert" className="rounded-md bg-danger/10 px-4 py-3 text-body text-danger">⚠ {errors.form}</p>}
+      <Button type="submit" size="lg" loading={busy} className="sm:justify-self-start">{ac.submitReturn}</Button>
     </form>
   );
 }

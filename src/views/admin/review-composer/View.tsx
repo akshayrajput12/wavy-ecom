@@ -1,74 +1,78 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Info } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { Button } from "@/components/ui/Button";
+import { useState } from "react";
+import { Select, Textarea, Toggle } from "@/components/admin/Fields";
+import { FormSection, PageHeader } from "@/components/admin/Panel";
 import { Input } from "@/components/ui/Input";
-import { Select, Textarea } from "@/components/admin/Fields";
-import { FormSection, PageHeader, Panel } from "@/components/admin/Panel";
-import type { Product } from "@/types/domain";
+import { ReviewPatchSchema, ReviewSchema } from "@/backend/admin/schemas/marketing";
+import type { AdminReview } from "@/types/admin";
+import { REVIEW_STATUS } from "@/types/domain";
 import { mutate } from "../api";
+import { ConfirmDelete } from "../orders/components/ConfirmDelete";
+import { detailErrors, fieldErrors, fromLocalInput, toLocalInput } from "../orders/components/fmt";
+import { FormActions } from "../orders/components/FormActions";
+import { RatingOverride } from "./components/RatingOverride";
 
-const SOURCES = ["In-store feedback", "Email to support", "Social media (with permission)", "Stylist / editorial"];
-const schema = z.object({
-  productId: z.string().min(1, "Pick a product"),
-  author: z.string().trim().min(2, "Author name is required"),
-  source: z.string().min(1, "Where did this review come from?"),
-  rating: z.number().int().min(1).max(5),
-  title: z.string().trim().min(3, "Add a short title"),
-  body: z.string().trim().min(20, "At least 20 characters"),
-  consent: z.literal(true, { error: "Confirm the author agreed to publication" }),
-});
-type Form = z.infer<typeof schema>;
+interface Props { products: { id: string; name: string; slug: string }[]; review?: AdminReview }
 
-/** Editorial review entry. verifiedPurchase is always false here: only the order system can set it. */
-export function ReviewComposerView({ products }: { products: Pick<Product, "id" | "name">[] }) {
+/** Create (/admin/reviews/new) or edit (/admin/reviews/[id]/edit) a review. The product is fixed once created. */
+export function ReviewComposerView({ products, review }: Props) {
   const router = useRouter();
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<Form>({
-    resolver: zodResolver(schema), defaultValues: { rating: 5, productId: "", author: "", source: "", title: "", body: "" },
+  const [f, setF] = useState({
+    productId: review?.productId ?? "", authorName: review?.authorName ?? "", authorLocation: review?.authorLocation ?? "", rating: String(review?.rating ?? 5),
+    title: review?.title ?? "", body: review?.body ?? "", status: review?.status ?? "approved", verifiedPurchase: review?.verifiedPurchase ?? false,
+    createdAt: toLocalInput(review?.createdAt),
   });
-  const onSubmit = async (v: Form) => {
-    // TODO(backend agent): call /api/admin/reviews — server forces verifiedPurchase=false, status=pending, stores source + actor
-    const ok = await mutate("reviews", { ...v, verifiedPurchase: false, origin: "admin_composed" }, { success: "Review saved to moderation queue" });
-    if (ok) router.push("/admin/reviews");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((p) => ({ ...p, [k]: v }));
+  const text = (k: keyof typeof f) => ({ value: String(f[k]), onChange: (e: { target: { value: string } }) => set(k, e.target.value as never), error: errors[k] });
+  const product = products.find((p) => p.id === f.productId);
+  const done = () => { router.push("/admin/reviews"); router.refresh(); };
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const body = {
+      authorName: f.authorName.trim(), authorLocation: f.authorLocation.trim() || null, rating: Number(f.rating), title: f.title.trim(), body: f.body.trim(),
+      status: f.status, verifiedPurchase: f.verifiedPurchase, ...(f.createdAt ? { createdAt: fromLocalInput(f.createdAt) ?? undefined } : {}),
+    };
+    const parsed = review ? ReviewPatchSchema.safeParse(body) : ReviewSchema.safeParse({ ...body, productId: f.productId });
+    if (!parsed.success) return setErrors(fieldErrors(parsed.error));
+    setErrors({});
+    setSaving(true);
+    const res = await mutate(review ? "PATCH" : "POST", review ? `reviews/${review.id}` : "reviews", parsed.data, { success: review ? "Review saved" : "Review created" });
+    setSaving(false);
+    if (res.ok) done(); else setErrors(detailErrors(res.details));
   };
+  const remove = async () => {
+    setSaving(true);
+    const res = await mutate("DELETE", `reviews/${review?.id}`, undefined, { success: "Review deleted" });
+    setSaving(false);
+    if (res.ok) done();
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      <PageHeader title="Compose review" description="Record genuine feedback received outside the site."
-        actions={<Button type="submit" size="sm" loading={isSubmitting}>Save for moderation</Button>} />
-      <Panel>
-        <p className="mb-6 flex gap-2 rounded-sm bg-info/10 p-3 text-body text-info">
-          <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
-          Composed reviews are labelled “Editorial” and can never show “Verified purchase”. Only reviews tied to a delivered order are verified.
-        </p>
+    <>
+      <PageHeader title={review ? "Edit review" : "Add review"} description="Admin-entered reviews are labelled with source admin. Mark verified only if an order backs it." />
+      <form onSubmit={save} noValidate>
         <FormSection title="Review">
-          <Select label="Product" error={errors.productId?.message} {...register("productId")}>
-            <option value="">Select…</option>{products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          <Select label="Product" value={f.productId} disabled={!!review} onChange={(e) => set("productId", e.target.value)} error={errors.productId}>
+            <option value="">Choose a product</option>{products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </Select>
-          <Select label="Rating" {...register("rating", { valueAsNumber: true })}>
-            {[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} star{n > 1 && "s"}</option>)}
-          </Select>
-          <Input label="Title" className="sm:col-span-2" error={errors.title?.message} {...register("title")} />
-          <Textarea label="Review" wrapperClassName="sm:col-span-2" error={errors.body?.message} {...register("body")} />
+          <Select label="Rating" value={f.rating} onChange={(e) => set("rating", e.target.value)} error={errors.rating}>{[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} stars</option>)}</Select>
+          <Input label="Title" {...text("title")} maxLength={120} className="sm:col-span-2" />
+          <Textarea label="Review text" value={f.body} onChange={(e) => set("body", e.target.value)} error={errors.body} wrapperClassName="sm:col-span-2" maxLength={5000} />
         </FormSection>
-        <FormSection title="Provenance" description="Kept for audit; not shown publicly.">
-          <Input label="Author display name" error={errors.author?.message} {...register("author")} />
-          <Select label="Source" error={errors.source?.message} {...register("source")}>
-            <option value="">Select…</option>{SOURCES.map((s) => <option key={s}>{s}</option>)}
-          </Select>
-          <div className="sm:col-span-2">
-            <p className="text-meta font-medium">Verified purchase</p>
-            <p className="t-meta">Not verified (locked). Editorial reviews can’t claim a purchase.</p>
-          </div>
-          <label className="flex items-start gap-2 text-body sm:col-span-2">
-            <input type="checkbox" className="mt-1 size-4 accent-ink" {...register("consent")} />
-            <span>The author agreed to have this published with their name.{errors.consent && <span className="block text-meta text-danger">⚠ {errors.consent.message}</span>}</span>
-          </label>
+        <FormSection title="Author and status">
+          <Input label="Author name" {...text("authorName")} maxLength={60} /><Input label="Location" {...text("authorLocation")} maxLength={60} />
+          <Select label="Status" value={f.status} onChange={(e) => set("status", e.target.value as typeof f.status)}>{REVIEW_STATUS.map((s) => <option key={s}>{s}</option>)}</Select>
+          <Input label="Review date" type="datetime-local" {...text("createdAt")} hint="Optional: backdate an imported review" />
+          <div className="sm:col-span-2"><Toggle label="Verified purchase" description="Shows the verified badge." checked={f.verifiedPurchase} onChange={(v) => set("verifiedPurchase", v)} /></div>
         </FormSection>
-      </Panel>
-    </form>
+        <FormActions saving={saving} backHref="/admin/reviews" extra={review && <ConfirmDelete busy={saving} onConfirm={() => void remove()} />} />
+      </form>
+      {product && <div className="mt-8"><RatingOverride key={product.slug} slug={product.slug} /></div>}
+    </>
   );
 }

@@ -1,83 +1,87 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
-import { useForm, useWatch } from "react-hook-form";
-import { z } from "zod";
-import { Button } from "@/components/ui/Button";
+import { useState } from "react";
 import { Input } from "@/components/ui/Input";
 import { Select, Textarea } from "@/components/admin/Fields";
-import { FormSection, PageHeader, Panel } from "@/components/admin/Panel";
+import { PageHeader, Panel } from "@/components/admin/Panel";
 import { SeoFields } from "@/components/admin/SeoFields";
-import type { AdminBlogPost } from "@/data/admin/types";
+import { BlogPostSchema } from "@/backend/admin/schemas/content";
+import type { AdminBlogCategory, AdminBlogPost } from "@/types/admin";
 import { slugify } from "@/lib/format";
-import { mutate } from "../api";
+import { BackLink, DeleteButton, EditorForm } from "../_kit/Chrome";
+import { useEditor } from "../_kit/useEditor";
+import { CoverField } from "./components/CoverField";
+import { MarkdownPreview } from "./components/MarkdownPreview";
 
-const schema = z.object({
-  title: z.string().trim().min(4, "Title is required"),
-  slug: z.string().regex(/^[a-z0-9-]+$/, "Lowercase letters, numbers and dashes"),
-  excerpt: z.string().trim().min(10, "Write a one-line excerpt"),
-  body: z.string(),
-  author: z.string().min(2),
-  tags: z.string(),
-  status: z.enum(["draft", "scheduled", "published"]),
-  publishAt: z.string(),
-  seoTitle: z.string().max(70), seoDescription: z.string().max(170),
-}).refine((v) => v.status !== "scheduled" || v.publishAt, { path: ["publishAt"], message: "Pick a date to schedule" })
-  .refine((v) => v.status === "draft" || v.body.trim().length >= 50, { path: ["body"], message: "At least 50 characters before publishing" });
-type Form = z.infer<typeof schema>;
+const local = (iso: string | null) => (iso ? new Date(iso).toISOString().slice(0, 16) : "");
 
-// datetime-local values are treated as IST ("YYYY-MM-DDTHH:mm"), independent of server/browser timezone.
-const IST = 330 * 60000;
-const toLocal = (iso?: string) => (iso ? new Date(new Date(iso).getTime() + IST).toISOString().slice(0, 16) : "");
-const fromLocal = (v: string) => new Date(`${v}:00+05:30`).toISOString();
+export function BlogEditorView({ post, categories }: { post: AdminBlogPost | null; categories: AdminBlogCategory[] }) {
+  const [touched, setTouched] = useState(!!post);
+  const [preview, setPreview] = useState(false);
+  const { v, set, errors, busy, save, remove } = useEditor({
+    title: post?.title ?? "", slug: post?.slug ?? "", excerpt: post?.excerpt ?? "", coverUrl: post?.coverUrl ?? "", coverAlt: post?.coverAlt ?? "",
+    body: post?.body ?? "", status: post?.status ?? "draft", scheduledFor: local(post?.scheduledFor ?? null), authorName: post?.authorName ?? "",
+    categoryId: post?.categoryId ?? "", tags: (post?.tags ?? []).join(", "), seoTitle: post?.seoTitle ?? "", seoDescription: post?.seoDescription ?? "",
+    canonicalUrl: post?.canonicalUrl ?? "", noindex: post?.noindex ?? false,
+  }, { schema: BlogPostSchema, back: "/admin/blog" });
 
-export function BlogEditorView({ post }: { post: AdminBlogPost | null }) {
-  const router = useRouter();
-  const { register, control, handleSubmit, setValue, getValues, formState: { errors, isSubmitting } } = useForm<Form>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      title: post?.title ?? "", slug: post?.slug ?? "", excerpt: post?.excerpt ?? "", body: post?.body ?? "", author: post?.author ?? "Editorial",
-      tags: post?.tags.join(", ") ?? "", status: post?.status ?? "draft", publishAt: toLocal(post?.publishAt),
-      seoTitle: post?.seo.title ?? "", seoDescription: post?.seo.description ?? "",
-    },
-  });
-  const [slug, status, seoTitle, seoDescription] = useWatch({ control, name: ["slug", "status", "seoTitle", "seoDescription"] });
-
-  const onSubmit = async (v: Form) => {
-    const payload = { ...v, id: post?.id, tags: v.tags.split(",").map((t) => t.trim()).filter(Boolean),
-      publishAt: v.status === "published" && !v.publishAt ? new Date().toISOString() : v.publishAt && fromLocal(v.publishAt) };
-    // TODO(backend agent): call /api/admin/blog (scheduled posts published by cron; revalidates /journal)
-    if (await mutate(post ? `blog/${post.id}` : "blog", payload, { success: v.status === "published" ? "Post published" : v.status === "scheduled" ? "Post scheduled" : "Draft saved" })) router.push("/admin/blog");
-  };
+  const submit = () => save(post ? "PATCH" : "POST", post ? `blog/${post.id}` : "blog", {
+    title: v.title, slug: v.slug, excerpt: v.excerpt, coverUrl: v.coverUrl || null, coverAlt: v.coverAlt, body: v.body,
+    status: v.status, scheduledFor: v.status === "scheduled" && v.scheduledFor ? new Date(v.scheduledFor).toISOString() : null,
+    ...(v.authorName ? { authorName: v.authorName } : {}), categoryId: v.categoryId || null,
+    tags: v.tags.split(",").map((t) => t.trim()).filter(Boolean),
+    seoTitle: v.seoTitle || null, seoDescription: v.seoDescription || null, canonicalUrl: v.canonicalUrl || null, noindex: v.noindex,
+  }, post ? "Post saved" : "Post created");
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      <PageHeader title={post ? "Edit post" : "New post"} actions={<>
-        <Button type="button" size="sm" variant="ghost" onClick={() => router.push("/admin/blog")}>Cancel</Button>
-        <Button type="submit" size="sm" loading={isSubmitting}>{status === "published" ? "Publish" : status === "scheduled" ? "Schedule" : "Save draft"}</Button>
-      </>} />
-      <div className="grid gap-6 xl:grid-cols-[1fr_300px]">
-        <Panel>
-          <FormSection title="Content">
-            <Input label="Title" className="sm:col-span-2" error={errors.title?.message} {...register("title", { onBlur: (e) => !getValues("slug") && setValue("slug", slugify(e.target.value)) })} />
-            <Input label="Slug" hint={`/journal/${slug || "…"}`} error={errors.slug?.message} {...register("slug")} />
-            <Input label="Tags (comma separated)" {...register("tags")} />
-            <Textarea label="Excerpt" wrapperClassName="sm:col-span-2" error={errors.excerpt?.message} {...register("excerpt")} />
-            <Textarea label="Body (Markdown)" wrapperClassName="sm:col-span-2" className="min-h-72 font-mono text-meta" error={errors.body?.message} {...register("body")} />
-          </FormSection>
-          <FormSection title="Search appearance">
-            <SeoFields title={seoTitle} description={seoDescription} path={`/journal/${slug}`} titleProps={register("seoTitle")} descriptionProps={register("seoDescription")} />
-          </FormSection>
-        </Panel>
-        <Panel title="Publishing">
+    <>
+      <BackLink href="/admin/blog">All posts</BackLink>
+      <PageHeader title={post ? "Edit post" : "New post"} />
+      <EditorForm onSave={submit} busy={busy} back="/admin/blog"
+        danger={post && <DeleteButton busy={busy} onConfirm={() => void remove(`blog/${post.id}`, "Post deleted")} />}>
+        <Panel title="Content">
           <div className="grid gap-4">
-            <Select label="Status" {...register("status")}><option value="draft">Draft</option><option value="scheduled">Scheduled</option><option value="published">Published</option></Select>
-            {status !== "draft" && <Input label={status === "scheduled" ? "Publish at (IST)" : "Published at (IST)"} type="datetime-local" error={errors.publishAt?.message} {...register("publishAt")} />}
-            <Input label="Author" error={errors.author?.message} {...register("author")} />
+            <Input label="Title" value={v.title} error={errors.title}
+              onChange={(e) => { set("title", e.target.value); if (!touched) set("slug", slugify(e.target.value)); }} />
+            <Input label="Slug" value={v.slug} error={errors.slug} hint="URL: /journal/<slug>" onChange={(e) => { setTouched(true); set("slug", e.target.value); }} />
+            <Textarea label="Excerpt" value={v.excerpt} error={errors.excerpt} onChange={(e) => set("excerpt", e.target.value)} />
+            <div>
+              <div className="mb-1.5 flex items-center justify-between">
+                <span className="text-meta font-medium">Body (markdown)</span>
+                <button type="button" aria-pressed={preview} className="min-h-11 px-2 text-meta underline" onClick={() => setPreview((p) => !p)}>{preview ? "Edit" : "Preview"}</button>
+              </div>
+              {preview
+                ? <div className="min-h-64 rounded-sm border border-line p-4"><MarkdownPreview text={v.body} /></div>
+                : <Textarea label="Body" className="min-h-64 font-mono" value={v.body} error={errors.body} onChange={(e) => set("body", e.target.value)} wrapperClassName="[&>label]:sr-only" />}
+            </div>
           </div>
         </Panel>
-      </div>
-    </form>
+        <Panel title="Cover image">
+          <CoverField url={v.coverUrl} alt={v.coverAlt} onUrl={(x) => set("coverUrl", x)} onAlt={(x) => set("coverAlt", x)} error={errors.coverUrl} />
+        </Panel>
+        <Panel title="Publishing">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Select label="Status" value={v.status} onChange={(e) => set("status", e.target.value as typeof v.status)}>
+              <option value="draft">Draft</option><option value="scheduled">Scheduled</option><option value="published">Published</option><option value="archived">Archived</option>
+            </Select>
+            {v.status === "scheduled" && <Input label="Publish at" type="datetime-local" value={v.scheduledFor} error={errors.scheduledFor} onChange={(e) => set("scheduledFor", e.target.value)} />}
+            <Input label="Author" value={v.authorName} error={errors.authorName} onChange={(e) => set("authorName", e.target.value)} />
+            <Select label="Category" value={v.categoryId} onChange={(e) => set("categoryId", e.target.value)}>
+              <option value="">None</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </Select>
+            <Input label="Tags" hint="Comma separated" className="sm:col-span-2" value={v.tags} error={errors.tags} onChange={(e) => set("tags", e.target.value)} />
+          </div>
+        </Panel>
+        <Panel title="SEO">
+          <div className="grid gap-4">
+            <SeoFields title={v.seoTitle} description={v.seoDescription} path={`/journal/${v.slug}`}
+              titleProps={{ value: v.seoTitle, onChange: (e) => set("seoTitle", e.target.value) }}
+              descriptionProps={{ value: v.seoDescription, onChange: (e) => set("seoDescription", e.target.value) }} />
+            <Input label="Canonical URL" value={v.canonicalUrl} error={errors.canonicalUrl} onChange={(e) => set("canonicalUrl", e.target.value)} />
+            <label className="flex min-h-11 items-center gap-2 text-body"><input type="checkbox" className="size-4 accent-ink" checked={v.noindex} onChange={(e) => set("noindex", e.target.checked)} />Hide from search engines (noindex)</label>
+          </div>
+        </Panel>
+      </EditorForm>
+    </>
   );
 }

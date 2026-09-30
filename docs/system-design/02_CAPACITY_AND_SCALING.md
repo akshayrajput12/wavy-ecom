@@ -88,7 +88,6 @@ Two layers:
 | `POST /api/checkout` | cart_id + IP | 6 / 10 min | 429 |
 | `POST /api/payments/intent` | order_id | 5 / 15 min | 429, UI says "Too many attempts, wait a few minutes" |
 | `GET /api/track/[token]` | IP | 30 / 60 s | 429 |
-| `POST /api/tryon/sessions` | visitor/user | 10 / day (cloud VTON only) | 429 `tryon_quota` |
 | `POST /api/analytics/events` | visitor id | 60 / 60 s | drop silently (202) |
 | Webhooks | not rate limited | signature verification is the gate | — |
 

@@ -20,7 +20,6 @@ flowchart LR
   D --- CNT[Content & SEO]
   CNT --> BLOG[Journal / blog] & PAGES[FAQ · About · Lookbook] & SEO[SEO manager]
   D --- AN[Analytics]
-  AN --> AC[Commerce] & AP[Payments] & AT[AI try-on]
   D --- SET[Settings]
   SET --> SH[Shipping] & PAY[Payment gateways] & TAX[Tax] & INT[Integrations] & STF[Staff & roles] & AUD[Audit log]
 ```
@@ -31,7 +30,6 @@ flowchart LR
 |---|---|---|---|---|
 | Dashboard | `/admin` | `dashboard.view` | KPI tiles (today / 7 d / 30 d revenue, orders, AOV, conversion); orders needing action (paid but not packed > 24 h, NDR, return requests); low-stock list; integration alerts banner; payment failure rate by stage; open `reconciliation_issues`; shortcuts | `daily_metrics`, `v_ops_queue`, `integration_configs` |
 | Products | `/admin/products` | `catalog.read` | table: image, name, category, status badge, variants count, stock sum, price range, updated; filters status/category/collection/stock; bulk publish/unpublish/archive | `products`, `product_variants` |
-| Product editor | `/admin/products/[id]` | `catalog.write` | info (name, slug, descriptor, description, material, fit, care, badges); media (drag order, 4:5 crop, alt text required); variant matrix colour × size (SKU, price, compare-at, stock link, barcode, status); try-on enable and garment asset; SEO panel (§3); publish state + schedule; change history | `products`, `product_variants`, `product_media`, Storage `product-media`; `updateTag('product:<id>')` on save |
 | Categories | `/admin/categories` | `catalog.write` | tree with drag reorder, parent, media, `returnable`, tax rule link, SEO | `categories` |
 | Collections | `/admin/collections` | `catalog.write` | manual membership or rule (tag/category/price), hero media, SEO, status | `collections`, `collection_products` |
 | Inventory | `/admin/inventory` | `inventory.adjust` | variant matrix per product: on-hand, reserved, available, low-stock threshold; adjustment with reason (`restock`, `damage`, `correction`, `return_restock`); CSV import (SKU,qty); movement ledger | `product_variants`, `inventory_movements`, `inventory_reservations` |
@@ -49,7 +47,6 @@ flowchart LR
 | Pages | `/admin/content/pages` | `content.write` | FAQ (categories, Q/A, order), About blocks, Lookbook (looks with hotspots → products) | `content_pages`, `faq_items`, `lookbook_looks` |
 | SEO manager | `/admin/seo` | `seo.manage` | see §3 | `seo_overrides`, `seo_settings`, `redirects` |
 | Analytics | `/admin/analytics` | `analytics.read` | date range; revenue, orders, AOV, conversion; funnel; product/category tables; coupons and offers uptake; payments by provider/method/failure stage | `daily_metrics`, `analytics_events` (replica) |
-| AI try-on analytics | `/admin/analytics/try-on` | `analytics.read` | generations, completion rate, failure classes (input vs provider), try-on → ATC, try-on → purchase, on-device vs cloud split, cloud cost/day, TTL compliance (assets deleted on time) | `tryon_sessions`, `analytics_events` |
 | Shipping settings | `/admin/settings/shipping` | `settings.shipping` | pickup locations (Shiprocket pickup nickname), free threshold, fees, express toggle, COD toggle + max value + fee, dispatch SLA, return window days, returns courier, package presets (weight/dims per category) | `settings` (key `shipping`) |
 | Payment gateways | `/admin/settings/payments` | `settings.payments` | per gateway: configured? (env), connection status, enabled toggle, default radio, display name, order, min/max amount; COD limits; test/live badge (03 §3) | `payment_gateways` |
 | Tax settings | `/admin/settings/tax` | `settings.tax` | inclusive/exclusive, default rate, slab rules per category, shipping tax mode, GSTIN, store state, invoice prefix and next number | `settings` (key `tax`), `tax_rules` |

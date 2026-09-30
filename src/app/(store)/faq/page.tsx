@@ -1,20 +1,21 @@
 import type { Metadata } from "next";
-import { getFaqs } from "@/backend/content/repo";
-import { faqCopy } from "@/data/content";
+import { listFaqs } from "@/backend/content/repo";
+import { getStoreSettings } from "@/backend/settings/repo";
+import { faqPageCopy } from "@/data/copy";
 import { FaqView } from "@/views/content/FaqView";
 
-export const metadata: Metadata = { title: faqCopy.title, description: faqCopy.intro };
+export const metadata: Metadata = { title: faqPageCopy.title, alternates: { canonical: "/faq" } };
 
 export default async function FaqRoute() {
-  const groups = await getFaqs();
+  const [faqs, settings] = await Promise.all([listFaqs(), getStoreSettings()]);
   const jsonLd = {
     "@context": "https://schema.org", "@type": "FAQPage",
-    mainEntity: groups.flatMap((g) => g.items.map((i) => ({ "@type": "Question", name: i.q, acceptedAnswer: { "@type": "Answer", text: i.a } }))),
+    mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.question, acceptedAnswer: { "@type": "Answer", text: f.answer } })),
   };
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\u003c") }} />
-      <FaqView groups={groups} />
+      {faqs.length > 0 && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\u003c") }} />}
+      <FaqView faqs={faqs} supportEmail={settings?.supportEmail} />
     </>
   );
 }

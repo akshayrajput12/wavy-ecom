@@ -7,23 +7,26 @@
 --   get_order_tracking(token)  public, safe fields only
 --   get_customer_journey(user) support timeline
 -- Order status transitions + history, refund bookkeeping triggers.
+-- State machines are summarised in docs/database/SCHEMA.md.
 -- =============================================================================
 
 -- ---------- discount targeting ----------
+-- Is one unit (variant of product, in category path, in collections) eligible for a coupon/offer?
+-- No include rows = everything; exclude always wins. p_category_path = category_path(category_id),
+-- so a category target also matches every descendant category.
 create or replace function public.discount_target_match(
-  p_coupon_id uuid, p_offer_id uuid, p_product_id uuid, p_category_path uuid[], p_collection_ids uuid[]
+  p_coupon_id uuid, p_offer_id uuid, p_product_id uuid, p_variant_id uuid,
+  p_category_path uuid[], p_collection_ids uuid[]
 ) returns boolean language sql stable set search_path = '' as $$
   with t as (
-    select * from public.discount_targets d
+    select d.mode,
+           (d.product_id = p_product_id or d.variant_id = p_variant_id or d.category_id = any (p_category_path)
+            or d.collection_id = any (p_collection_ids)) is true as hit
+    from public.discount_targets d
     where (p_coupon_id is not null and d.coupon_id = p_coupon_id) or (p_offer_id is not null and d.offer_id = p_offer_id)
   )
-  select (not exists (select 1 from t where t.mode = 'include')
-          or exists (select 1 from t where t.mode = 'include'
-                       and (t.product_id = p_product_id or t.category_id = any (p_category_path)
-                            or t.collection_id = any (p_collection_ids))))
-     and not exists (select 1 from t where t.mode = 'exclude'
-                       and (t.product_id = p_product_id or t.category_id = any (p_category_path)
-                            or t.collection_id = any (p_collection_ids)));
+  select (not exists (select 1 from t where t.mode = 'include') or exists (select 1 from t where t.mode = 'include' and t.hit))
+     and not exists (select 1 from t where t.mode = 'exclude' and t.hit);
 $$;
 
 -- =============================================================================
@@ -33,6 +36,13 @@ $$;
 --   {valid, errors[], lines[], subtotal, offerDiscount, couponDiscount, discount, shipping, codFee,
 --    tax, taxRate, taxInclusive, total, currency, appliedCoupon, coupon{}, appliedDiscounts[],
 --    offerNudges[{offerId,message,itemsNeeded}], shippingMethod{}}
+-- lines[]: {variantId, productId, categoryId, sku, name, brand, slug, variantTitle, options[{name,value}],
+--           image, unitPrice, compareAtPrice, quantity, maxQuantity, lineSubtotal, discount, lineTotal,
+--           hsnCode, returnWindowDays}
+-- errors[]: {variantId?, code: variant_not_found|unavailable|invalid_quantity|insufficient_stock|
+--           shipping_method_unavailable|gateway_disabled|cod_unavailable|cod_limit_exceeded|empty_cart, ...}
+-- coupon.error: coupon_not_found|coupon_inactive|coupon_not_started|coupon_expired|coupon_usage_limit_reached|
+--           coupon_already_used|coupon_first_order_only|coupon_min_order_not_met|coupon_not_applicable
 -- Offer rules: each unit gets at most one offer (priority desc). Bundles/BOGO group the most
 -- expensive eligible units first (customer-favourable). Coupon applies after offers.
 -- Tax: single store rate. Inclusive -> tax is the GST contained in the price.
@@ -101,10 +111,13 @@ begin
     from jsonb_array_elements(coalesce(p_items, '[]'::jsonb)) with ordinality as t(e, ord)
     group by 1
   ), j as (
-    select r.variant_id, r.qty, r.ord, v.sku, v.color, v.size, v.price, v.compare_at, v.status as vstatus,
-           p.id as product_id, p.name, p.slug, p.status as pstatus, p.category_id, i.available,
+    select r.variant_id, r.qty, r.ord, v.sku, v.title, v.price, v.compare_at_price, v.status as vstatus,
+           p.id as product_id, p.name, p.brand, p.slug, p.status as pstatus, p.category_id, p.hsn_code, i.available,
+           case when p.returnable then coalesce(p.return_window_days, s.return_window_days) else 0 end as return_days,
            (select pm.url from public.product_media pm where pm.product_id = p.id
-             order by (pm.color is not distinct from v.color) desc, pm.is_primary desc, pm.sort_order limit 1) as image_url,
+             order by (pm.variant_id = v.id) is true desc,
+                      (pm.option_value in (v.option1, v.option2, v.option3)) is true desc,
+                      pm.is_primary desc, pm.position limit 1) as image_url,
            case
              when v.id is null then 'variant_not_found'
              when p.status <> 'published' or v.status = 'disabled' then 'unavailable'
@@ -119,8 +132,10 @@ begin
   select
     coalesce(jsonb_agg(jsonb_build_object(
       'variantId', variant_id, 'productId', product_id, 'categoryId', category_id, 'sku', sku, 'name', name,
-      'slug', slug, 'color', color, 'size', size, 'image', image_url, 'unitPrice', price, 'compareAt', compare_at,
-      'quantity', qty, 'maxQuantity', least(coalesce(available, 0), 10), 'lineSubtotal', price * qty) order by ord)
+      'brand', brand, 'slug', slug, 'variantTitle', title, 'options', public.variant_options(variant_id),
+      'image', image_url, 'unitPrice', price, 'compareAtPrice', compare_at_price, 'quantity', qty,
+      'maxQuantity', least(coalesce(available, 0), 10), 'lineSubtotal', price * qty,
+      'hsnCode', hsn_code, 'returnWindowDays', return_days) order by ord)
       filter (where err is null), '[]'),
     coalesce(jsonb_agg(jsonb_build_object('variantId', variant_id, 'code', err, 'available', coalesce(available, 0)) order by ord)
       filter (where err is not null), '[]')
@@ -149,7 +164,7 @@ begin
   loop
     update pg_temp._pricing_units u
        set eligible = (u.offer_id is null
-                       and public.discount_target_match(null, o.id, u.product_id, u.category_path, u.collection_ids));
+                       and public.discount_target_match(null, o.id, u.product_id, u.variant_id, u.category_path, u.collection_ids));
     select count(*) into v_n from pg_temp._pricing_units where eligible;
     continue when v_n = 0;
     v_sets := 0;
@@ -260,14 +275,15 @@ begin
 
     if v_err is null then
       update pg_temp._pricing_units u
-         set eligible = public.discount_target_match(c.id, null, u.product_id, u.category_path, u.collection_ids)
+         set eligible = public.discount_target_match(c.id, null, u.product_id, u.variant_id, u.category_path, u.collection_ids)
                         and (c.combinable_with_offers or u.offer_id is null);
       select coalesce(sum(unit_price - offer_discount), 0) into v_base from pg_temp._pricing_units where eligible;
 
-      if c.type = 'free_shipping' then
-        v_free_ship := v_subtotal > 0;
-      elsif v_base <= 0 then
+      -- every coupon type (free shipping included) needs at least one eligible item
+      if v_base <= 0 then
         v_err := 'coupon_not_applicable';
+      elsif c.type = 'free_shipping' then
+        v_free_ship := true;
       else
         v_coupon_disc := case c.type
           when 'percent' then least((v_base::bigint * c.value / 100)::int, coalesce(c.max_discount_amount, v_base))
@@ -598,10 +614,12 @@ begin
     p_payload ->> 'notes', nullif(p_payload ->> 'customerIp', '')::inet, p_payload ->> 'userAgent')
   returning * into v_order;
 
-  insert into public.order_items (order_id, product_id, variant_id, sku, product_name, color, size, image_url,
-                                  unit_price, compare_at, quantity, line_subtotal, discount_allocated, line_total)
-  select v_order.id, (l ->> 'productId')::uuid, (l ->> 'variantId')::uuid, l ->> 'sku', l ->> 'name', l ->> 'color',
-         l ->> 'size', l ->> 'image', (l ->> 'unitPrice')::int, (l ->> 'compareAt')::int, (l ->> 'quantity')::int,
+  insert into public.order_items (order_id, product_id, variant_id, sku, product_name, brand, variant_title, options,
+                                  hsn_code, return_window_days, image_url, unit_price, compare_at_price, quantity,
+                                  line_subtotal, discount_allocated, line_total)
+  select v_order.id, (l ->> 'productId')::uuid, (l ->> 'variantId')::uuid, l ->> 'sku', l ->> 'name', l ->> 'brand',
+         l ->> 'variantTitle', l -> 'options', l ->> 'hsnCode', (l ->> 'returnWindowDays')::int, l ->> 'image',
+         (l ->> 'unitPrice')::int, (l ->> 'compareAtPrice')::int, (l ->> 'quantity')::int,
          (l ->> 'lineSubtotal')::int, (l ->> 'discount')::int, (l ->> 'lineTotal')::int
   from jsonb_array_elements(v_quote -> 'lines') l;
 
@@ -672,6 +690,9 @@ begin
   if v_order.status <> 'pending_payment' then
     raise exception 'order_not_payable' using errcode = 'P0001', detail = v_order.status::text;
   end if;
+  if p_provider = 'cod' then
+    raise exception 'cod_is_confirmed_at_place_order' using errcode = '22023';
+  end if;
   if not coalesce((select g.is_enabled from public.payment_gateways g where g.provider = p_provider), false) then
     raise exception 'gateway_disabled' using errcode = 'P0001';
   end if;
@@ -693,7 +714,9 @@ begin
           p_raw_request, p_client_ip, p_user_agent)
   returning * into v_attempt;
 
-  update public.orders set payment_status = 'initiated' where id = p_order_id and payment_status = 'failed';
+  -- retry after a failure / switch of online gateway: the order follows the latest attempt
+  update public.orders set payment_status = 'initiated', payment_provider = p_provider
+   where id = p_order_id and (payment_status = 'failed' or payment_provider <> p_provider);
   -- give the customer time to finish paying
   update public.inventory_reservations set expires_at = greatest(expires_at, now() + interval '15 minutes')
    where order_id = p_order_id and status = 'active' and expires_at is not null;
@@ -915,7 +938,11 @@ begin
   perform set_config('wavy.status_note', '', true);
   update public.checkout_sessions set status = 'expired' where order_id = p_order_id and status <> 'completed';
 
-  return public.order_json(v_order) || jsonb_build_object('refundRequired', v_order.payment_status = 'captured');
+  -- money still held for a cancelled order must go back (partially refunded included)
+  return public.order_json(v_order) || jsonb_build_object('refundRequired',
+    v_order.payment_status in ('captured', 'partially_refunded'),
+    'refundableAmount', coalesce((select sum(p.amount_captured - p.amount_refunded) from public.payments p
+                                   where p.order_id = p_order_id), 0));
 end $$;
 
 -- Cancel unpaid orders whose holds expired; drop orphan checkout holds. Run every 5 min.
@@ -973,6 +1000,24 @@ end $$;
 create trigger refunds_before_insert before insert on public.refunds
   for each row execute function public.refunds_before_insert();
 
+-- pending -> processing -> processed | failed. processed is terminal (money has moved).
+create or replace function public.refunds_before_update()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+  if new.amount is distinct from old.amount or new.payment_id is distinct from old.payment_id
+     or new.order_id is distinct from old.order_id then
+    raise exception 'refund amount/payment/order are immutable' using errcode = '42501';
+  end if;
+  if old.status = 'processed' and new.status <> 'processed' then
+    raise exception 'refund_already_processed' using errcode = 'P0001';
+  end if;
+  if new.status = 'processed' then new.processed_at := coalesce(new.processed_at, now()); end if;
+  if new.status = 'failed' then new.failed_at := coalesce(new.failed_at, now()); end if;
+  return new;
+end $$;
+create trigger refunds_before_update before update on public.refunds
+  for each row execute function public.refunds_before_update();
+
 create or replace function public.refunds_after_processed()
 returns trigger language plpgsql security definer set search_path = '' as $$
 declare v_payment public.payments; v_is_dupe boolean;
@@ -1018,8 +1063,9 @@ begin
     'shipTo', jsonb_build_object('name', split_part(coalesce(o.shipping_address ->> 'name', ''), ' ', 1),
                                  'city', o.shipping_address ->> 'city', 'state', o.shipping_address ->> 'state',
                                  'postalCode', o.shipping_address ->> 'postalCode'),
-    'items', (select coalesce(jsonb_agg(jsonb_build_object('name', i.product_name, 'color', i.color, 'size', i.size,
-                                                           'quantity', i.quantity, 'image', i.image_url)), '[]')
+    'items', (select coalesce(jsonb_agg(jsonb_build_object('name', i.product_name, 'variantTitle', i.variant_title,
+                                                           'options', i.options, 'quantity', i.quantity,
+                                                           'image', i.image_url) order by i.created_at, i.id), '[]')
                 from public.order_items i where i.order_id = o.id),
     'shipment', (select jsonb_build_object(
                    'carrier', sh.courier_name, 'awb', sh.awb, 'status', sh.status, 'eta', sh.eta,
@@ -1035,7 +1081,7 @@ begin
 end $$;
 
 -- =============================================================================
--- Support: one customer's full journey (events, orders, payment tries, tickets, try-ons).
+-- Support: one customer's full journey (events, orders, payment tries, tickets).
 -- =============================================================================
 create or replace function public.get_customer_journey(p_user_id uuid, p_limit integer default 200)
 returns table (occurred_at timestamptz, kind text, summary text, ref_id text, detail jsonb)
@@ -1066,10 +1112,6 @@ begin
     select t.created_at, 'support_ticket'::text, t.ticket_number || ' ' || t.subject, t.id::text,
            jsonb_build_object('status', t.status, 'category', t.category)
       from public.support_tickets t where t.user_id = p_user_id
-    union all
-    select ts.created_at, 'try_on'::text, ts.status::text, ts.id::text,
-           jsonb_build_object('productId', ts.product_id, 'errorClass', ts.error_class, 'latencyMs', ts.latency_ms)
-      from public.tryon_sessions ts where ts.user_id = p_user_id
   ) as j(occurred_at, kind, summary, ref_id, detail)
   order by j.occurred_at desc
   limit p_limit;

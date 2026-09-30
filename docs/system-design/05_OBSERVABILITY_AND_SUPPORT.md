@@ -66,14 +66,12 @@ renders every panel independently: if one panel fails, the others still show.
 |---|---|---|
 | Identity | `profiles`, `auth.users` | name, email (with bounce status), phone, created, last login, marketing consent, return count (90 d), lifetime value, orders count |
 | Live cart | `carts` + `cart_items` (latest by user or visitor) | lines, current server totals, applied coupon, offer nudges, last updated |
-| Journey (last 30 days) | `visitor_sessions` + `analytics_events` | timeline grouped by session: landing page + UTM, pages visited, searches (with zero-result flag), products viewed, try-on used, add-to-cart, checkout step reached, device |
 | Payment attempts | `v_payment_timeline` | every attempt across orders: provider, method, amount, status, **failure_stage**, provider error text, callback/webhook timeline, customer-facing message shown |
 | Orders | `orders`, `order_events` | status chips, totals snapshot, coupon, items, cancel/refund history |
 | Shipments | `shipments`, `shipment_events` | carrier, AWB (copy button), live status, ETA, NDR/exception reasons, `/track/[token]` link |
 | Returns | `return_requests` | status, reason, evidence thumbnails (signed URLs, 5-min expiry) |
 | Tickets | `support_tickets`, `ticket_messages` | open/closed tickets, channel (email/WhatsApp/form), SLA timer, internal notes |
 | Emails | `notifications` | every transactional email with its Resend status |
-| Try-on | `tryon_sessions` | sessions, status, provider, error class (no images unless the customer shared them) |
 
 Quick actions: **Resend confirmation email**, **Re-check payment with gateway**, **Create ticket**,
 **Copy customer-safe status summary**, **Issue refund** (only with `orders.refund`). Every action writes `audit_logs`.
@@ -122,5 +120,4 @@ Slack webhook through `pg_net`. There is no extra alerting service until the tea
 | Commerce | Admin `/admin/analytics` (from `daily_metrics`) | revenue, orders, AOV, conversion, top products/categories, coupon usage, bundle-offer uptake |
 | Funnel | PostHog | `page_view → product_viewed → add_to_cart → checkout_started → payment_initiated → payment_succeeded`, split by device and UTM |
 | Fulfilment | Admin `/admin/shipping` | paid→packed hours, packed→delivered days, NDR rate, RTO rate by courier and pincode |
-| Try-on | Admin `/admin/analytics/try-on` | opened → started → completed, failure classes, try-on add-to-cart and purchase rate, cloud cost |
 | Support | Admin `/admin/support` | open tickets, SLA breaches, top contact reasons (tagged), payment-issue tickets vs `failure_stage` |

@@ -20,10 +20,9 @@ create table public.store_settings (
   cod_fee                 integer not null default 0 check (cod_fee >= 0),
   cod_max_order_amount    integer check (cod_max_order_amount > 0),
   -- policy
-  return_window_days      integer not null default 7 check (return_window_days between 0 and 90),
+  return_window_days      integer not null default 7 check (return_window_days between 0 and 90),   -- products.return_window_days overrides
   reservation_ttl_minutes integer not null default 30 check (reservation_ttl_minutes between 5 and 1440),
   low_stock_default       integer not null default 3 check (low_stock_default >= 0),
-  tryon_ttl_hours         integer not null default 24 check (tryon_ttl_hours between 1 and 720),
   support_email           text,
   support_phone           text,
   updated_by              uuid references public.profiles (id) on delete set null,
@@ -34,7 +33,7 @@ values (true, 149900, 4900, 1000000, 'support@wavy.store');
 
 create table public.integration_configs (
   id              uuid primary key default gen_random_uuid(),
-  provider        text not null check (provider in ('razorpay', 'payu', 'shiprocket', 'resend', 'ga4', 'posthog', 'tryon_ai')),
+  provider        text not null check (provider in ('razorpay', 'payu', 'shiprocket', 'resend', 'ga4', 'posthog')),
   environment     text not null default 'test' check (environment in ('test', 'live')),
   is_active       boolean not null default false,
   status          public.integration_status not null default 'disconnected',
@@ -59,8 +58,7 @@ insert into public.integration_configs (provider, environment, secret_ref, confi
   ('shiprocket', 'test', 'SHIPROCKET_PASSWORD',  '{"email": null, "pickup_location": "Primary"}'),
   ('resend',     'test', 'RESEND_API_KEY',       '{"from": "wavy <orders@wavy.store>"}'),
   ('ga4',        'live', null,                   '{"measurement_id": null}'),
-  ('posthog',    'live', 'POSTHOG_KEY',          '{"host": "https://eu.i.posthog.com"}'),
-  ('tryon_ai',   'test', 'TRYON_PROVIDER_KEY',   '{"provider": null, "ttl_hours": 24}');
+  ('posthog',    'live', 'POSTHOG_KEY',          '{"host": "https://eu.i.posthog.com"}');
 
 -- Every transactional message. idempotency_key (e.g. 'order_confirmed:<order_id>') stops double emails.
 create table public.notification_log (

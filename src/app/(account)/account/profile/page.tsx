@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getAccountUser } from "@/backend/orders/repo";
+import { getAccountUser } from "@/backend/account/repo";
 import { ProfileView } from "@/views/account/ProfileView";
 
 export const metadata: Metadata = { title: "Profile" };

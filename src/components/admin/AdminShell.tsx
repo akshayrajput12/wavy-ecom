@@ -6,14 +6,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { EmptyState } from "@/components/ui/States";
-import type { StaffMember, StaffRole } from "@/data/admin/types";
+import type { StaffRole, StaffSession } from "@/types/admin";
 import { ADMIN_NAV, can, navItemFor, ROLE_LABELS } from "@/views/admin/rbac";
-import { setPreviewRole, useRole } from "./useRole";
+import { RoleProvider, setPreviewRole, useRole } from "./useRole";
 
 const humanize = (s: string) => (s === "new" ? "New" : decodeURIComponent(s));
 
 /** Admin chrome: black nav rail (filtered by role) + topbar with breadcrumb + route-level RBAC guard. */
-export function AdminShell({ me, children }: { me: Pick<StaffMember, "name" | "email">; children: ReactNode }) {
+/** `me` = current staff session (null when Supabase is not configured; the UI then assumes super_admin, the server still enforces). */
+export function AdminShell({ me, children }: { me: StaffSession | null; children: ReactNode }) {
+  return <RoleProvider role={me?.role ?? "super_admin"}><Shell me={me}>{children}</Shell></RoleProvider>;
+}
+
+function Shell({ me, children }: { me: StaffSession | null; children: ReactNode }) {
   const pathname = usePathname();
   const { role, allowPreview } = useRole();
   const [open, setOpen] = useState(false);
@@ -67,7 +72,7 @@ export function AdminShell({ me, children }: { me: Pick<StaffMember, "name" | "e
           })}
         </nav>
         <div className="border-t border-on-dark/10 px-5 py-4">
-          <p className="text-body font-medium">{me.name}</p>
+          <p className="text-body font-medium">{me?.name ?? me?.email ?? "Staff"}</p>
           <p className="t-meta text-on-dark/60">{ROLE_LABELS[role]}</p>
         </div>
       </aside>

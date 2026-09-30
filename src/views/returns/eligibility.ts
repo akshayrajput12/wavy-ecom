@@ -1,15 +1,25 @@
-import { RETURN_WINDOW_DAYS } from "@/data/account";
-import type { AccountOrder, ReturnRequest } from "@/data/orders";
+import type { Order, OrderItem } from "@/types/domain";
 
 const DAY = 86_400_000;
 
-/** When the order was delivered (last carrier "delivered" event), if it was. */
-export const deliveredAt = (o: AccountOrder) => o.shipment?.events.findLast((e) => e.status === "delivered")?.at;
+/** When the order was delivered: order.deliveredAt, else the last carrier "delivered" event. */
+export const deliveredAt = (o: Pick<Order, "deliveredAt" | "shipment">) =>
+  o.deliveredAt ?? o.shipment?.events.findLast((e) => e.status === "delivered")?.at;
 
-/** Items still returnable: delivered, inside the window, not already in a return. */
-export function returnableItems(order: AccountOrder, existing: ReturnRequest[], now = Date.now()) {
-  const at = deliveredAt(order);
-  if (order.status !== "delivered" || !at || now - new Date(at).getTime() > RETURN_WINDOW_DAYS * DAY) return [];
-  const taken = new Set(existing.filter((r) => r.orderNumber === order.number).map((r) => r.itemId));
-  return order.items.filter((i) => !taken.has(i.id));
+/** Last day an item can be returned, or undefined when it can't be (0-day window / not delivered). */
+export function returnDeadline(o: Pick<Order, "deliveredAt" | "shipment">, item: Pick<OrderItem, "returnWindowDays">) {
+  const at = deliveredAt(o);
+  return at && item.returnWindowDays > 0 ? new Date(new Date(at).getTime() + item.returnWindowDays * DAY) : undefined;
+}
+
+/**
+ * Items the UI offers for return: delivered order, item window still open. Display gate only:
+ * the DB re-checks ownership, window and quantity already returned (return_quantity_exceeds_purchase).
+ */
+export function returnableItems(order: Pick<Order, "status" | "items" | "deliveredAt" | "shipment">, now = Date.now()): OrderItem[] {
+  if (order.status !== "delivered") return [];
+  return order.items.filter((i) => {
+    const end = returnDeadline(order, i);
+    return !!end && now <= end.getTime();
+  });
 }

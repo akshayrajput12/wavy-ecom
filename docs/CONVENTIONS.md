@@ -1,6 +1,6 @@
 # wavy — Codebase Conventions (read before writing any code)
 
-Stack: **Next.js 16 (App Router, Turbopack) · React 19 · TypeScript strict · Tailwind v4 (token-driven) · Framer Motion · Lenis · Supabase (Postgres, Auth, Storage, RLS) · Zod · react-hook-form · Zustand (cart UI state only) · Razorpay / PayU · Shiprocket · Resend · PostHog/GA4 · MediaPipe (try-on)**
+Stack: **Next.js 16 (App Router, Turbopack) · React 19 · TypeScript strict · Tailwind v4 (token-driven) · Framer Motion · Lenis · Supabase (Postgres, Auth, Storage, RLS) · Zod · react-hook-form · Zustand (cart UI state only) · Razorpay / PayU · Shiprocket · Resend · PostHog/GA4**
 
 > Next 16 notes: `middleware.ts` is now **`src/proxy.ts`**. `params`, `searchParams`, `cookies()`, `headers()` are **async** (await them). Local docs: `node_modules/next/dist/docs/`.
 
@@ -27,30 +27,29 @@ src/
     layout/                   Header, Footer, AdminShell…
     commerce/                 ProductCard, PriceTag, Swatch, SizeSelector, RatingStars…
     providers/                client providers (SmoothScroll…)
-  data/                       CONST DATA — one .ts per domain (products.ts, orders.ts, categories.ts,
-                              home.ts, navigation.ts, admin.ts…). Page copy lives here too, not in JSX.
+  data/                       UI MICROCOPY ONLY (copy.ts: labels, headings, messages of fixed UI). No domain data:
+                              products, categories, home sections, blog, FAQs, nav, settings… all come from Supabase.
   backend/                    SERVER-ONLY "microservices" — one folder per domain
     _core/                    http.ts (route wrapper, errors), auth.ts (session + RBAC guards)
     catalog/ cart/ pricing/ checkout/ payments/ orders/ shipping/ returns/ reviews/
     content/ marketing/ analytics/ settings/ notifications/ integrations/
       service.ts              business logic (pure where possible)
-      repo.ts                 data access: Supabase if configured, else src/data fallback
+      repo.ts                 data access (Supabase; explicit column lists; mappers in mapper.ts)
       schema.ts               zod input schemas
       providers/              external adapters (payments/providers/razorpay.ts, payu.ts)
-  lib/                        framework glue: logger.ts, supabase/{server,client,admin}.ts, format.ts, env.ts
+  lib/                        framework glue: logger.ts, supabase/{server,client,admin,public}.ts, format.ts, env.ts, site.ts
   types/                      domain.ts (shared contract), database.ts (Supabase types)
-  tryon/                      EVERYTHING for virtual try-on lives here (components, engine, api helpers)
 supabase/
   migrations/                 numbered SQL migrations (schema, RLS, indexes, functions)
-  seed.sql                    demo data matching src/data
-docs/                         specs/, database/, system-design/, design/, tryon/, api/
+  seed.sql                    demo data (the only source of demo content)
+docs/                         specs/, database/, system-design/, design/, api/
 ```
 
 ### Rules
 1. **Component placement**: build a section inside `views/<page>/components/`. The moment a component is used in a **2nd view**, move it to `components/`.
-2. **No hard-coded content in JSX.** Text lists, nav items, product data, and page copy come from `src/data/<domain>.ts` (or from the backend, which falls back to that data). Components receive data via **props**.
+2. **No hard-coded content in JSX.** Domain data (products, categories, collections, reviews, home sections, blog, FAQs, testimonials, nav, store settings, shipping methods, coupons) comes from the backend (Supabase). Fixed-UI microcopy comes from `src/data/copy.ts`. Components receive data via **props**.
 3. **Data flow**: `app/**/page.tsx` (Server Component) → `backend/<svc>/repo.ts` → returns typed data (`types/domain.ts`) → `<XView data={…} />` → components. Client components only where interaction needs it (`"use client"` at the smallest leaf).
-4. **Const fallback**: every repo checks `hasSupabase` (`lib/env.ts`); without Supabase it returns `src/data` so the UI always renders.
+4. **No const fallback**: without Supabase env config, public reads return empty results (`publicDb()` logs one `supabase.not_configured` warning) and the UI renders empty states; writes/checkout return 503 `backend_unavailable`. Public reads are cached with `cached()` (`backend/_core/cache.ts`) under `TAGS`; after admin writes call `revalidateTag(TAGS.x, "max")`. Contract: `docs/api/API_REFERENCE.md`.
 5. **API routes** use `route("svc", handler)` from `backend/_core/http.ts`, validate with zod via `parse()`, and return `ok()`/`ApiError`. Each service is isolated: one failing never breaks others.
 6. **Server authority**: prices, totals, coupon/offer eligibility, tax and stock are computed on the server. Client-sent prices are ignored.
 7. **Idempotency**: payment/order/inventory writes take an idempotency key and are safe to retry. Webhooks are deduped by provider event id.

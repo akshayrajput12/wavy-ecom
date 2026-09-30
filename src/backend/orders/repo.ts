@@ -1,46 +1,72 @@
 import "server-only";
-import { hasSupabase } from "@/lib/env";
-import { createClient } from "@/lib/supabase/server";
-import { demoUser, orders, returns, type AccountOrder, type ReturnRequest } from "@/data/orders";
-import type { Address } from "@/types/domain";
+import { getSession, type Session } from "@/backend/_core/auth";
+import { must, publicDb, safe, serviceDb, userDb } from "@/backend/_core/db";
+import { ApiError } from "@/backend/_core/http";
+import { hasServiceRole } from "@/lib/env";
+import { logger } from "@/lib/logger";
+import type { Order, OrderStatus, OrderSummary, OrderTracking } from "@/types/domain";
+import { ORDER_COLS, ORDER_SUMMARY_COLS, toOrder, toOrderSummary, toTracking, type OrderRow, type OrderSummaryRow } from "./mapper";
 
-export interface AccountUser { id: string; name: string; email: string; phone: string }
+/** Statuses a customer may cancel from (before the parcel is packed). */
+export const CUSTOMER_CANCELLABLE: readonly OrderStatus[] = ["pending_payment", "paid", "processing"];
 
-/** Signed-in customer, or null. Without Supabase the demo customer is always "signed in". */
-export async function getAccountUser(): Promise<AccountUser | null> {
-  if (!hasSupabase) return demoUser;
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) return null;
-  const meta = data.user.user_metadata as { name?: string; phone?: string };
-  return { id: data.user.id, name: meta.name ?? "", email: data.user.email ?? "", phone: meta.phone ?? "" };
+/** Signed-in customer's orders, newest first (RLS own_select). */
+export async function listMyOrders(session: Session): Promise<OrderSummary[]> {
+  const db = await userDb();
+  const rows: OrderSummaryRow[] = must(
+    await db.from("orders").select(ORDER_SUMMARY_COLS).eq("user_id", session.userId).order("placed_at", { ascending: false }).limit(100),
+    "list your orders",
+  ) ?? [];
+  return rows.map(toOrderSummary);
 }
 
-export async function getOrdersForUser(userId: string): Promise<AccountOrder[]> {
-  if (hasSupabase) { /* TODO(backend agent): select orders where user_id = userId, newest first */ }
-  void userId;
-  return [...orders].sort((a, b) => b.placedAt.localeCompare(a.placedAt));
+/** One of the signed-in customer's orders by number (null when not theirs / unknown). */
+export async function getMyOrder(session: Session, number: string): Promise<Order | null> {
+  const db = await userDb();
+  const row: OrderRow | null = must(
+    await db.from("orders").select(ORDER_COLS).eq("order_number", number).eq("user_id", session.userId).maybeSingle(), "load your order",
+  );
+  return row ? toOrder(row) : null;
 }
 
-export async function getOrderByNumber(number: string): Promise<AccountOrder | undefined> {
-  if (hasSupabase) { /* TODO(backend agent): RLS-scoped lookup by order number */ }
-  return orders.find((o) => o.number === number);
+/**
+ * Order confirmation / payment-retry page: the owner (session) or a guest holding the order's tracking token.
+ * Service-role read, so the credential check here is the gate.
+ */
+export async function getOrderForViewer(number: string, trackingToken?: string): Promise<Order | null> {
+  if (!hasServiceRole) return null;
+  const session = await getSession();
+  const row: OrderRow | null = safe(
+    await serviceDb().from("orders").select(`${ORDER_COLS}, user_id`).eq("order_number", number).maybeSingle(), "load order", null,
+  );
+  if (!row) return null;
+  const owner = (row as OrderRow & { user_id: string | null }).user_id;
+  const allowed = (session && owner === session.userId) || (trackingToken && trackingToken === row.tracking_token);
+  return allowed ? toOrder(row) : null;
 }
 
-/** Public tracking: the token is the only credential, so never expose contact details from here. */
-export async function getOrderByTrackingToken(token: string): Promise<AccountOrder | undefined> {
-  if (hasSupabase) { /* TODO(backend agent): service-role lookup by tracking_token */ }
-  return orders.find((o) => o.trackingToken === token);
+/** Public tracking by token (safe fields only). */
+export async function getOrderTracking(token: string): Promise<OrderTracking | null> {
+  const db = publicDb();
+  if (!db || token.length < 32) return null;
+  return toTracking(safe(await db.rpc("get_order_tracking", { p_token: token }), "track order", null));
 }
 
-export async function getAddresses(userId: string): Promise<Address[]> {
-  if (hasSupabase) { /* TODO(backend agent): select addresses where user_id = userId */ }
-  void userId;
-  return demoUser.addresses;
-}
-
-export async function getReturnsForUser(userId: string): Promise<ReturnRequest[]> {
-  if (hasSupabase) { /* TODO(backend agent): move to backend/returns/repo.ts */ }
-  void userId;
-  return returns;
+/** Customer cancel. Ownership via RLS read, then cancel_order (service role) releases/restocks and reverses discounts. */
+export async function cancelMyOrder(session: Session, number: string, reason?: string) {
+  const db = await userDb();
+  const row = must<{ id: string; status: OrderStatus } | null>(
+    await db.from("orders").select("id, status").eq("order_number", number).eq("user_id", session.userId).maybeSingle(), "load your order",
+  );
+  if (!row) throw new ApiError(404, "order_not_found", "Order not found");
+  if (!CUSTOMER_CANCELLABLE.includes(row.status)) throw new ApiError(409, "order_not_cancellable", "This order can no longer be cancelled");
+  const res = must<{ status: OrderStatus; refundRequired: boolean; refundableAmount: number }>(
+    await serviceDb().rpc("cancel_order", { p_order_id: row.id, p_reason: `customer: ${reason?.slice(0, 200) || "cancelled"}` }),
+    "cancel the order",
+  );
+  const log = logger.child({ svc: "orders", orderId: row.id, userId: session.userId });
+  log.info("order.cancelled_by_customer", { from: row.status });
+  // ponytail: refunds are issued by staff from the admin console (refunds table); flagged here for the queue
+  if (res.refundRequired) log.warn("order.refund_required", { amount: res.refundableAmount });
+  return { status: res.status, refundRequired: res.refundRequired, refundableAmount: res.refundableAmount };
 }

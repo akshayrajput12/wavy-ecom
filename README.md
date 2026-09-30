@@ -1,7 +1,7 @@
 # wavy — Fashion Commerce
 
 Premium clothing & sneakers storefront + admin console.
-Next.js 16 · TypeScript · Tailwind v4 tokens · Framer Motion · Lenis · Supabase · Razorpay/PayU · Shiprocket · in-house MediaPipe try-on.
+Next.js 16 · TypeScript · Tailwind v4 tokens · Framer Motion · Lenis · Supabase · Razorpay/PayU · Shiprocket.
 
 ## Quick start
 
@@ -38,6 +38,5 @@ npm run db:start && npm run db:reset && npm run db:types
 | `npm run db:types` | regenerate `src/types/database.ts` |
 
 ## Where things live
-Read **[docs/CONVENTIONS.md](docs/CONVENTIONS.md)** before coding. Specs: `docs/specs/`. Architecture, payments, capacity: `docs/system-design/`. Database: `docs/database/`. Design system + screen map: `docs/design/`. Try-on: `docs/tryon/`.
+Read **[docs/CONVENTIONS.md](docs/CONVENTIONS.md)** before coding. Specs: `docs/specs/`. Architecture, payments, capacity: `docs/system-design/`. Database: `docs/database/`. Design system + screen map: `docs/design/`.
 
-Try-on API contract: `docs/api/TRYON_V1.md`. The free live preview runs in the browser and does not upload camera frames. Photo generation is disabled. BHMR reference adaptation: `docs/design/REFERENCE_BHMR.md`.

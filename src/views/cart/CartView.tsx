@@ -1,50 +1,45 @@
 "use client";
 
 import { ShoppingBag } from "lucide-react";
+import { CartLines, CartNudges, CartTotals } from "@/components/commerce/cart/CartParts";
+import { CouponForm } from "@/components/commerce/cart/CouponForm";
 import { ButtonLink } from "@/components/ui/Button";
-import { EmptyState } from "@/components/ui/States";
-import { ProductRail } from "@/components/commerce/ProductGrid";
-import { CartLineRow, CartNudges, CartTotals, CouponForm } from "@/components/commerce/cart/CartParts";
-import { cartCount, useCart } from "@/stores/cart";
-import { cartCopy as c } from "@/data/content";
-import type { Product } from "@/types/domain";
+import { EmptyState, Skeleton } from "@/components/ui/States";
+import { cartCopy as c } from "@/data/copy";
+import { cartCount, useCart, useCartHydrated, useCartQuote } from "@/stores/cart";
 
-/** Screens 15/27 — full bag with coupon, totals, bundle nudge and cross-sells. */
-export function CartView({ crossSells, bundleIds }: { crossSells: Product[]; bundleIds: string[] }) {
+/** Full bag page: same parts as the drawer, laid out with a sticky summary. */
+export function CartView({ freeShippingThreshold }: { freeShippingThreshold?: number }) {
+  const hydrated = useCartHydrated();
   const lines = useCart((s) => s.lines);
-  const inBag = new Set(lines.map((l) => l.productId));
+  const q = useCartQuote();
 
   return (
     <div className="container-x pb-24">
-      <header className="flex items-end justify-between gap-4 border-b border-line py-10 lg:py-16">
-        <h1 className="t-hero">{c.title} <span className="text-ink-soft">({cartCount(lines)})</span></h1>
-        {lines.length > 0 && <ButtonLink href="/new-in" variant="link" className="max-sm:hidden">{c.continue}</ButtonLink>}
+      <header className="flex items-end justify-between gap-4 border-b border-line py-8 lg:py-12">
+        <h1 className="t-h1">{c.title} {hydrated && <span className="font-normal text-ink-soft">({cartCount(lines)})</span>}</h1>
+        {lines.length > 0 && <ButtonLink href="/" variant="link" className="max-sm:hidden">{c.continue}</ButtonLink>}
       </header>
 
-      {lines.length === 0 ? (
+      {!hydrated ? (
+        <div className="mt-8 grid gap-4" aria-busy="true"><Skeleton className="h-28" /><Skeleton className="h-28" /></div>
+      ) : lines.length === 0 ? (
         <div className="mt-10">
-          <EmptyState icon={<ShoppingBag className="size-7" aria-hidden />} title={c.empty.title} body={c.empty.body} action={<ButtonLink href="/new-in">{c.emptyCta}</ButtonLink>} />
+          <EmptyState icon={<ShoppingBag className="size-7" aria-hidden />} title={c.empty.title} body={c.empty.body} action={<ButtonLink href="/">{c.emptyCta}</ButtonLink>} />
         </div>
       ) : (
-        <div className="mt-8 grid gap-10 lg:grid-cols-12 lg:gap-10">
-          <ul className="divide-y divide-line border-b border-line lg:col-span-7">
-            {lines.map((l) => <CartLineRow key={l.id} line={l} large />)}
-          </ul>
-          <aside className="lg:col-span-5 lg:col-start-8">
-            <div className="space-y-6 rounded-md border border-line bg-surface p-6 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
-              <CartNudges bundleIds={bundleIds} />
-              <CouponForm />
-              <CartTotals bundleIds={bundleIds} />
+        <div className="mt-6 grid gap-8 lg:grid-cols-12 lg:gap-10">
+          <div className="space-y-4 lg:col-span-7">
+            <CartNudges q={q} freeShippingThreshold={freeShippingThreshold} />
+            <CartLines q={q} large />
+          </div>
+          <aside className="lg:col-span-5">
+            <div className="space-y-5 rounded-lg border border-line bg-surface p-5 sm:p-6 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
+              <CouponForm quoteCoupon={q.quote?.coupon} />
+              <CartTotals q={q} />
             </div>
           </aside>
         </div>
-      )}
-
-      {crossSells.length > 0 && (
-        <section className="mt-24 overflow-hidden">
-          <h2 className="t-display mb-10">{c.crossSells}</h2>
-          <ProductRail products={crossSells.filter((p) => !inBag.has(p.id))} />
-        </section>
       )}
     </div>
   );

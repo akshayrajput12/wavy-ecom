@@ -1,7 +1,7 @@
 -- =============================================================================
 -- 0005 — Orders + payments
 --   orders            immutable money snapshot of what the customer agreed to pay
---   order_items       line snapshots (name/price/size at time of purchase)
+--   order_items       line snapshots (name, variant title + options, price at time of purchase)
 --   order_status_history  every status transition (trigger, 0014)
 --   payment_gateways  admin on/off switch + non-secret config per provider
 --   payments          one per (order, provider) "attempt series"
@@ -85,11 +85,14 @@ create table public.order_items (
   variant_id         uuid references public.product_variants (id) on delete set null,
   sku                text not null,
   product_name       text not null,
-  color              text not null,
-  size               text not null,
+  brand              text,
+  variant_title      text not null,                    -- 'Black / M' ('Default' when the product has no options)
+  options            jsonb not null default '[]' check (jsonb_typeof(options) = 'array'),   -- [{"name":"Color","value":"Black"}]
+  hsn_code           text,                             -- GST invoice line
+  return_window_days integer not null default 0 check (return_window_days >= 0),   -- policy at purchase; 0 = not returnable
   image_url          text,
   unit_price         integer not null check (unit_price >= 0),
-  compare_at         integer,
+  compare_at_price   integer,
   quantity           integer not null check (quantity > 0),
   line_subtotal      integer not null,
   discount_allocated integer not null default 0 check (discount_allocated >= 0),
@@ -258,9 +261,12 @@ create table public.refunds (
   provider_refund_id text,
   idempotency_key    text not null unique,
   initiated_by       uuid references public.profiles (id) on delete set null,
+  failure_code       text,
   failure_reason     text,
+  raw_request        jsonb,
   raw_response       jsonb,
   processed_at       timestamptz,
+  failed_at          timestamptz,
   created_at         timestamptz not null default now(),
   updated_at         timestamptz not null default now()
 );

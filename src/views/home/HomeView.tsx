@@ -1,28 +1,41 @@
-import type { CollectionPage } from "@/backend/catalog/repo";
-import type { BlogPost, Product, Testimonial } from "@/types/domain";
-import { Hero } from "./components/Hero";
-import { CompleteTheLook } from "./components/CompleteTheLook";
-import { BundleBanner, Departments, FeaturedCollection, JournalTeaser, NewArrivals, SocialProof } from "./components/Sections";
+import { Store } from "lucide-react";
+import { ButtonLink } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/States";
+import { homeCopy } from "@/data/storefront";
+import type { HomeSection } from "@/types/domain";
+import { BlogRail } from "./components/BlogRail";
+import { CategoryGrid } from "./components/CategoryGrid";
+import { CollectionRail } from "./components/CollectionRail";
+import { FloatingShowcase } from "./components/FloatingShowcase";
+import { HeroCarousel } from "./components/HeroCarousel";
+import { NewsletterSection } from "./components/NewsletterSection";
+import { ProductCarouselSection } from "./components/ProductCarouselSection";
+import { PromoBanner } from "./components/PromoBanner";
+import { Testimonials } from "./components/Testimonials";
 
-export interface HomeData {
-  newArrivals: Product[];
-  featured: { collection: CollectionPage; products: Product[] } | null;
-  look: Product[];
-  testimonials: Testimonial[];
-  posts: BlogPost[];
+function Section({ section: s }: { section: HomeSection }) {
+  switch (s.type) {
+    case "hero_carousel": return <HeroCarousel section={s} />;
+    case "category_grid": return <CategoryGrid section={s} />;
+    case "collection_rail": return <CollectionRail section={s} />;
+    case "product_carousel": return <ProductCarouselSection section={s} />;
+    case "floating_showcase": return <FloatingShowcase section={s} />;
+    case "promo_banner": return <PromoBanner section={s} />;
+    case "testimonials": return <Testimonials section={s} />;
+    case "blog_rail": return <BlogRail section={s} />;
+    case "newsletter": return <NewsletterSection section={s} />;
+  }
 }
 
-export function HomeView({ newArrivals, featured, look, testimonials, posts }: HomeData) {
-  return (
-    <>
-      <Hero />
-      <NewArrivals products={newArrivals} />
-      <Departments />
-      {featured && <FeaturedCollection {...featured} />}
-      <CompleteTheLook products={look} />
-      <BundleBanner />
-      <SocialProof testimonials={testimonials} />
-      <JournalTeaser posts={posts} />
-    </>
-  );
+/** Home is entirely admin-defined: sections render in the order getHomeSections() returns. */
+export function HomeView({ sections }: { sections: HomeSection[] }) {
+  if (!sections.length) {
+    return (
+      <div className="container-x section-y">
+        <EmptyState icon={<Store className="size-7" aria-hidden />} title={homeCopy.empty.title} body={homeCopy.empty.body}
+          action={<ButtonLink href="/collections" variant="secondary">{homeCopy.empty.cta}</ButtonLink>} />
+      </div>
+    );
+  }
+  return <>{sections.map((s) => <Section key={s.id} section={s} />)}</>;
 }

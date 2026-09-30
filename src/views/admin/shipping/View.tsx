@@ -1,77 +1,66 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useFieldArray, useForm, useWatch } from "react-hook-form";
-import { z } from "zod";
-import { Button } from "@/components/ui/Button";
+import Link from "next/link";
 import { Input } from "@/components/ui/Input";
-import { Select, Toggle } from "@/components/admin/Fields";
-import { FormSection, PageHeader, Panel } from "@/components/admin/Panel";
-import type { ShippingSettings } from "@/data/admin/types";
-import { mutate } from "../api";
+import { Badge } from "@/components/ui/Badge";
+import { ButtonLink } from "@/components/ui/Button";
+import { PageHeader, Panel } from "@/components/admin/Panel";
+import { SETTINGS_SECTIONS } from "@/backend/admin/schemas/settings";
+import { formatPrice } from "@/lib/format";
+import type { AdminShippingZone, AdminStoreSettings } from "@/types/admin";
+import { EditorForm } from "../_kit/Chrome";
+import { useEditor } from "../_kit/useEditor";
+import { paise, rupees } from "./money";
 
-const rupees = z.number({ error: "Enter an amount" }).min(0);
-const schema = z.object({
-  provider: z.string().min(1),
-  pickupAddress: z.string().trim().min(10, "Full pickup address"),
-  pickupPincode: z.string().regex(/^\d{6}$/, "6-digit PIN code"),
-  freeShippingThreshold: rupees, flatRate: rupees,
-  codEnabled: z.boolean(), codFee: rupees, codMaxOrder: rupees,
-  windows: z.array(z.object({ zone: z.string().min(2, "Required"), days: z.string().regex(/^\d+(–\d+)?$/, "e.g. 2–4") })),
-  returnsCourier: z.string().min(2), returnWindowDays: z.number().int().min(0).max(60),
-});
-type Form = z.infer<typeof schema>;
-const PAISE = ["freeShippingThreshold", "flatRate", "codFee", "codMaxOrder"] as const;
-
-export function ShippingView({ settings }: { settings: ShippingSettings }) {
-  const toForm = { ...settings, ...Object.fromEntries(PAISE.map((k) => [k, settings[k] / 100])) } as Form;
-  const { register, control, handleSubmit, setValue, reset, formState: { errors, isDirty, isSubmitting } } = useForm<Form>({ resolver: zodResolver(schema), defaultValues: toForm });
-  const windows = useFieldArray({ control, name: "windows" });
-  const cod = useWatch({ control, name: "codEnabled" });
-  const n = { valueAsNumber: true } as const;
-
-  const onSubmit = async (v: Form) => {
-    const payload = { ...v, ...Object.fromEntries(PAISE.map((k) => [k, Math.round(v[k] * 100)])) };
-    // TODO(backend agent): call /api/admin/settings/shipping (checkout reads threshold server-side)
-    if (await mutate("settings/shipping", payload, { success: "Shipping settings saved" })) reset(v);
-  };
-
+function RatesForm({ s }: { s: AdminStoreSettings }) {
+  const { v, set, errors, busy, save } = useEditor({
+    freeShippingThreshold: s.freeShippingThreshold === null ? "" : rupees(s.freeShippingThreshold), flatShippingFee: rupees(s.flatShippingFee),
+    codEnabled: s.codEnabled, codFee: rupees(s.codFee), codMaxOrderAmount: s.codMaxOrderAmount === null ? "" : rupees(s.codMaxOrderAmount),
+  }, { schema: SETTINGS_SECTIONS.shipping.schema, back: "/admin/shipping" });
+  const submit = () => save("PATCH", "settings/shipping", {
+    freeShippingThreshold: v.freeShippingThreshold.trim() ? paise(v.freeShippingThreshold) : null, flatShippingFee: paise(v.flatShippingFee),
+    codEnabled: v.codEnabled, codFee: paise(v.codFee), codMaxOrderAmount: v.codMaxOrderAmount.trim() ? paise(v.codMaxOrderAmount) : null,
+  }, "Shipping rates saved");
+  const f = (k: "freeShippingThreshold" | "flatShippingFee" | "codFee" | "codMaxOrderAmount", label: string, hint?: string) =>
+    <Input label={`${label} (INR)`} hint={hint} type="number" step="0.01" min="0" value={v[k]} error={errors[k]} onChange={(e) => set(k, e.target.value)} />;
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      <PageHeader title="Shipping" description="Courier, pickup, delivery promises, COD and returns."
-        actions={<Button type="submit" size="sm" loading={isSubmitting} disabled={!isDirty}>Save changes</Button>} />
-      <Panel>
-        <FormSection title="Provider & pickup">
-          <Select label="Shipping provider" {...register("provider")}><option>Shiprocket</option><option>Delhivery direct</option><option>Self-managed</option></Select>
-          <Input label="Pickup PIN code" inputMode="numeric" error={errors.pickupPincode?.message} {...register("pickupPincode")} />
-          <Input label="Pickup address" className="sm:col-span-2" error={errors.pickupAddress?.message} {...register("pickupAddress")} />
-        </FormSection>
-        <FormSection title="Rates" description="Customers see the threshold as a progress nudge in the bag.">
-          <Input label="Free shipping over (₹)" type="number" min={0} error={errors.freeShippingThreshold?.message} {...register("freeShippingThreshold", n)} />
-          <Input label="Flat rate below threshold (₹)" type="number" min={0} error={errors.flatRate?.message} {...register("flatRate", n)} />
-        </FormSection>
-        <FormSection title="Delivery windows" description="Shown on product pages and at checkout.">
-          <div className="grid gap-3 sm:col-span-2">
-            {windows.fields.map((f, i) => (
-              <div key={f.id} className="grid items-end gap-3 sm:grid-cols-[2fr_1fr_auto]">
-                <Input label={`Zone ${i + 1}`} error={errors.windows?.[i]?.zone?.message} {...register(`windows.${i}.zone`)} />
-                <Input label="Business days" error={errors.windows?.[i]?.days?.message} {...register(`windows.${i}.days`)} />
-                <Button type="button" size="sm" variant="ghost" className="mb-1" onClick={() => windows.remove(i)}>Remove</Button>
-              </div>
-            ))}
-            <Button type="button" size="sm" variant="secondary" className="justify-self-start" onClick={() => windows.append({ zone: "", days: "" })}>Add zone</Button>
-          </div>
-        </FormSection>
-        <FormSection title="Cash on delivery">
-          <div className="sm:col-span-2"><Toggle label="Offer COD" description="Hidden automatically for pincodes the courier can't serve." checked={cod} onChange={(v) => setValue("codEnabled", v, { shouldDirty: true })} /></div>
-          <Input label="COD fee (₹)" type="number" min={0} readOnly={!cod} aria-disabled={!cod} {...register("codFee", n)} />
-          <Input label="Max COD order (₹)" type="number" min={0} readOnly={!cod} aria-disabled={!cod} {...register("codMaxOrder", n)} />
-        </FormSection>
-        <FormSection title="Returns">
-          <Input label="Returns courier" {...register("returnsCourier")} />
-          <Input label="Return window (days)" type="number" min={0} error={errors.returnWindowDays?.message} {...register("returnWindowDays", n)} />
-        </FormSection>
+    <EditorForm onSave={submit} busy={busy} back="/admin/shipping">
+      <Panel title="Rates and cash on delivery">
+        <div className="grid gap-4 sm:grid-cols-2">
+          {f("flatShippingFee", "Flat shipping fee")}
+          {f("freeShippingThreshold", "Free shipping above", "Leave empty for never")}
+          <label className="flex min-h-11 items-center gap-2 text-body sm:col-span-2"><input type="checkbox" className="size-4 accent-ink" checked={v.codEnabled} onChange={(e) => set("codEnabled", e.target.checked)} />Cash on delivery enabled</label>
+          {f("codFee", "COD fee")}
+          {f("codMaxOrderAmount", "COD max order", "Leave empty for no limit")}
+        </div>
       </Panel>
-    </form>
+    </EditorForm>
+  );
+}
+
+export function ShippingView({ settings, zones }: { settings: AdminStoreSettings | null; zones: AdminShippingZone[] }) {
+  return (
+    <>
+      <PageHeader title="Shipping" description="Store-wide rates, delivery zones and the methods offered in each." />
+      {settings ? <RatesForm s={settings} /> : <p className="mb-6 text-body text-ink-soft">Store settings are unavailable. Check the Supabase connection.</p>}
+      <div className="mt-10 mb-3 flex items-center justify-between"><h2 className="t-h3">Zones</h2><ButtonLink size="sm" href="/admin/shipping/zones/new">New zone</ButtonLink></div>
+      <div className="grid gap-4">
+        {zones.length === 0 && <p className="text-body text-ink-soft">No zones yet.</p>}
+        {zones.map((z) => (
+          <Panel key={z.id} title={z.name} description={z.isDefault ? "Default zone" : `${z.states.length} states`}
+            actions={<div className="flex gap-2">{!z.isActive && <Badge>Inactive</Badge>}<ButtonLink size="sm" variant="secondary" href={`/admin/shipping/zones/${z.id}/edit`}>Edit zone</ButtonLink></div>}>
+            <ul className="divide-y divide-line-soft text-body">
+              {z.methods.map((m) => (
+                <li key={m.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                  <Link href={`/admin/shipping/methods/${m.id}/edit`} className="font-medium underline-offset-4 hover:underline">{m.name}</Link>
+                  <span className="text-ink-soft">{formatPrice(m.rate)} · {m.minDays}-{m.maxDays} days {m.isActive ? "" : "· Inactive"}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-3"><ButtonLink size="sm" variant="ghost" href={`/admin/shipping/methods/new?zoneId=${z.id}`}>Add method</ButtonLink></div>
+          </Panel>
+        ))}
+      </div>
+    </>
   );
 }

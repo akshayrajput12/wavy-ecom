@@ -20,7 +20,6 @@ create type public.review_status   as enum ('pending', 'approved', 'rejected', '
 create type public.coupon_status   as enum ('draft', 'active', 'paused', 'expired', 'archived');
 create type public.campaign_status as enum ('draft', 'scheduled', 'live', 'paused', 'completed', 'archived');
 create type public.integration_status as enum ('connected', 'needs_attention', 'disconnected');
-create type public.tryon_status    as enum ('created', 'uploading', 'queued', 'processing', 'completed', 'failed', 'expired', 'deleted');
 create type public.user_role       as enum ('customer', 'super_admin', 'catalog_manager', 'order_manager',
                                             'marketing_manager', 'analyst', 'support_agent');
 create type public.payment_provider as enum ('razorpay', 'payu', 'cod');
@@ -65,18 +64,23 @@ create type public.blog_status          as enum ('draft', 'scheduled', 'publishe
 create type public.ticket_status        as enum ('open', 'pending_customer', 'pending_internal', 'resolved', 'closed');
 create type public.ticket_priority      as enum ('low', 'normal', 'high', 'urgent');
 create type public.notification_status  as enum ('queued', 'sent', 'delivered', 'bounced', 'failed', 'complained');
-create type public.return_reason        as enum ('size_too_small', 'size_too_large', 'defective', 'wrong_item',
-                                                 'not_as_described', 'changed_mind', 'other');
-create type public.tryon_error_class    as enum ('input_invalid', 'unsupported_type', 'input_too_large', 'no_person_detected',
-                                                 'moderation_blocked', 'provider_error', 'provider_timeout',
-                                                 'quota_exceeded', 'internal');
--- Commerce + AI events, docs/specs/05 section 3. Add new ones with ALTER TYPE ... ADD VALUE.
+create type public.return_reason        as enum ('size_too_small', 'size_too_large', 'defective', 'damaged_in_transit',
+                                                 'wrong_item', 'missing_parts', 'not_as_described', 'changed_mind',
+                                                 'other');
+-- Commerce events, docs/specs/05 section 3. Add new ones with ALTER TYPE ... ADD VALUE.
 create type public.analytics_event_name as enum (
-  'page_view', 'search_submitted', 'product_viewed', 'size_finder_opened', 'size_recommendation_generated',
-  'try_on_opened', 'try_on_started', 'try_on_completed', 'try_on_failed', 'add_to_cart', 'wishlist_added',
-  'checkout_started', 'payment_initiated', 'payment_succeeded', 'payment_failed', 'order_created',
-  'shipment_created', 'order_delivered', 'return_requested', 'review_submitted', 'coupon_applied', 'campaign_viewed'
+  'page_view', 'search_submitted', 'product_viewed', 'category_viewed', 'collection_viewed', 'add_to_cart',
+  'remove_from_cart', 'wishlist_added', 'checkout_started', 'payment_initiated', 'payment_succeeded',
+  'payment_failed', 'order_created', 'shipment_created', 'order_delivered', 'return_requested',
+  'review_submitted', 'coupon_applied', 'campaign_viewed', 'home_section_clicked'
 );
+-- Admin-editable home page blocks (home_sections.type). config shape per type: docs/database/SCHEMA.md.
+create type public.home_section_type as enum (
+  'hero_carousel', 'category_grid', 'collection_rail', 'product_carousel', 'floating_showcase',
+  'promo_banner', 'testimonials', 'blog_rail', 'newsletter'
+);
+-- Who wrote a review: customers (verified_purchase computed) or staff/imports (verified flag as given).
+create type public.review_source as enum ('customer', 'admin', 'import');
 
 -- ---------- Shared trigger: updated_at ----------
 -- Attached to every table with an updated_at column in 0014.
@@ -86,6 +90,13 @@ begin
   new.updated_at := now();
   return new;
 end $$;
+
+-- array_to_string() is only STABLE; this text[]-only wrapper is safe to mark IMMUTABLE so it can
+-- feed generated columns (products.search_vector) and expression indexes (tags trigram).
+create or replace function public.immutable_array_to_string(p_arr text[])
+returns text language sql immutable parallel safe set search_path = '' as $$
+  select coalesce(array_to_string(p_arr, ' '), '');
+$$;
 
 -- "Trusted caller": service_role key, or a direct DB session with no SET ROLE (migrations,
 -- seed, SQL editor, pg_cron). Uses the 'role' GUC rather than current_user so it gives the

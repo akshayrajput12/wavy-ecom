@@ -72,12 +72,10 @@ Marketing
 Coupons, campaigns, testimonials.
 FR-022
 Analytics
-Commerce + AI try-on reporting.
 FR-023
 Integrations
 Provider connection state/configuration metadata.
 FR-024
-Try-on
 Create session, validate input, process, result, failure, expiry/deletion.
 FR-025
 Notifications
@@ -108,7 +106,6 @@ Campaign
 Draft / Scheduled / Live / Paused / Completed / Archived
 Integration
 Connected / Needs Attention / Disconnected
-Try-On
 Created / Uploading / Queued / Processing / Completed / Failed / Expired / Deleted
 3. Required data entities
 Entity
@@ -145,7 +142,6 @@ Campaign / Testimonial / ContentPage
 content metadata, state, media, linked products/collections, SEO
 AnalyticsEvent
 event name, context payload, timestamp, user/session
-TryOnSession
 product, user/session, source asset, provider, status, result asset, TTL, usage metadata
 IntegrationConfig
 provider, environment, non-secret config, status, last checked
@@ -180,7 +176,6 @@ Commerce/page analytics.
 PostHog
 Product events, funnels and feature usage.
 AI provider
-Try-on generation, result delivery, usage/cost context.
 6. Non-functional requirements
 ID
 Category
@@ -199,7 +194,6 @@ Security
 No client exposure of provider secrets; all privileged actions authenticated/authorized.
 NFR-005
 Privacy
-Private customer and try-on assets accessible only to authorized parties; explicit lifecycle/retention.
 NFR-006
 Reliability
 Idempotent payment/order side effects and safe repeated callbacks.
@@ -220,4 +214,3 @@ Every async action has loading, success and failure states.
 Every list has loading, empty and filtered-empty states.
 Payment failure retains cart context and supports safe retry.
 Form validation preserves valid input and shows field-level errors.
-Try-on failure distinguishes input validation from provider/generation failure.

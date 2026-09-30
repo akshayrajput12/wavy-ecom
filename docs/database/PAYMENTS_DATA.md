@@ -30,6 +30,9 @@ payments (1) ── refunds
 | Stock sold while the customer pays | Online orders reserve stock with a TTL (`store_settings.reservation_ttl_minutes`, extended 15 minutes on each new attempt). On capture it is committed. `release_expired_reservations()` cancels unpaid orders after expiry |
 | Payment captured after the order expired | Returns `captured_on_cancelled_order`, `refundRequired`. `reconcile_order_payment` lists it |
 | Over-refund | `refunds_before_insert` trigger: the sum of non-failed refunds cannot exceed `amount_captured` (or the duplicate attempt's amount) |
+| Refund status rewritten after money moved | `refunds_before_update`: `processed` is terminal; amount / payment / order are immutable; `processed_at` / `failed_at` stamped |
+| Customer switches gateway on retry | `start_payment_attempt(order, 'payu')` opens a PayU `payments` row and sets `orders.payment_provider`; COD cannot be chosen after placement (`cod_is_confirmed_at_place_order`) |
+| Paid order cancelled | `cancel_order` restocks committed stock and returns `refundRequired` + `refundableAmount` (captured minus refunded) |
 
 ## Backend flow (Razorpay)
 

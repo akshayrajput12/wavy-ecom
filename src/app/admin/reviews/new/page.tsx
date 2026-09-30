@@ -1,9 +1,8 @@
-import { getProducts } from "@/backend/admin/repo";
+import { listProductOptions } from "@/backend/admin/repo";
 import { ReviewComposerView } from "@/views/admin/review-composer/View";
 
-export const metadata = { title: "Compose review" };
+export const metadata = { title: "Add review" };
 
 export default async function Page() {
-  const products = await getProducts();
-  return <ReviewComposerView products={products.map(({ id, name }) => ({ id, name }))} />;
+  return <ReviewComposerView products={(await listProductOptions()).map(({ id, name, slug }) => ({ id, name, slug }))} />;
 }

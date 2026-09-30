@@ -25,7 +25,7 @@ create index content_pages_updated_by_idx on public.content_pages (updated_by);
 create table public.faqs (
   id           uuid primary key default gen_random_uuid(),
   category     text not null default 'general'
-               check (category in ('general', 'orders', 'shipping', 'returns', 'payments', 'sizing', 'try_on', 'account')),
+               check (category in ('general', 'orders', 'shipping', 'returns', 'payments', 'products', 'account')),
   question     text not null,
   answer       text not null,
   sort_order   integer not null default 0,

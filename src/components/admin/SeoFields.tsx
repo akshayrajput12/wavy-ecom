@@ -2,7 +2,7 @@
 
 import type { ComponentProps } from "react";
 import { Input } from "@/components/ui/Input";
-import { site } from "@/data/site";
+import { siteConfig as site } from "@/lib/site";
 import { Textarea } from "./Fields";
 
 const cut = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);

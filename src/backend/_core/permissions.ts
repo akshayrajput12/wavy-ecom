@@ -15,7 +15,7 @@ export const PERMISSIONS = [
   "payments.read", "payments.gateway.manage",
   "marketing.read", "coupons.write", "offers.write", "campaigns.write",
   "testimonials.write", "content.write", "seo.write", "blog.write", "blog.publish", "reviews.moderate",
-  "analytics.read", "tryon.read",
+  "analytics.read",
   "support.read", "support.write",
   "settings.read", "settings.write", "settings.tax.manage", "settings.shipping.manage", "integrations.manage",
   "staff.manage", "audit.read",
@@ -28,7 +28,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
   super_admin: PERMISSIONS,
   catalog_manager: [
     "catalog.read", "catalog.write", "catalog.publish", "inventory.read", "inventory.write",
-    "reviews.moderate", "tryon.read", "seo.write",
+    "reviews.moderate", "seo.write",
   ],
   order_manager: [
     "catalog.read", "inventory.read", "orders.read", "orders.write", "orders.refund",
@@ -40,7 +40,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     "testimonials.write", "content.write", "seo.write", "blog.write", "blog.publish",
     "reviews.moderate", "analytics.read",
   ],
-  analyst: ["catalog.read", "marketing.read", "analytics.read", "tryon.read", "orders.read"],
+  analyst: ["catalog.read", "marketing.read", "analytics.read", "orders.read"],
   support_agent: [
     "catalog.read", "orders.read", "customers.read", "journey.read", "payments.read",
     "returns.read", "returns.write", "support.read", "support.write",

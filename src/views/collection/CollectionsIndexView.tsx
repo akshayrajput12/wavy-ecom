@@ -1,30 +1,47 @@
-import Image from "next/image";
 import Link from "next/link";
-import { clsx } from "clsx";
-import { Reveal } from "@/components/ui/Reveal";
-import { collectionsIndex } from "@/data/content";
+import { LayoutGrid } from "lucide-react";
+import { ImageWell } from "@/components/commerce/ImageWell";
+import { EmptyState } from "@/components/ui/States";
+import { Stagger, StaggerItem } from "@/components/ui/Reveal";
+import { collectionsIndexCopy } from "@/data/copy";
+import { collectionCopy, homeCopy } from "@/data/storefront";
 import type { Category, Collection } from "@/types/domain";
 
-export function CollectionsIndexView({ items }: { items: (Collection | Category)[] }) {
+type Tile = { id: string; name: string; slug: string; image?: Category["image"]; meta?: string };
+
+function Tiles({ title, items }: { title: string; items: Tile[] }) {
+  return (
+    <section className="mt-12">
+      <h2 className="t-h1">{title}</h2>
+      <Stagger as="ul" className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+        {items.map((c) => (
+          <StaggerItem as="li" key={c.id}>
+            <Link href={`/collections/${c.slug}`} className="group block rounded-lg">
+              <ImageWell media={c.image} alt={c.image?.alt ?? ""} sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw" className="lift aspect-[4/5] rounded-lg"
+                imgClassName="transition-[scale] duration-(--dur-slow) ease-soft group-hover:scale-[1.04]" />
+              <p className="mt-3 text-body-lg font-medium group-hover:text-accent-deep">{c.name}</p>
+              {c.meta && <p className="text-meta text-ink-soft">{c.meta}</p>}
+            </Link>
+          </StaggerItem>
+        ))}
+      </Stagger>
+    </section>
+  );
+}
+
+export function CollectionsIndexView({ categories, collections }: { categories: Category[]; collections: Collection[] }) {
   return (
     <div className="container-x pb-24">
       <header className="border-b border-line py-10 lg:py-16">
-        <h1 className="t-hero">{collectionsIndex.title}</h1>
-        <p className="mt-4 max-w-xl text-body-lg text-ink-soft">{collectionsIndex.description}</p>
+        <h1 className="t-hero">{collectionsIndexCopy.title}</h1>
       </header>
-      <ul className="mt-10 grid gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((c, i) => (
-          <Reveal as="li" key={c.id} delay={(i % 3) * 0.08} className={clsx(i % 3 === 1 && "lg:mt-16")}>
-            <Link href={`/collections/${c.slug}`} className="group block">
-              <div className="relative aspect-[4/5] overflow-hidden rounded-md bg-surface-warm">
-                {c.image && <Image src={c.image.url} alt={c.image.alt} fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover transition duration-700 group-hover:scale-[1.03]" />}
-              </div>
-              <h2 className="t-display mt-4 group-hover:underline group-hover:underline-offset-4">{c.name}</h2>
-              {c.description && <p className="mt-2 max-w-sm text-body text-ink-soft">{c.description}</p>}
-            </Link>
-          </Reveal>
-        ))}
-      </ul>
+      {!categories.length && !collections.length && (
+        <div className="mt-10"><EmptyState icon={<LayoutGrid className="size-7" aria-hidden />} title={collectionsIndexCopy.empty} /></div>
+      )}
+      {collections.length > 0 && (
+        <Tiles title={collectionCopy.collections} items={collections.map((c) => ({ ...c, meta: c.productCount ? homeCopy.products(c.productCount) : undefined }))} />
+      )}
+      {categories.length > 0 && <Tiles title={collectionCopy.categories} items={categories} />}
     </div>
   );
 }

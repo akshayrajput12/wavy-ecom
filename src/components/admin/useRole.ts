@@ -1,25 +1,30 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-import type { StaffRole } from "@/data/admin/types";
+import { createContext, createElement, useContext, useSyncExternalStore, type ReactNode } from "react";
+import type { StaffRole } from "@/types/admin";
 import { can, ROLE_LABELS, type Permission } from "@/views/admin/rbac";
 
 /**
- * Current staff role for the UI. Demo = super_admin.
- * ponytail: dev-only role preview lives in localStorage; TODO(backend agent): read the role from the staff session.
+ * Current staff role for the UI: the real session role (provided by AdminShell), with a dev-only preview override.
+ * The server re-checks every action; this is cosmetic.
  */
 const KEY = "wavy.admin.previewRole";
 const DEFAULT: StaffRole = "super_admin";
 const listeners = new Set<() => void>();
 const allowPreview = process.env.NODE_ENV !== "production";
+const SessionRole = createContext<StaffRole>(DEFAULT);
 
-function read(): StaffRole {
-  if (!allowPreview) return DEFAULT;
+export function RoleProvider({ role, children }: { role: StaffRole; children: ReactNode }) {
+  return createElement(SessionRole.Provider, { value: role }, children);
+}
+
+function read(): StaffRole | null {
+  if (!allowPreview) return null;
   try {
     const v = localStorage.getItem(KEY);
-    return v && v in ROLE_LABELS ? (v as StaffRole) : DEFAULT;
+    return v && v in ROLE_LABELS ? (v as StaffRole) : null;
   } catch {
-    return DEFAULT;
+    return null;
   }
 }
 function subscribe(cb: () => void) {
@@ -34,8 +39,9 @@ export function setPreviewRole(role: StaffRole) {
 }
 
 export function useRole() {
-  const role = useSyncExternalStore(subscribe, read, () => DEFAULT);
-  return { role, allowPreview };
+  const session = useContext(SessionRole);
+  const preview = useSyncExternalStore(subscribe, read, () => null);
+  return { role: preview ?? session, allowPreview };
 }
 
 export function useCan(p: Permission) {

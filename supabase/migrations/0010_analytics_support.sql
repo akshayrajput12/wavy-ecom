@@ -104,7 +104,7 @@ create table public.support_tickets (
   payment_id        uuid references public.payments (id) on delete set null,
   subject           text not null check (char_length(subject) between 1 and 200),
   category          text not null default 'other'
-                    check (category in ('order', 'payment', 'shipping', 'return', 'product', 'account', 'try_on', 'other')),
+                    check (category in ('order', 'payment', 'shipping', 'return', 'product', 'account', 'other')),
   status            public.ticket_status not null default 'open',
   priority          public.ticket_priority not null default 'normal',
   channel           text not null default 'web' check (channel in ('web', 'email', 'phone', 'whatsapp', 'instagram')),

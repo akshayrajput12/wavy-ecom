@@ -1,14 +1,15 @@
 "use client";
 
 import { clsx } from "clsx";
-import { LogOut } from "lucide-react";
+import { LayoutDashboard, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { accountNav } from "@/data/account";
+import { accountNav } from "@/data/copy";
+import { ac } from "../copy";
 import { signOut } from "@/views/auth/actions";
 
 /** Account sub-nav: horizontal scroller on mobile, vertical rail on desktop. */
-export function AccountNav() {
+export function AccountNav({ isStaff }: { isStaff?: boolean }) {
   const path = usePathname();
   const isActive = (href: string) => (href === "/account" ? path === href : path.startsWith(href));
   return (
@@ -25,10 +26,17 @@ export function AccountNav() {
             </Link>
           </li>
         ))}
+        {isStaff && (
+          <li>
+            <Link href="/admin/dashboard" className="flex min-h-11 items-center gap-2 whitespace-nowrap rounded-pill px-4 text-body font-medium text-ink hover:bg-surface-warm lg:rounded-sm">
+              <LayoutDashboard className="size-4" aria-hidden /> Admin dashboard
+            </Link>
+          </li>
+        )}
         <li>
           <form action={signOut}>
             <button type="submit" className="flex min-h-11 items-center gap-2 whitespace-nowrap rounded-pill px-4 text-body text-ink-soft hover:bg-surface-warm hover:text-ink lg:w-full lg:rounded-sm">
-              <LogOut className="size-4" aria-hidden /> Logout
+              <LogOut className="size-4" aria-hidden /> {ac.auth.logout}
             </button>
           </form>
         </li>

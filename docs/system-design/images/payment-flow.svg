@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1062" viewBox="0 0 1200 1062" role="img" aria-labelledby="t d">
+<title id="t">wavy checkout and payment flow</title><desc id="d">Sequence of calls between customer browser, Next.js API, Postgres, payment gateway and outbox worker from order creation to confirmed payment, including idempotent webhook handling.</desc>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#111"/></marker></defs>
+<style>text{font-family:'Instrument Sans',system-ui,sans-serif;fill:#111}.h{font-size:15px;font-weight:600}.t{font-size:12.5px}.s{font-size:11.5px;fill:#494540}.n{font-size:11px;font-weight:700;fill:#111}
+.e{stroke:#111;stroke-width:1.5;fill:none;marker-end:url(#a)}.r{stroke:#494540;stroke-width:1.25;stroke-dasharray:5 4;fill:none;marker-end:url(#a)}.life{stroke:#E6DDD5;stroke-width:2;stroke-dasharray:2 6}</style>
+<rect width="1200" height="1062" fill="#FCFAF7"/>
+<text x="40" y="44" class="h" style="font-size:22px">Checkout → payment → confirmation</text>
+<text x="40" y="66" class="s">Happy path. Solid = request, dashed = response. confirm_payment() is the only path to "paid"; the first arrival wins, and repeats are no-ops.</text>
+<rect x="25.0" y="88" width="190" height="40" rx="10" fill="#fff" stroke="#E6DDD5" stroke-width="1.5"/><text x="120" y="113" class="h" text-anchor="middle">Customer browser</text>
+<path d="M120 130V972" class="life"/>
+<rect x="275.0" y="88" width="190" height="40" rx="10" fill="#FFA273" stroke="#E6DDD5" stroke-width="1.5"/><text x="370" y="113" class="h" text-anchor="middle">Next.js /api</text>
+<path d="M370 130V972" class="life"/>
+<rect x="525.0" y="88" width="190" height="40" rx="10" fill="#fff" stroke="#E6DDD5" stroke-width="1.5"/><text x="620" y="113" class="h" text-anchor="middle">Postgres</text>
+<path d="M620 130V972" class="life"/>
+<rect x="760.0" y="88" width="220" height="40" rx="10" fill="#fff" stroke="#E6DDD5" stroke-width="1.5"/><text x="870" y="113" class="h" text-anchor="middle">Gateway (Razorpay / PayU)</text>
+<path d="M870 130V972" class="life"/>
+<rect x="1015.0" y="88" width="150" height="40" rx="10" fill="#fff" stroke="#E6DDD5" stroke-width="1.5"/><text x="1090" y="113" class="h" text-anchor="middle">Outbox worker</text>
+<path d="M1090 130V972" class="life"/>
+<path d="M126 150H364" class="e"/>
+<text x="134" y="143" class="t">POST /api/checkout · key K1</text>
+<circle cx="102" cy="150" r="10" fill="#fff" stroke="#111"/><text x="102" y="154" class="n" text-anchor="middle">1</text>
+<path d="M376 196H614" class="e"/>
+<text x="384" y="189" class="t">place_order(): quote, reserve 15 min</text>
+<circle cx="352" cy="196" r="10" fill="#fff" stroke="#111"/><text x="352" y="200" class="n" text-anchor="middle">2</text>
+<path d="M614 242H376" class="r"/>
+<text x="384" y="235" class="t">orderId, total (pending_payment)</text>
+<circle cx="638" cy="242" r="10" fill="#fff" stroke="#111"/><text x="638" y="246" class="n" text-anchor="middle">3</text>
+<path d="M126 288H364" class="e"/>
+<text x="134" y="281" class="t">POST /api/payments/intent · K2</text>
+<circle cx="102" cy="288" r="10" fill="#fff" stroke="#111"/><text x="102" y="292" class="n" text-anchor="middle">4</text>
+<path d="M376 334H614" class="e"/>
+<text x="384" y="327" class="t">insert payment_attempts (initiated)</text>
+<circle cx="352" cy="334" r="10" fill="#fff" stroke="#111"/><text x="352" y="338" class="n" text-anchor="middle">5</text>
+<path d="M376 380H864" class="e"/>
+<text x="384" y="373" class="t">adapter.createOrder(amount, receipt = order no.)</text>
+<circle cx="352" cy="380" r="10" fill="#fff" stroke="#111"/><text x="352" y="384" class="n" text-anchor="middle">6</text>
+<path d="M864 426H376" class="r"/>
+<text x="384" y="419" class="t">provider_order_id</text>
+<circle cx="888" cy="426" r="10" fill="#fff" stroke="#111"/><text x="888" y="430" class="n" text-anchor="middle">7</text>
+<path d="M364 472H126" class="r"/>
+<text x="134" y="465" class="t">clientPayload (modal / redirect)</text>
+<circle cx="388" cy="472" r="10" fill="#fff" stroke="#111"/><text x="388" y="476" class="n" text-anchor="middle">8</text>
+<path d="M126 518H864" class="e"/>
+<text x="134" y="511" class="t">customer pays: UPI · card + OTP · netbanking</text>
+<circle cx="102" cy="518" r="10" fill="#fff" stroke="#111"/><text x="102" y="522" class="n" text-anchor="middle">9</text>
+<path d="M864 564H126" class="r"/>
+<text x="134" y="557" class="t">success + signature</text>
+<circle cx="888" cy="564" r="10" fill="#fff" stroke="#111"/><text x="888" y="568" class="n" text-anchor="middle">10</text>
+<path d="M126 610H364" class="e"/>
+<text x="134" y="603" class="t">POST /api/payments/verify</text>
+<circle cx="102" cy="610" r="10" fill="#fff" stroke="#111"/><text x="102" y="614" class="n" text-anchor="middle">11</text>
+<rect x="362" y="642" width="236" height="28" rx="8" fill="#F7F0E9" stroke="#E6DDD5"/><text x="374" y="660" class="t">verify HMAC (timingSafeEqual) + amount</text>
+<circle cx="348" cy="656" r="10" fill="#fff" stroke="#111"/><text x="348" y="660" class="n" text-anchor="middle">12</text>
+<path d="M376 702H614" class="e"/>
+<text x="384" y="695" class="t">confirm_payment(): paid + outbox</text>
+<circle cx="352" cy="702" r="10" fill="#fff" stroke="#111"/><text x="352" y="706" class="n" text-anchor="middle">13</text>
+<path d="M364 748H126" class="r"/>
+<text x="134" y="741" class="t">paid → /order/[n]/success</text>
+<circle cx="388" cy="748" r="10" fill="#fff" stroke="#111"/><text x="388" y="752" class="n" text-anchor="middle">14</text>
+<path d="M864 794H376" class="e"/>
+<text x="384" y="787" class="t">POST /api/payments/razorpay/webhook  payment.captured</text>
+<circle cx="888" cy="794" r="10" fill="#fff" stroke="#111"/><text x="888" y="798" class="n" text-anchor="middle">15</text>
+<path d="M376 840H614" class="e"/>
+<text x="384" y="833" class="t">dedupe event → no-op</text>
+<circle cx="352" cy="840" r="10" fill="#fff" stroke="#111"/><text x="352" y="844" class="n" text-anchor="middle">16</text>
+<path d="M626 886H1084" class="e"/>
+<text x="634" y="879" class="t">outbox order.paid</text>
+<circle cx="602" cy="886" r="10" fill="#fff" stroke="#111"/><text x="602" y="890" class="n" text-anchor="middle">17</text>
+<rect x="990" y="922" width="190" height="62" rx="10" fill="#fff" stroke="#E6DDD5" stroke-width="1.5"/><text x="1000" y="942" class="s">Resend: order confirmed</text><text x="1000" y="959" class="s">PostHog: payment_succeeded</text><text x="1000" y="976" class="s">Shiprocket: create order</text>
+<text x="40" y="1012" class="s">Failures branch off at steps 6 (order_creation), 9 (checkout_open, user_cancelled, bank_declined, otp_timeout), 12 (signature_mismatch), 15 (webhook_timeout) and capture (capture_failed). See payment-failure-states.svg.</text>
+<text x="40" y="1032" class="s">Reservation TTL 15 min (extended 5 min per retry, max 30); pg_cron releases expired ones every minute. The reconcile job polls the provider every 5 min for attempts older than 10 min.</text>
+</svg>

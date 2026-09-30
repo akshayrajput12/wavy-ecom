@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="860" viewBox="0 0 1200 860" role="img" aria-labelledby="t d">
+  <title id="t">wavy system architecture</title>
+  <desc id="d">Browsers reach the Vercel edge, which serves cached pages or forwards to the Next.js app. The app contains proxy.ts, React Server Component pages, route handlers and 16 isolated backend service modules. Services use Supabase (Postgres, Auth, Storage, pg_cron, Vault) and call external providers through adapters. Providers send webhooks back to route handlers; pg_cron calls cron routes.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#111"/></marker>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#C9532E"/></marker>
+  </defs>
+  <style>
+    text{font-family:'Instrument Sans',system-ui,sans-serif;fill:#111}
+    .h{font-size:16px;font-weight:600}
+    .t{font-size:13px}
+    .s{font-size:11.5px;fill:#494540}
+    .o{font-size:10.5px;font-weight:600;letter-spacing:.12em;fill:#494540}
+    .box{fill:#fff;stroke:#E6DDD5;stroke-width:1.5}
+    .zone{fill:#F7F0E9;stroke:#E6DDD5;stroke-width:1.5}
+    .chip{fill:#FCFAF7;stroke:#E6DDD5}
+    .acc{fill:#FFA273;stroke:#F47A4A}
+    .e{stroke:#111;stroke-width:1.5;fill:none;marker-end:url(#a)}
+    .w{stroke:#C9532E;stroke-width:1.5;fill:none;stroke-dasharray:6 4;marker-end:url(#b)}
+  </style>
+  <rect width="1200" height="860" fill="#FCFAF7"/>
+  <text x="40" y="44" class="h" style="font-size:22px">wavy: system architecture</text>
+  <g transform="translate(820 40)"><path d="M0 0H40" class="e"/><text x="48" y="4" class="s">request / provider call</text><path d="M0 22H40" class="w"/><text x="48" y="26" class="s">inbound webhook · pg_cron → /api/cron/*</text></g>
+  <text x="40" y="66" class="s">Single Next.js 16 deployable on Vercel (bom1) · modular backend services · Supabase (ap-south-1)</text>
+
+  <!-- Clients -->
+  <text x="40" y="100" class="o">CLIENTS</text>
+  <rect x="40" y="110" width="340" height="58" rx="12" class="box"/>
+  <text x="58" y="135" class="h">Shopper browser</text>
+  <text x="58" y="155" class="s">storefront · mobile web · PostHog/GA4 SDK</text>
+  <rect x="400" y="110" width="300" height="58" rx="12" class="box"/>
+  <text x="418" y="135" class="h">Staff browser</text>
+  <text x="418" y="155" class="s">/admin · TOTP MFA (aal2)</text>
+  <rect x="720" y="110" width="440" height="58" rx="12" class="box"/>
+  <text x="738" y="135" class="h">On-device try-on (MediaPipe)</text>
+  <text x="738" y="155" class="s">pose + segmentation in browser; cloud VTON only if enabled</text>
+
+  <!-- Edge -->
+  <rect x="40" y="196" width="1120" height="52" rx="12" class="acc"/>
+  <text x="58" y="220" class="h">Vercel Edge Network</text>
+  <text x="58" y="238" class="t">TLS · CDN cache (static shell + "use cache" segments) · Firewall/WAF rate limits · next/image optimisation</text>
+  <path d="M210 168V194" class="e"/><path d="M550 168V194" class="e"/>
+
+  <!-- Next app -->
+  <rect x="40" y="276" width="780" height="330" rx="16" class="zone"/>
+  <text x="58" y="300" class="o">NEXT.JS APP · VERCEL FUNCTIONS (NODE, FLUID)</text>
+  <rect x="56" y="312" width="748" height="40" rx="10" class="box"/>
+  <text x="72" y="337" class="t"><tspan font-weight="600">proxy.ts</tspan>  x-request-id · Supabase session refresh · /admin + /account gate · bb_vid visitor cookie · redirects</text>
+  <rect x="56" y="364" width="364" height="64" rx="10" class="box"/>
+  <text x="72" y="388" class="h">RSC pages</text>
+  <text x="72" y="408" class="s">cached catalog/content (cacheTag) · dynamic</text>
+  <text x="72" y="422" class="s">holes for stock, cart, account, admin</text>
+  <rect x="440" y="364" width="364" height="64" rx="10" class="box"/>
+  <text x="456" y="388" class="h">Route handlers /api/**</text>
+  <text x="456" y="408" class="s">route(svc) wrapper: zod · typed errors · logs</text>
+  <text x="456" y="422" class="s">webhooks · /api/cron/* (CRON_SECRET)</text>
+  <path d="M600 248V310" class="e"/>
+
+  <text x="58" y="456" class="o">SRC/BACKEND · ISOLATED SERVICE MODULES</text>
+  <g class="t">
+    <rect x="56" y="466" width="86" height="34" rx="8" class="chip"/><text x="99" y="488" text-anchor="middle">catalog</text>
+    <rect x="150" y="466" width="86" height="34" rx="8" class="chip"/><text x="193" y="488" text-anchor="middle">cart</text>
+    <rect x="244" y="466" width="86" height="34" rx="8" class="chip"/><text x="287" y="488" text-anchor="middle">pricing</text>
+    <rect x="338" y="466" width="86" height="34" rx="8" class="chip"/><text x="381" y="488" text-anchor="middle">checkout</text>
+    <rect x="432" y="466" width="86" height="34" rx="8" class="acc"/><text x="475" y="488" text-anchor="middle" font-weight="600">payments</text>
+    <rect x="526" y="466" width="86" height="34" rx="8" class="chip"/><text x="569" y="488" text-anchor="middle">orders</text>
+    <rect x="620" y="466" width="86" height="34" rx="8" class="chip"/><text x="663" y="488" text-anchor="middle">shipping</text>
+    <rect x="714" y="466" width="90" height="34" rx="8" class="chip"/><text x="759" y="488" text-anchor="middle">returns</text>
+    <rect x="56" y="508" width="86" height="34" rx="8" class="chip"/><text x="99" y="530" text-anchor="middle">reviews</text>
+    <rect x="150" y="508" width="86" height="34" rx="8" class="chip"/><text x="193" y="530" text-anchor="middle">content</text>
+    <rect x="244" y="508" width="86" height="34" rx="8" class="chip"/><text x="287" y="530" text-anchor="middle">marketing</text>
+    <rect x="338" y="508" width="86" height="34" rx="8" class="chip"/><text x="381" y="530" text-anchor="middle">analytics</text>
+    <rect x="432" y="508" width="86" height="34" rx="8" class="chip"/><text x="475" y="530" text-anchor="middle">notifications</text>
+    <rect x="526" y="508" width="86" height="34" rx="8" class="chip"/><text x="569" y="530" text-anchor="middle">integrations</text>
+    <rect x="620" y="508" width="86" height="34" rx="8" class="chip"/><text x="663" y="530" text-anchor="middle">support</text>
+    <rect x="714" y="508" width="90" height="34" rx="8" class="chip"/><text x="759" y="530" text-anchor="middle">tryon</text>
+  </g>
+  <text x="58" y="566" class="s">each: service.ts (logic) · repo.ts (Supabase or src/data fallback) · schema.ts (zod) · providers/ (adapters, 8 s timeout)</text>
+  <text x="58" y="584" class="s">rules: call other services via service.ts only · atomic cross-service writes = one SQL function · side effects via outbox</text>
+  <path d="M400 428V462" class="e"/><path d="M622 428V462" class="e"/>
+
+  <!-- Providers -->
+  <rect x="850" y="276" width="310" height="330" rx="16" class="zone"/>
+  <text x="868" y="300" class="o">EXTERNAL PROVIDERS (ADAPTERS)</text>
+  <g>
+    <rect x="866" y="312" width="278" height="40" rx="10" class="box"/><text x="882" y="337" class="t"><tspan font-weight="600">Razorpay</tspan> · modal checkout, refunds</text>
+    <rect x="866" y="360" width="278" height="40" rx="10" class="box"/><text x="882" y="385" class="t"><tspan font-weight="600">PayU</tspan> · hosted redirect</text>
+    <rect x="866" y="408" width="278" height="40" rx="10" class="box"/><text x="882" y="433" class="t"><tspan font-weight="600">Shiprocket</tspan> · AWB, pickup, tracking</text>
+    <rect x="866" y="456" width="278" height="40" rx="10" class="box"/><text x="882" y="481" class="t"><tspan font-weight="600">Resend</tspan> · transactional email</text>
+    <rect x="866" y="504" width="278" height="40" rx="10" class="box"/><text x="882" y="529" class="t"><tspan font-weight="600">PostHog · GA4</tspan> · product analytics</text>
+    <rect x="866" y="552" width="278" height="40" rx="10" class="box"/><text x="882" y="577" class="t"><tspan font-weight="600">Cloud VTON</tspan> · optional, admin toggle</text>
+  </g>
+  <path d="M806 480H862" class="e"/>
+  <path d="M866 332H840V388H808" class="w"/>
+
+  <!-- Supabase -->
+  <rect x="40" y="640" width="1120" height="190" rx="16" class="zone"/>
+  <text x="58" y="664" class="o">SUPABASE · AP-SOUTH-1</text>
+  <rect x="56" y="676" width="330" height="138" rx="10" class="box"/>
+  <text x="72" y="700" class="h">Postgres 17</text>
+  <text x="72" y="722" class="s">RLS on every table · enums = domain.ts</text>
+  <text x="72" y="740" class="s">place_order() · confirm_payment() · advance_shipment()</text>
+  <text x="72" y="758" class="s">outbox · idempotency_keys · payment_events</text>
+  <text x="72" y="776" class="s">PostgREST (supabase-js) + Supavisor :6543</text>
+  <text x="72" y="794" class="s">read replica at Scale tier (analytics, search)</text>
+  <rect x="402" y="676" width="176" height="138" rx="10" class="box"/>
+  <text x="418" y="700" class="h">Auth</text>
+  <text x="418" y="722" class="s">customers: password,</text>
+  <text x="418" y="738" class="s">magic link</text>
+  <text x="418" y="756" class="s">staff: invite + TOTP</text>
+  <text x="418" y="774" class="s">JWT claim user_role</text>
+  <rect x="594" y="676" width="190" height="138" rx="10" class="box"/>
+  <text x="610" y="700" class="h">Storage</text>
+  <text x="610" y="722" class="s">product-media (public)</text>
+  <text x="610" y="738" class="s">review-media</text>
+  <text x="610" y="756" class="s">return-evidence (private)</text>
+  <text x="610" y="774" class="s">tryon-* (private, 24 h TTL)</text>
+  <rect x="800" y="676" width="200" height="138" rx="10" class="box"/>
+  <text x="816" y="700" class="h">pg_cron + pg_net</text>
+  <text x="816" y="722" class="s">1 min: reservations, outbox</text>
+  <text x="816" y="738" class="s">5 min: reconcile payments</text>
+  <text x="816" y="756" class="s">10 min: integration health</text>
+  <text x="816" y="774" class="s">30 min: Shiprocket sync</text>
+  <text x="816" y="792" class="s">nightly: metrics, settlements</text>
+  <rect x="1016" y="676" width="128" height="138" rx="10" class="box"/>
+  <text x="1032" y="700" class="h">Vault</text>
+  <text x="1032" y="722" class="s">runtime provider</text>
+  <text x="1032" y="738" class="s">secrets (admin-set)</text>
+  <text x="1032" y="756" class="s">env vars for</text>
+  <text x="1032" y="772" class="s">static keys</text>
+  <path d="M430 606V672" class="e"/>
+  <text x="440" y="632" class="s">user JWT (RLS) · service role only after RBAC guard</text>
+  <path d="M830 676V412H808" class="w"/>
+</svg>

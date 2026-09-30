@@ -1,0 +1,37 @@
+export const tryOnCopy = {
+  launch: "Try it on",
+  title: "Live try-on",
+  live: "Live",
+  intro: "Stand in the outline and the piece appears on you in real time. Move around and it follows.",
+  privacy: "Processed on your device, nothing uploaded. The camera turns off when you close this window.",
+  disclaimer: "Visual preview only — not a size or fit guarantee.",
+  start: "Start camera",
+  close: "Close try-on",
+  snapshot: "Save snapshot",
+  retry: "Try again",
+  steps: [
+    "Prop your phone up or step back from your laptop",
+    "Line your body up with the outline",
+    "Hold still for a second, then move around",
+  ],
+  status: {
+    starting: "Starting camera and loading the try-on engine…",
+    tracking: "Tracking — move around, the piece follows you",
+  },
+  hints: {
+    no_person: "Step into the outline",
+    show_hips: "Step back so your waist is in view",
+    show_legs: "Step back so your legs and feet are in view",
+    move_left: "Move a little to your left",
+    move_right: "Move a little to your right",
+    move_closer: "Move a little closer",
+    step_back: "Step back a little",
+    aligned: "Perfect — hold still",
+  },
+  errors: {
+    denied: { title: "Camera access blocked", body: "Allow camera access for this site in your browser settings, then try again." },
+    unsupported: { title: "Camera not supported", body: "This browser can't open the camera. Try the latest Chrome, Safari or Edge on a secure (https) page." },
+    camera_error: { title: "Couldn't open your camera", body: "No camera was found or it's in use by another app. Close other apps using it and try again." },
+    engine_error: { title: "Try-on engine failed to load", body: "Your camera works, but the body-tracking engine couldn't start. Check your connection and try again." },
+  },
+} as const;

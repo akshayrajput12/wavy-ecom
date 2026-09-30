@@ -1,26 +1,217 @@
 @import "tailwindcss";
 
+/*
+ * wavy design system — single source of truth.
+ * RULE: never write hex/rgb in components. Use these tokens via Tailwind
+ * utilities (bg-canvas, text-ink, border-line, text-display…) or var(--*).
+ * Change a value here and the whole site follows.
+ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* ---------- Color palette ---------- */
+  --ink: #111111;
+  --ink-soft: #494540;
+  --ink-muted: #8a847d;
+  --canvas: #fcfaf7;
+  --surface: #ffffff;
+  --surface-warm: #f7f0e9;
+  --line: #e6ddd5;
+  --line-soft: #f0e9e3;
+  --accent: #ffa273;
+  --accent-hover: #f47a4a;
+  --accent-deep: #c9532e;
+  --success: #258653;
+  --warning: #b7791f;
+  --danger: #c43d3d;
+  --info: #4669a8;
+  --rating: #f2a93b;
+  --black: #080808;
+  --on-dark: #fcfaf7;
+
+  /* ---------- Typography ---------- */
+  /* font vars are injected by next/font in app/layout.tsx */
+  --font-ui: var(--font-instrument-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-editorial: var(--font-instrument-serif), ui-serif, Georgia, serif;
+
+  /* fluid type scale: min → max between 390px and 1440px viewports */
+  --text-hero: clamp(2.75rem, 1.6rem + 4.8vw, 5.5rem);   /* 44 → 88 */
+  --text-display: clamp(2.25rem, 1.5rem + 3vw, 3.5rem);  /* 36 → 56 */
+  --text-h1: clamp(1.875rem, 1.4rem + 1.8vw, 2.5rem);    /* 30 → 40 */
+  --text-h2: clamp(1.5rem, 1.3rem + 0.8vw, 1.75rem);     /* 24 → 28 */
+  --text-h3: 1.25rem;   /* 20 */
+  --text-body-lg: 1rem; /* 16 */
+  --text-body: 0.875rem;/* 14 */
+  --text-meta: 0.75rem; /* 12 */
+  --text-micro: 0.6875rem; /* 11 */
+  --text-overline: 0.625rem; /* 10 (docs said 9 — bumped for legibility) */
+
+  --leading-tight: 1.05;
+  --leading-snug: 1.25;
+  --leading-body: 1.55;
+  --tracking-tight: -0.02em;
+  --tracking-wide: 0.14em;
+
+  /* ---------- Spacing (8px rhythm) ---------- */
+  --space-1: 0.25rem; /* 4 */
+  --space-2: 0.5rem;  /* 8 */
+  --space-3: 0.75rem; /* 12 */
+  --space-4: 1rem;    /* 16 */
+  --space-6: 1.5rem;  /* 24 */
+  --space-8: 2rem;    /* 32 */
+  --space-12: 3rem;   /* 48 */
+  --space-16: 4rem;   /* 64 */
+  --space-24: 6rem;   /* 96 */
+  --section-y: clamp(3rem, 2rem + 4vw, 6rem);
+  --gutter: clamp(1rem, 0.5rem + 2.4vw, 3rem);
+  --container: 1440px;
+  --header-h: 64px;
+
+  /* ---------- Shape & elevation ---------- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+  --shadow-sm: 0 1px 2px color-mix(in srgb, var(--ink) 6%, transparent);
+  --shadow-md: 0 8px 24px -8px color-mix(in srgb, var(--ink) 14%, transparent);
+  --shadow-lg: 0 24px 60px -20px color-mix(in srgb, var(--ink) 25%, transparent);
+
+  /* ---------- Motion ---------- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 150ms;
+  --dur-base: 280ms;
+  --dur-slow: 600ms;
 }
 
+/* Expose tokens as Tailwind utilities: bg-canvas, text-ink, border-line, rounded-md, text-h1 … */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-muted: var(--ink-muted);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-warm: var(--surface-warm);
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-deep: var(--accent-deep);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --color-rating: var(--rating);
+  --color-black: var(--black);
+  --color-on-dark: var(--on-dark);
+
+  --font-sans: var(--font-ui);
+  --font-serif: var(--font-editorial);
+
+  --text-hero: var(--text-hero);
+  --text-display: var(--text-display);
+  --text-h1: var(--text-h1);
+  --text-h2: var(--text-h2);
+  --text-h3: var(--text-h3);
+  --text-body-lg: var(--text-body-lg);
+  --text-body: var(--text-body);
+  --text-meta: var(--text-meta);
+  --text-micro: var(--text-micro);
+  --text-overline: var(--text-overline);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-pill: var(--radius-pill);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --ease-out: var(--ease-out);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ---------- Base ---------- */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  -webkit-font-smoothing: antialiased;
+}
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+::selection {
+  background: var(--accent);
+  color: var(--ink);
+}
+
+/* ---------- Semantic typography (swap any heading style here) ---------- */
+@layer components {
+  .t-hero {
+    font-family: var(--font-editorial);
+    font-size: var(--text-hero);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    font-weight: 400;
+  }
+  .t-display {
+    font-family: var(--font-editorial);
+    font-size: var(--text-display);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    font-weight: 400;
+  }
+  .t-h1 {
+    font-size: var(--text-h1);
+    line-height: var(--leading-snug);
+    letter-spacing: var(--tracking-tight);
+    font-weight: 600;
+  }
+  .t-h2 {
+    font-size: var(--text-h2);
+    line-height: var(--leading-snug);
+    letter-spacing: var(--tracking-tight);
+    font-weight: 600;
+  }
+  .t-h3 {
+    font-size: var(--text-h3);
+    line-height: var(--leading-snug);
+    font-weight: 500;
+  }
+  .t-body {
+    font-size: var(--text-body);
+    line-height: var(--leading-body);
+  }
+  .t-meta {
+    font-size: var(--text-meta);
+    color: var(--ink-soft);
+  }
+  .t-overline {
+    font-size: var(--text-overline);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    font-weight: 600;
+  }
+  .container-x {
+    width: 100%;
+    max-width: var(--container);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+  .section-y {
+    padding-block: var(--section-y);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

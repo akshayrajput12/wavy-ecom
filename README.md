@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# wavy — Fashion Commerce
 
-## Getting Started
+Premium clothing & sneakers storefront + admin console.
+Next.js 16 · TypeScript · Tailwind v4 tokens · Framer Motion · Lenis · Supabase · Razorpay/PayU · Shiprocket · in-house MediaPipe try-on.
 
-First, run the development server:
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local      # leave Supabase blank to run on demo data (src/data/*.ts)
+npm run dev                     # http://localhost:3000   admin: /admin
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Connect Supabase
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Option A: hosted project (no Docker needed):
+```bash
+npx supabase login
+npx supabase link --project-ref <your-ref>
+npx supabase db push            # runs supabase/migrations/*
+psql "$DB_URL" -f supabase/seed.sql   # or paste seed.sql in the SQL editor
+```
+Then fill `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`, and enable the **Custom Access Token hook** (Auth → Hooks → `public.custom_access_token_hook`) so staff roles reach the JWT.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Option B: local (needs Docker Desktop):
+```bash
+npm run db:start && npm run db:reset && npm run db:types
+```
 
-## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
+| | |
+|---|---|
+| `npm run dev` / `build` / `start` | Next.js |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run lint` | ESLint |
+| `npm test` | Vitest |
+| `npm run db:types` | regenerate `src/types/database.ts` |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Where things live
+Read **[docs/CONVENTIONS.md](docs/CONVENTIONS.md)** before coding. Specs: `docs/specs/`. Architecture, payments, capacity: `docs/system-design/`. Database: `docs/database/`. Design system + screen map: `docs/design/`. Try-on: `docs/tryon/`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Try-on API contract: `docs/api/TRYON_V1.md`. The free live preview runs in the browser and does not upload camera frames. Photo generation is disabled. BHMR reference adaptation: `docs/design/REFERENCE_BHMR.md`.

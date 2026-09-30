@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1010" viewBox="0 0 1200 1010" role="img" aria-labelledby="t d">
+<title id="t">Order, shipment and return state machines</title>
+<desc id="d">Order states from pending payment to delivered with cancel, return and refund branches; shipment states from created to delivered with exception and cancellation; return states from requested to closed. Emails sent at each transition are noted.</desc>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#111"/></marker>
+<marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#C9532E"/></marker></defs>
+<style>text{font-family:'Instrument Sans',system-ui,sans-serif;fill:#111}.h{font-size:14px;font-weight:600}.s{font-size:11px;fill:#494540}.m{font-size:11px;fill:#C9532E;font-weight:600}.o{font-size:10.5px;font-weight:600;letter-spacing:.12em;fill:#494540}
+.box{fill:#fff;stroke:#E6DDD5;stroke-width:1.5}.good{fill:#FFA273;stroke:#F47A4A;stroke-width:1.5}.bad{fill:#F7F0E9;stroke:#C43D3D;stroke-width:1.5}.zone{fill:none;stroke:#E6DDD5;stroke-width:1.5}
+.e{stroke:#111;stroke-width:1.4;fill:none;marker-end:url(#a)}.x{stroke:#C9532E;stroke-width:1.4;fill:none;stroke-dasharray:5 4;marker-end:url(#b)}</style>
+<rect width="1200" height="1010" fill="#FCFAF7"/>
+<text x="40" y="44" class="h" style="font-size:22px">Order, shipment and return lifecycle</text>
+<text x="40" y="66" class="s">SRS §2 states. Each transition is one SQL function that appends to order_events and writes an outbox row (✉ = Resend email). Invalid transitions return 409.</text>
+<rect x="24" y="84" width="1152" height="400" rx="16" class="zone"/>
+<text x="40" y="106" class="o" text-anchor="start">ORDER · orders.status</text>
+<rect x="60" y="170" width="150" height="44" rx="12" class="box"/><text x="135.0" y="197.0" class="h" text-anchor="middle">pending_payment</text>
+<rect x="246" y="170" width="150" height="44" rx="12" class="box"/><text x="321.0" y="197.0" class="h" text-anchor="middle">paid</text>
+<rect x="432" y="170" width="150" height="44" rx="12" class="box"/><text x="507.0" y="197.0" class="h" text-anchor="middle">processing</text>
+<rect x="618" y="170" width="150" height="44" rx="12" class="box"/><text x="693.0" y="197.0" class="h" text-anchor="middle">packed</text>
+<rect x="804" y="170" width="150" height="44" rx="12" class="box"/><text x="879.0" y="197.0" class="h" text-anchor="middle">shipped</text>
+<rect x="990" y="170" width="150" height="44" rx="12" class="good"/><text x="1065.0" y="197.0" class="h" text-anchor="middle">delivered</text>
+<path d="M212 192H242" class="e"/>
+<text x="228.0" y="162" class="s" text-anchor="middle">confirm_payment()</text>
+<path d="M398 192H428" class="e"/>
+<text x="414.0" y="162" class="s" text-anchor="middle">auto</text>
+<path d="M584 192H614" class="e"/>
+<text x="600.0" y="162" class="s" text-anchor="middle">admin Pack · AWB</text>
+<path d="M770 192H800" class="e"/>
+<text x="786.0" y="162" class="s" text-anchor="middle">SR picked up</text>
+<path d="M956 192H986" class="e"/>
+<text x="972.0" y="162" class="s" text-anchor="middle">SR delivered</text>
+<path d="M135 168C135 96 507 96 507 166" class="e"/>
+<text x="321" y="138" class="s" text-anchor="middle">COD confirmed (confirm_cod)</text>
+<text x="321.0" y="232" class="m" text-anchor="middle">✉ order_confirmed</text>
+<text x="507.0" y="232" class="s" text-anchor="middle">→ Shiprocket create</text>
+<text x="879.0" y="232" class="m" text-anchor="middle">✉ shipped + /track/[token]</text>
+<text x="1065.0" y="232" class="m" text-anchor="middle">✉ delivered · review T+3d</text>
+<rect x="246" y="300" width="336" height="44" rx="12" class="bad"/><text x="414.0" y="327.0" class="h" text-anchor="middle">cancelled</text>
+<path d="M135 216V322H242" class="e"/>
+<text x="144" y="270" class="s" text-anchor="start">24 h unpaid · customer · admin</text>
+<path d="M321 242V296" class="e"/>
+<path d="M507 242V296" class="e"/>
+<text x="414" y="364" class="s" text-anchor="middle">before packed → release stock + auto refund · ✉ order_cancelled</text>
+<rect x="990" y="300" width="150" height="44" rx="12" class="box"/><text x="1065.0" y="327.0" class="h" text-anchor="middle">return_requested</text>
+<path d="M1050 242V296" class="e"/>
+<text x="1058" y="270" class="s" text-anchor="start">POST /api/returns</text>
+<path d="M1130 298C1174 270 1174 220 1142 200" class="x"/>
+<text x="1124" y="246" class="m" text-anchor="end">rejected</text>
+<rect x="804" y="400" width="150" height="44" rx="12" class="box"/><text x="879.0" y="427.0" class="h" text-anchor="middle">returned</text>
+<path d="M1065 346V420H958" class="e"/>
+<text x="1072" y="414" class="s" text-anchor="start">received + QC</text>
+<rect x="618" y="400" width="150" height="44" rx="12" class="bad"/><text x="693.0" y="427.0" class="h" text-anchor="middle">refunded</text>
+<path d="M802 422H772" class="e"/>
+<text x="786" y="394" class="s" text-anchor="middle">refund.processed</text>
+<path d="M1000 216C980 330 760 330 693 398" class="x"/>
+<text x="760" y="322" class="m" text-anchor="start">goodwill refund (admin)</text>
+<text x="693" y="462" class="m" text-anchor="middle">✉ refund_processed</text>
+<text x="1065" y="362" class="m" text-anchor="middle">✉ return_requested</text>
+<rect x="24" y="500" width="1152" height="230" rx="16" class="zone"/>
+<text x="40" y="522" class="o" text-anchor="start">SHIPMENT · shipments.status (Shiprocket webhook POST /api/hooks/courier-status + 30 min poll)</text>
+<rect x="80" y="560" width="160" height="44" rx="12" class="box"/><text x="160.0" y="587.0" class="h" text-anchor="middle">created</text>
+<rect x="300" y="560" width="160" height="44" rx="12" class="box"/><text x="380.0" y="587.0" class="h" text-anchor="middle">picked_up</text>
+<rect x="520" y="560" width="160" height="44" rx="12" class="box"/><text x="600.0" y="587.0" class="h" text-anchor="middle">in_transit</text>
+<rect x="740" y="560" width="160" height="44" rx="12" class="box"/><text x="820.0" y="587.0" class="h" text-anchor="middle">out_for_delivery</text>
+<rect x="960" y="560" width="160" height="44" rx="12" class="good"/><text x="1040.0" y="587.0" class="h" text-anchor="middle">delivered</text>
+<path d="M242 582H296" class="e"/>
+<path d="M462 582H516" class="e"/>
+<path d="M682 582H736" class="e"/>
+<path d="M902 582H956" class="e"/>
+<text x="170" y="622" class="s" text-anchor="start">AWB assigned</text>
+<text x="380.0" y="622" class="m" text-anchor="middle">→ order shipped</text>
+<text x="1040.0" y="622" class="m" text-anchor="middle">→ order delivered</text>
+<rect x="630" y="660" width="200" height="44" rx="12" class="bad"/><text x="730.0" y="687.0" class="h" text-anchor="middle">exception</text>
+<path d="M600 606V682H626" class="e"/>
+<path d="M840 606V656" class="e"/>
+<path d="M832 682H880V610" class="x"/>
+<text x="844" y="700" class="m" text-anchor="start">reattempt</text>
+<text x="730" y="722" class="m" text-anchor="middle">NDR / lost / RTO · ✉ delivery_issue</text>
+<rect x="80" y="660" width="160" height="44" rx="12" class="bad"/><text x="160.0" y="687.0" class="h" text-anchor="middle">cancelled</text>
+<path d="M160 606V656" class="e"/>
+<path d="M628 694H244" class="e"/>
+<text x="254" y="690" class="s" text-anchor="start">RTO delivered</text>
+<rect x="24" y="746" width="1152" height="240" rx="16" class="zone"/>
+<text x="40" y="768" class="o" text-anchor="start">RETURN · return_requests.status (window 7 days after delivered)</text>
+<rect x="60" y="800" width="150" height="44" rx="12" class="box"/><text x="135.0" y="827.0" class="h" text-anchor="middle">requested</text>
+<rect x="246" y="800" width="150" height="44" rx="12" class="box"/><text x="321.0" y="827.0" class="h" text-anchor="middle">approved</text>
+<rect x="432" y="800" width="150" height="44" rx="12" class="box"/><text x="507.0" y="827.0" class="h" text-anchor="middle">pickup_scheduled</text>
+<rect x="618" y="800" width="150" height="44" rx="12" class="box"/><text x="693.0" y="827.0" class="h" text-anchor="middle">received</text>
+<rect x="804" y="800" width="150" height="44" rx="12" class="box"/><text x="879.0" y="827.0" class="h" text-anchor="middle">refunded</text>
+<rect x="990" y="800" width="150" height="44" rx="12" class="good"/><text x="1065.0" y="827.0" class="h" text-anchor="middle">closed</text>
+<path d="M212 822H242" class="e"/>
+<text x="228.0" y="792" class="s" text-anchor="middle">auto rule / admin</text>
+<path d="M398 822H428" class="e"/>
+<text x="414.0" y="792" class="s" text-anchor="middle">SR return order</text>
+<path d="M584 822H614" class="e"/>
+<text x="600.0" y="792" class="s" text-anchor="middle">warehouse + QC</text>
+<path d="M770 822H800" class="e"/>
+<text x="786.0" y="792" class="s" text-anchor="middle">refund.processed</text>
+<path d="M956 822H986" class="e"/>
+<rect x="246" y="900" width="150" height="44" rx="12" class="bad"/><text x="321.0" y="927.0" class="h" text-anchor="middle">rejected</text>
+<path d="M135 846V922H242" class="e"/>
+<text x="144" y="892" class="s" text-anchor="start">admin (reason)</text>
+<path d="M398 922H1065V850" class="e"/>
+<text x="135.0" y="862" class="m" text-anchor="middle">✉ return_requested</text>
+<text x="321.0" y="862" class="m" text-anchor="middle">✉ return_approved</text>
+<text x="507.0" y="862" class="m" text-anchor="middle">✉ return_pickup</text>
+<text x="879.0" y="862" class="m" text-anchor="middle">✉ refund_processed</text>
+<text x="321.0" y="962" class="m" text-anchor="middle">✉ return_rejected</text>
+</svg>

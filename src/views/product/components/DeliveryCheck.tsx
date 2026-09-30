@@ -1,0 +1,55 @@
+"use client";
+
+import { useState } from "react";
+import { MapPin } from "lucide-react";
+import { deliveryCopy as c } from "@/data/content";
+
+// ponytail: mock serviceability by pincode prefix; swap for GET /api/shipping/serviceability when Shiprocket is wired
+export function DeliveryCheck() {
+  const [pin, setPin] = useState("");
+  const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
+  const [loading, setLoading] = useState(false);
+
+  async function check(e: React.FormEvent) {
+    e.preventDefault();
+    if (!/^[1-9]\d{5}$/.test(pin)) return setMsg({ ok: false, text: c.invalid });
+    setLoading(true);
+    setMsg(undefined);
+    try {
+      const response = await fetch(`/api/shipping/serviceability?pincode=${encodeURIComponent(pin)}`, { cache: "no-store" });
+      const payload = (await response.json()) as {
+        ok?: boolean;
+        data?: { serviceable: boolean; prepaidAvailable: boolean; codAvailable: boolean; estimatedDays: { min: number; max: number } | null };
+      };
+      if (!response.ok || !payload.ok || !payload.data) throw new Error("serviceability_unavailable");
+      const availability = payload.data;
+      if (!availability.serviceable) return setMsg({ ok: false, text: c.unserviceable });
+      const days = availability.estimatedDays
+        ? availability.estimatedDays.min === availability.estimatedDays.max
+          ? `${availability.estimatedDays.min} days`
+          : `${availability.estimatedDays.min}–${availability.estimatedDays.max} days`
+        : null;
+      const payment = availability.codAvailable ? c.codAvailable : availability.prepaidAvailable ? c.prepaidOnly : c.paymentUnavailable;
+      setMsg({ ok: true, text: c.result(days, payment) });
+    } catch {
+      setMsg({ ok: false, text: c.unavailable });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <form onSubmit={check} className="rounded-md border border-line bg-surface p-4" noValidate aria-busy={loading}>
+      <label htmlFor="pincode" className="flex items-center gap-2 text-meta font-medium"><MapPin className="size-4" aria-hidden /> {c.title}</label>
+      <div className="mt-2 flex gap-2">
+        <input
+          id="pincode" value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+          inputMode="numeric" autoComplete="postal-code" placeholder={c.placeholder} aria-describedby={msg ? "pincode-msg" : undefined} aria-invalid={msg && !msg.ok}
+          className="h-11 min-w-0 flex-1 rounded-sm border border-line bg-canvas px-3 text-body tabular-nums focus:border-ink focus:outline-none"
+        />
+        <button type="submit" disabled={loading} className="h-11 min-w-20 rounded-sm border border-ink px-4 text-meta font-semibold hover:bg-ink hover:text-on-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60">{loading ? c.loading : c.cta}</button>
+      </div>
+      {msg && <p id="pincode-msg" role="status" className={msg.ok ? "mt-2 text-meta text-success" : "mt-2 text-meta text-danger"}>{msg.ok ? "✓ " : "⚠ "}{msg.text}</p>}
+    </form>
+  );
+}

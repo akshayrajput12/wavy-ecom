@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Placeholder overlay: waistband y~57 (hip line), ankles y~1005 -->
+  <path d="M318 18 L706 18 L734 1012 L562 1012 L512 330 L462 1012 L290 1012 Z"
+        fill="#494540" fill-opacity="0.9" stroke="#000" stroke-opacity="0.3" stroke-width="6" stroke-linejoin="round"/>
+  <rect x="318" y="18" width="388" height="56" fill="#111" fill-opacity="0.5"/>
+  <rect x="300" y="420" width="90" height="140" rx="10" fill="#000" fill-opacity="0.15"/>
+  <rect x="634" y="420" width="90" height="140" rx="10" fill="#000" fill-opacity="0.15"/>
+</svg>

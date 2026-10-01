@@ -11,7 +11,7 @@ import { formatPrice } from "@/lib/format";
 import { FilterPanel, type FilterProps } from "./FilterPanel";
 import { useFilterNav } from "./useFilterNav";
 
-/** Result count, active-filter chips, clear all, sort, and the mobile filter sheet. */
+/** Toolbar: "Filters" pill (opens the facet drawer), active-filter chips, result count and sort. */
 export function FilterToolbar({ total, ...props }: FilterProps & { total: number }) {
   const nav = useFilterNav();
   const sp = nav.params;
@@ -31,41 +31,35 @@ export function FilterToolbar({ total, ...props }: FilterProps & { total: number
   const drop = (a: (typeof active)[number]) =>
     a.key === "price" ? nav.set({ min: undefined, max: undefined }) : a.key === "opt" || a.key === "brand" ? nav.remove(a.key, a.value) : nav.set({ [a.key]: undefined });
 
-  const sort = (
-    <Select label={filterCopy.sort} value={sp.get("sort") ?? "featured"} onChange={(e) => nav.set({ sort: e.target.value === "featured" ? undefined : e.target.value })}>
-      {sortOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
-    </Select>
-  );
-
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-meta text-ink-soft" aria-live="polite">{nav.pending ? collectionCopy.updating : filterCopy.results(total)}</p>
-        <div className="flex items-center gap-2">
-          <Button variant="secondary" size="sm" className="lg:hidden" onClick={() => setSheet(true)}>
-            <SlidersHorizontal className="size-4" aria-hidden /> {filterCopy.title}{active.length > 0 && ` (${active.length})`}
-          </Button>
-          <div className="max-lg:hidden">{sort}</div>
-        </div>
-      </div>
+    <div className="flex flex-wrap items-center gap-2 border-y border-line py-3">
+      <Button variant="secondary" size="sm" className="h-11 px-5" onClick={() => setSheet(true)} aria-haspopup="dialog">
+        <SlidersHorizontal className="size-4" aria-hidden /> {filterCopy.filters}
+        {active.length > 0 && <span className="grid size-5 place-items-center rounded-pill bg-ink text-micro text-canvas">{active.length}</span>}
+      </Button>
       {active.length > 0 && (
-        <ul className="flex flex-wrap items-center gap-2" aria-label={collectionCopy.activeFilters}>
+        <ul className="flex flex-wrap items-center gap-2 max-md:order-last max-md:w-full" aria-label={collectionCopy.activeFilters}>
           {active.map((a) => (
             <li key={`${a.key}-${a.value}`}>
               <Chip onRemove={() => drop(a)} aria-label={collectionCopy.removeFilter(a.label)}>{a.label}</Chip>
             </li>
           ))}
           <li>
-            <button type="button" onClick={nav.clear} className="min-h-11 px-2 text-meta font-medium underline underline-offset-4 hover:text-accent-deep">{filterCopy.clearAll}</button>
+            <button type="button" onClick={nav.clear} className="min-h-11 px-2 text-meta font-medium underline decoration-line underline-offset-4 hover:decoration-ink">{filterCopy.clearAll}</button>
           </li>
         </ul>
       )}
+      <div className="ml-auto flex items-center gap-3">
+        <p className="t-meta tabular-nums max-sm:sr-only" aria-live="polite">{nav.pending ? collectionCopy.updating : filterCopy.results(total)}</p>
+        <Select label={filterCopy.sort} hideLabel value={sp.get("sort") ?? "featured"} onChange={(e) => nav.set({ sort: e.target.value === "featured" ? undefined : e.target.value })}>
+          {sortOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+        </Select>
+      </div>
 
       <Drawer
         open={sheet}
         onClose={() => setSheet(false)}
-        side="bottom"
-        title={filterCopy.title}
+        title={filterCopy.filters}
         footer={
           <div className="flex gap-3">
             <Button variant="secondary" className="flex-1" onClick={nav.clear} disabled={!active.length}>{filterCopy.clearAll}</Button>
@@ -73,7 +67,6 @@ export function FilterToolbar({ total, ...props }: FilterProps & { total: number
           </div>
         }
       >
-        <div className="mb-2 [&_select]:w-full">{sort}</div>
         <FilterPanel {...props} />
       </Drawer>
     </div>

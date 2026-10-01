@@ -16,25 +16,25 @@ export function CartView({ freeShippingThreshold }: { freeShippingThreshold?: nu
 
   return (
     <div className="container-x pb-24">
-      <header className="flex items-end justify-between gap-4 border-b border-line py-8 lg:py-12">
-        <h1 className="t-h1">{c.title} {hydrated && <span className="font-normal text-ink-soft">({cartCount(lines)})</span>}</h1>
-        {lines.length > 0 && <ButtonLink href="/" variant="link" className="max-sm:hidden">{c.continue}</ButtonLink>}
+      <header className="flex items-end justify-between gap-4 pb-8 pt-8 lg:pb-10 lg:pt-12">
+        <h1 className="t-display">{c.title} {hydrated && <span className="t-index align-top text-ink-soft">({String(cartCount(lines)).padStart(2, "0")})</span>}</h1>
+        {lines.length > 0 && <ButtonLink href="/" variant="link" size="sm" className="max-sm:hidden">{c.continue}</ButtonLink>}
       </header>
 
       {!hydrated ? (
-        <div className="mt-8 grid gap-4" aria-busy="true"><Skeleton className="h-28" /><Skeleton className="h-28" /></div>
+        <div className="grid gap-4" aria-busy="true"><Skeleton className="h-32 rounded-lg" /><Skeleton className="h-32 rounded-lg" /></div>
       ) : lines.length === 0 ? (
-        <div className="mt-10">
+        <div>
           <EmptyState icon={<ShoppingBag className="size-7" aria-hidden />} title={c.empty.title} body={c.empty.body} action={<ButtonLink href="/">{c.emptyCta}</ButtonLink>} />
         </div>
       ) : (
-        <div className="mt-6 grid gap-8 lg:grid-cols-12 lg:gap-10">
-          <div className="space-y-4 lg:col-span-7">
+        <div className="grid gap-8 lg:grid-cols-12 lg:gap-12">
+          <div className="space-y-5 lg:col-span-7">
             <CartNudges q={q} freeShippingThreshold={freeShippingThreshold} />
             <CartLines q={q} large />
           </div>
           <aside className="lg:col-span-5">
-            <div className="space-y-5 rounded-lg border border-line bg-surface p-5 sm:p-6 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
+            <div className="space-y-6 rounded-xl bg-surface-2 p-5 sm:p-7 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
               <CouponForm quoteCoupon={q.quote?.coupon} />
               <CartTotals q={q} />
             </div>

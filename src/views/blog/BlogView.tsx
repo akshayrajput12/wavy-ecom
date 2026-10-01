@@ -9,9 +9,13 @@ export function BlogView({ posts, params }: { posts: Paginated<BlogPost>; params
   const [lead, ...rest] = posts.items;
   const first = posts.page === 1;
   return (
-    <div className="container-x pb-24">
-      <header className="border-b border-line py-10 lg:py-16">
-        <h1 className="t-hero">{c.title}</h1>
+    <div className="container-x pb-24 pt-10">
+      <header className="grid gap-4 border-b border-line py-10 lg:grid-cols-2 lg:items-end lg:py-16">
+        <div className="grid gap-3">
+          <p className="t-overline">{c.overline}</p>
+          <h1 className="t-hero">{c.title}</h1>
+        </div>
+        <p className="max-w-md text-body text-ink-soft lg:justify-self-end">{c.lede}</p>
       </header>
       {!lead ? (
         <div className="mt-10"><EmptyState icon={<Newspaper className="size-7" aria-hidden />} title={c.empty} /></div>

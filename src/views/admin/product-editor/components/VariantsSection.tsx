@@ -57,7 +57,7 @@ export function VariantsSection({ f, set }: { f: EditorForm; set: SetForm }) {
     <FormSection title="Options & variants" description="Up to 3 options. Prices in rupees. Stock of saved variants changes in Inventory.">
       <OptionRows f={f} set={set} />
       <Bulk f={f} set={set} />
-      <div className="overflow-x-auto sm:col-span-2">
+      <div className="relative overflow-x-auto overscroll-x-contain sm:col-span-2">
         <table className="w-full min-w-[60rem] border-collapse text-left">
           <caption className="sr-only">Variants</caption>
           <thead><tr>{heads.map((h) => <th key={h} scope="col" className="px-1 pb-2 text-micro font-medium text-ink-soft">{h}</th>)}</tr></thead>

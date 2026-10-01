@@ -35,9 +35,9 @@ export function ProfileView({ user }: { user: AccountUser }) {
   };
 
   return (
-    <div className="grid max-w-xl gap-6">
-      <h1 className="t-h1">{ac.profile}</h1>
-      <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid gap-4 rounded-lg border border-line bg-surface p-5">
+    <div className="grid max-w-xl gap-8">
+      <header className="grid gap-3"><p className="t-overline">{ac.overline}</p><h1 className="t-h1">{ac.profile}</h1></header>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid gap-5 rounded-xl border border-line bg-surface p-5 sm:p-8">
         <Input label={ac.name} autoComplete="name" error={errors.fullName?.message} {...register("fullName")} />
         <Input label={ac.email} type="email" value={user.email} readOnly disabled hint={ac.emailHint} />
         <Input label={ac.phone} type="tel" inputMode="tel" maxLength={13} autoComplete="tel-national" error={errors.phone?.message} {...register("phone")} />

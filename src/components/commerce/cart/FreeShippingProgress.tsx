@@ -17,12 +17,12 @@ export function FreeShippingProgress({ net, threshold }: { net: number; threshol
   const label = unlocked ? x.freeUnlocked : x.freeLeft(formatPrice(left));
 
   return (
-    <div className="rounded-md bg-accent-soft px-4 py-3">
+    <div className="rounded-lg bg-surface-2 px-4 py-3">
       <div className="flex min-h-6 items-center gap-2 text-meta font-medium text-ink" aria-live="polite">
         <AnimatePresence mode="wait" initial={false}>
           <motion.span
             key={unlocked ? "on" : "off"}
-            className="grid size-6 place-items-center rounded-pill bg-surface text-accent-deep"
+            className="grid size-6 place-items-center rounded-pill bg-ink text-canvas"
             initial={reduce ? false : { scale: 0.4, rotate: unlocked ? -30 : 0, opacity: 0 }}
             animate={{ scale: 1, rotate: 0, opacity: 1 }}
             exit={reduce ? undefined : { scale: 0.6, opacity: 0 }}
@@ -36,10 +36,10 @@ export function FreeShippingProgress({ net, threshold }: { net: number; threshol
       </div>
       <div
         role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(Math.min(1, net / threshold) * 100)}
-        className="mt-2 h-1.5 overflow-hidden rounded-pill bg-surface"
+        className="mt-2.5 h-1 overflow-hidden rounded-pill bg-line"
       >
         <div
-          className="h-full origin-left rounded-pill bg-accent-deep transition-transform duration-(--dur-slow) ease-out"
+          className="h-full origin-left rounded-pill bg-ink transition-transform duration-(--dur-slow) ease-out"
           style={{ transform: `scaleX(${Math.min(1, net / threshold)})` }}
         />
       </div>

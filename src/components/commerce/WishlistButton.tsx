@@ -32,7 +32,7 @@ export function WishlistButton({ productId, name, className, variant = "overlay"
       }}
       className={clsx(
         "grid size-11 place-items-center rounded-pill transition-colors duration-(--dur-fast)",
-        variant === "overlay" ? "bg-surface/85 shadow-sm backdrop-blur-sm hover:bg-surface" : "border border-line bg-surface hover:border-ink",
+        variant === "overlay" ? "bg-surface/90 text-ink shadow-sm backdrop-blur-sm hover:bg-surface" : "border border-line text-ink hover:border-ink",
         className,
       )}
     >

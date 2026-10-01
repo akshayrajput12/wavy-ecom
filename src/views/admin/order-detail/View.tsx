@@ -22,8 +22,8 @@ export function OrderDetailView({ order }: { order: AdminOrderDetail }) {
     <>
       <PageHeader title={`Order ${order.orderNumber}`} description={`Placed ${fmtDateTime(order.placedAt)} · ${formatPrice(order.total)}`}
         actions={<><StatusBadge status={order.status} /><Link href="/admin/orders" className="text-meta underline">All orders</Link></>} />
-      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-        <div className="flex flex-col gap-6">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="flex min-w-0 flex-col gap-6">
           <Items order={order} />
           <PaymentTimeline order={order} />
           <RefundPanel order={order} />
@@ -35,7 +35,7 @@ export function OrderDetailView({ order }: { order: AdminOrderDetail }) {
             </Panel>
           )}
         </div>
-        <div className="flex flex-col gap-6">
+        <div className="flex min-w-0 flex-col gap-6">
           <StatusPanel order={order} />
           <Panel title="Customer">
             <DefinitionList items={[

@@ -7,7 +7,7 @@ import { formatDate, formatPrice } from "@/lib/format";
 export function RecentOrders({ orders }: { orders: AdminOrderRow[] }) {
   return (
     <Panel title="Recent orders" actions={<Link href="/admin/orders" className="text-meta underline underline-offset-4">All orders</Link>}>
-      <div className="-mx-5 overflow-x-auto">
+      <div className="relative -mx-4 overflow-x-auto overscroll-x-contain sm:-mx-5">
         <table className="w-full min-w-[560px] text-body">
           <caption className="sr-only">Most recent orders</caption>
           <thead className="text-left text-meta text-ink-soft">

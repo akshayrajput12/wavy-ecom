@@ -36,7 +36,7 @@ export function InventoryView({ initialFilter }: { initialFilter?: string }) {
   return (
     <>
       <PageHeader title="Inventory" description="Stock per variant. Every change is written to the movement ledger." />
-      <form className="mb-4 flex flex-wrap items-end gap-3" onSubmit={(e) => { e.preventDefault(); setPage(1); setTerm(q.trim()); }}>
+      <form className="mb-4 grid gap-3 sm:flex sm:flex-wrap sm:items-end" onSubmit={(e) => { e.preventDefault(); setPage(1); setTerm(q.trim()); }}>
         <Input label="Search SKU or product" value={q} onChange={(e) => setQ(e.target.value)} />
         <Select label="Show" value={filter} onChange={(e) => { setFilter(e.target.value as Filter); setPage(1); }}>
           <option value="all">All variants</option><option value="low">Low stock</option><option value="out">Out of stock</option>
@@ -45,8 +45,8 @@ export function InventoryView({ initialFilter }: { initialFilter?: string }) {
       </form>
       {error && <p role="alert" className="mb-3 text-danger">⚠ {error}</p>}
       {!data ? <Skeleton className="h-64 w-full" /> : data.items.length === 0 ? <EmptyState title="No variants match" /> : (
-        <div className="overflow-x-auto rounded-md border border-line bg-surface">
-          <table className="w-full text-left text-body">
+        <div className="relative overflow-x-auto overscroll-x-contain rounded-lg border border-line bg-surface">
+          <table className="w-full min-w-3xl text-left text-body">
             <caption className="sr-only">Inventory by variant</caption>
             <thead className="border-b border-line text-meta text-ink-soft">
               <tr><th className="p-3">Product / variant</th><th className="p-3">SKU</th><th className="p-3 text-right">On hand</th><th className="p-3 text-right">Reserved</th><th className="p-3 text-right">Available</th><th className="p-3">Stock</th><th className="p-3"><span className="sr-only">Details</span></th></tr>
@@ -55,7 +55,7 @@ export function InventoryView({ initialFilter }: { initialFilter?: string }) {
           </table>
         </div>
       )}
-      <div className="mt-4 flex items-center justify-between text-meta text-ink-soft">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-meta text-ink-soft">
         <span>{data ? `${data.total} variants` : ""}</span>
         <div className="flex items-center gap-2">
           <Button size="sm" variant="ghost" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</Button>

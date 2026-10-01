@@ -32,7 +32,7 @@ export function AnalyticsView({ data, days }: { data: AdminAnalytics; days: numb
         actions={<Select label="Date range" value={String(days)} onChange={(e) => router.push(`${pathname}?days=${e.target.value}`)} wrapperClassName="min-w-44">
           {RANGES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
         </Select>} />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">{kpis.map((k) => <StatCard key={k.id} kpi={k} hint={period} />)}</div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">{kpis.map((k) => <StatCard key={k.id} kpi={k} hint={period} />)}</div>
       <div className="mt-6 grid gap-6 xl:grid-cols-2">
         <ChartCard title="Revenue" description="Daily, incl. GST" table={{ headers: ["Date", "Revenue"], rows: data.series.map((p) => [p.date, formatPrice(p.revenue)]) }}>
           <TrendChart data={data.series} series={[{ key: "revenue", label: "Revenue", color: "var(--ink)" }]} format="money" />

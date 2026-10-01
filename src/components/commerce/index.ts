@@ -8,6 +8,7 @@ export { ImageWell } from "./ImageWell";
 export { StockNote } from "./StockNote";
 export { OptionPicker } from "./OptionPicker";
 export { QuickViewButton, QuickViewHost, openQuickView } from "./QuickView";
+export { FloatingProductCard } from "./FloatingProductCard";
 export { Pagination } from "./Pagination";
 export { CartDrawer } from "./cart/CartDrawer";
 export { FilterToolbar } from "./filters/FilterToolbar";

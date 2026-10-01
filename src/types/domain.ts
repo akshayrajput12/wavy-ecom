@@ -93,6 +93,8 @@ export interface Product {
   priceFrom: number; compareAtFrom?: number;
   variants: ProductVariant[]; seo?: Seo;
 }
+/** One product in the storefront's floating spotlight card, tagged with the set it came from. */
+export interface SpotlightItem { product: Product; kind: "new" | "bestseller" }
 
 // ---------- Cart / pricing ----------
 export interface CartLine {

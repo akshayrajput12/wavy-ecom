@@ -9,9 +9,9 @@ export function StatCard({ kpi, hint }: { kpi: Kpi; hint?: string }) {
   const up = (delta ?? 0) >= 0;
   const Arrow = up ? ArrowUpRight : ArrowDownRight;
   return (
-    <div className="rounded-md border border-line bg-surface p-5">
-      <p className="t-overline text-ink-soft">{kpi.label}</p>
-      <p className="mt-2 text-h2 font-semibold tracking-tight tabular-nums">{formatKpi(kpi)}</p>
+    <div className="min-w-0 rounded-lg border border-line bg-surface p-4 sm:p-5">
+      <p className="t-overline truncate text-ink-soft" title={kpi.label}>{kpi.label}</p>
+      <p className="mt-2 text-h2 font-semibold tracking-tight break-words tabular-nums">{formatKpi(kpi)}</p>
       <p className="mt-1 flex flex-wrap items-center gap-1.5 text-meta">
         {delta !== null && (
           <span className={clsx("inline-flex items-center gap-0.5 font-medium", up ? "text-success" : "text-danger")}>

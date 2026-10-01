@@ -14,24 +14,25 @@ import { CancelOrder } from "./components/CancelOrder";
 export function OrderDetailView({ order, canCancel, canReturn }: { order: Order; canCancel: boolean; canReturn: boolean }) {
   const a = order.shippingAddress;
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-8">
       <Link href="/account/orders" className="inline-flex min-h-11 items-center gap-2 self-start text-meta text-ink-soft hover:text-ink">
         <ArrowLeft className="size-4" aria-hidden /> {ac.allOrders}
       </Link>
       <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
+        <div className="grid gap-3">
+          <p className="t-overline">{ac.orders}</p>
           <h1 className="t-h1">{ac.order(order.number)}</h1>
-          <p className="t-meta">{ac.placed(formatDate(order.placedAt))}{order.shippingMethodName && ` · ${order.shippingMethodName}`}</p>
+          <p className="text-body text-ink-soft">{ac.placed(formatDate(order.placedAt))}{order.shippingMethodName && ` · ${order.shippingMethodName}`}</p>
         </div>
         <Badge tone={order.status === "cancelled" ? "danger" : "info"} dot>{orderStatusLabels[order.status]}</Badge>
       </header>
 
       <div className="flex flex-wrap gap-2">
         {order.trackingToken && order.status !== "cancelled" && (
-          <ButtonLink href={`/track/${order.trackingToken}`} size="sm"><Truck className="size-4" aria-hidden /> {ac.track}</ButtonLink>
+          <ButtonLink href={`/track/${order.trackingToken}`}><Truck className="size-4" aria-hidden /> {ac.track}</ButtonLink>
         )}
         {canReturn && (
-          <ButtonLink href={`/account/returns/new?order=${encodeURIComponent(order.number)}`} size="sm" variant="secondary">
+          <ButtonLink href={`/account/returns/new?order=${encodeURIComponent(order.number)}`} variant="secondary">
             <RotateCcw className="size-4" aria-hidden /> {accountCopy.requestReturn}
           </ButtonLink>
         )}
@@ -40,11 +41,11 @@ export function OrderDetailView({ order, canCancel, canReturn }: { order: Order;
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="grid content-start gap-6">
-          <section aria-labelledby="tl-h" className="rounded-lg border border-line bg-surface p-5">
-            <h2 id="tl-h" className="mb-5 t-h3">{ac.progress}</h2>
+          <section aria-labelledby="tl-h" className="rounded-xl border border-line bg-surface p-5 sm:p-6">
+            <h2 id="tl-h" className="mb-6 t-h3">{ac.progress}</h2>
             <Timeline order={order} />
           </section>
-          <section aria-labelledby="pay-h" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-surface p-5">
+          <section aria-labelledby="pay-h" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface p-5 sm:p-6">
             <div>
               <h2 id="pay-h" className="t-h3">{ac.payment}</h2>
               <p className="t-meta">{co.success.paidWith[order.paymentProvider]}</p>
@@ -53,7 +54,7 @@ export function OrderDetailView({ order, canCancel, canReturn }: { order: Order;
               {paymentStatusLabels[order.paymentStatus]}
             </Badge>
           </section>
-          <section aria-labelledby="addr-h" className="rounded-lg border border-line bg-surface p-5">
+          <section aria-labelledby="addr-h" className="rounded-xl border border-line bg-surface p-5 sm:p-6">
             <h2 id="addr-h" className="t-h3">{ac.address}</h2>
             <address className="mt-2 text-body not-italic text-ink-soft">
               <span className="font-medium text-ink">{a.name}</span> · {a.phone}<br />

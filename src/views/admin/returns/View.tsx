@@ -2,7 +2,8 @@ import { PageHeader } from "@/components/admin/Panel";
 import { EmptyState } from "@/components/ui/States";
 import { RETURN_STATUS } from "@/types/domain";
 import type { AdminReturn, Paginated } from "@/types/admin";
-import { FilterBar, opts, Pager } from "../orders/components/list";
+import { FilterBar, Pager } from "../orders/components/list";
+import { opts } from "../orders/components/table";
 import { ReturnCard } from "./components/ReturnCard";
 
 export function ReturnsView({ returns }: { returns: Paginated<AdminReturn> }) {

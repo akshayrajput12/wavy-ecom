@@ -90,10 +90,10 @@ export function InventoryRow({ row, onChanged }: { row: AdminInventoryRow; onCha
         </td>
       </tr>
       {open && (
-        <tr className="border-b border-line bg-surface-warm"><td colSpan={7} className="grid gap-4 p-4">
+        <tr className="border-b border-line bg-surface-warm"><td colSpan={7} className="p-4"><div className="grid gap-4">
           <AdjustForm row={row} onDone={() => { setTick((t) => t + 1); onChanged(); }} />
           <Ledger variantId={row.variantId} refreshKey={tick} />
-        </td></tr>
+        </div></td></tr>
       )}
     </>
   );

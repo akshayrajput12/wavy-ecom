@@ -43,12 +43,12 @@ export function ShippingView({ settings, zones }: { settings: AdminStoreSettings
     <>
       <PageHeader title="Shipping" description="Store-wide rates, delivery zones and the methods offered in each." />
       {settings ? <RatesForm s={settings} /> : <p className="mb-6 text-body text-ink-soft">Store settings are unavailable. Check the Supabase connection.</p>}
-      <div className="mt-10 mb-3 flex items-center justify-between"><h2 className="t-h3">Zones</h2><ButtonLink size="sm" href="/admin/shipping/zones/new">New zone</ButtonLink></div>
+      <div className="mt-10 mb-3 flex flex-wrap items-center justify-between gap-3"><h2 className="t-h3">Zones</h2><ButtonLink size="sm" href="/admin/shipping/zones/new">New zone</ButtonLink></div>
       <div className="grid gap-4">
         {zones.length === 0 && <p className="text-body text-ink-soft">No zones yet.</p>}
         {zones.map((z) => (
           <Panel key={z.id} title={z.name} description={z.isDefault ? "Default zone" : `${z.states.length} states`}
-            actions={<div className="flex gap-2">{!z.isActive && <Badge>Inactive</Badge>}<ButtonLink size="sm" variant="secondary" href={`/admin/shipping/zones/${z.id}/edit`}>Edit zone</ButtonLink></div>}>
+            actions={<div className="flex flex-wrap gap-2">{!z.isActive && <Badge>Inactive</Badge>}<ButtonLink size="sm" variant="secondary" href={`/admin/shipping/zones/${z.id}/edit`}>Edit zone</ButtonLink></div>}>
             <ul className="divide-y divide-line-soft text-body">
               {z.methods.map((m) => (
                 <li key={m.id} className="flex flex-wrap items-center justify-between gap-2 py-2">

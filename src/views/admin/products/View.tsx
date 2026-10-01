@@ -56,7 +56,7 @@ export function ProductsView({ data, query, categories, collections }: { data: P
           <Button size="sm" variant="ghost" onClick={() => setPicked([])}>Clear</Button>
         </div>
       )}
-      <div className="overflow-x-auto rounded-md border border-line bg-surface">
+      <div className="relative overflow-x-auto overscroll-x-contain rounded-lg border border-line bg-surface">
         <table className="w-full min-w-[52rem] text-left text-body">
           <caption className="sr-only">Products, {data.total} total</caption>
           <thead className="border-b border-line text-meta text-ink-soft">
@@ -92,7 +92,7 @@ export function ProductsView({ data, query, categories, collections }: { data: P
           </tbody>
         </table>
       </div>
-      <nav aria-label="Pagination" className="mt-4 flex items-center justify-between text-meta">
+      <nav aria-label="Pagination" className="mt-4 flex flex-wrap items-center justify-between gap-3 text-meta">
         <span>Page {data.page} of {pages} ({data.total} products)</span>
         <span className="flex gap-2">
           {data.page > 1 && <ButtonLink href={listHref(query, { page: data.page - 1 })} size="sm" variant="secondary">Previous</ButtonLink>}

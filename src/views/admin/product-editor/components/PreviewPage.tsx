@@ -9,7 +9,7 @@ export function PreviewPage({ m, f }: { m: PreviewModel; f: EditorForm }) {
   const [sel, setSel] = useState(0);
   const cover = m.images[Math.min(sel, Math.max(0, m.images.length - 1))];
   return (
-    <div className="grid gap-4 rounded-md border border-line bg-surface p-4">
+    <div className="grid gap-4 rounded-lg border border-line bg-surface p-4">
       <div className="relative aspect-square overflow-hidden rounded-md bg-surface-warm"><PreviewImage url={cover?.url} alt={cover?.alt ?? ""} sizes="360px" /></div>
       {m.images.length > 1 && (
         <ul className="flex gap-2 overflow-x-auto" aria-label="Gallery thumbnails">

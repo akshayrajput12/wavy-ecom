@@ -44,7 +44,7 @@ export function Toggle({ checked, onChange, label, description, disabled }: {
   const id = useId();
   return (
     <div className="flex items-center justify-between gap-4">
-      <div>
+      <div className="min-w-0">
         <span id={id} className="text-body font-medium">{label}</span>
         {description && <p className="t-meta">{description}</p>}
       </div>

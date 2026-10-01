@@ -3,44 +3,17 @@
 import { clsx } from "clsx";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { EmptyState } from "@/components/ui/States";
-
-export interface Col<T> { header: string; cell: (row: T) => ReactNode; right?: boolean }
-
-/** Plain table for server-paginated data. */
-export function SimpleTable<T>({ caption, rows, cols, getId, empty }: {
-  caption: string; rows: T[]; cols: Col<T>[]; getId: (r: T) => string; empty: string;
-}) {
-  if (!rows.length) return <EmptyState title={empty} />;
-  return (
-    <div className="overflow-x-auto rounded-md border border-line bg-surface">
-      <table className="w-full min-w-[640px] text-body">
-        <caption className="sr-only">{caption}</caption>
-        <thead className="bg-canvas text-left">
-          <tr>{cols.map((c) => <th key={c.header} scope="col" className={clsx("px-4 py-2.5 text-meta font-medium whitespace-nowrap text-ink-soft", c.right && "text-right")}>{c.header}</th>)}</tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={getId(r)} className="border-t border-line-soft align-top hover:bg-canvas">
-              {cols.map((c) => <td key={c.header} className={clsx("px-4 py-3", c.right && "text-right tabular-nums")}>{c.cell(r)}</td>)}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
 
 export function Pager({ page, pageSize, total }: { page: number; pageSize: number; total: number }) {
   const path = usePathname();
   const sp = useSearchParams();
   const pages = Math.max(1, Math.ceil(total / pageSize));
   const href = (p: number) => { const n = new URLSearchParams(sp.toString()); n.set("page", String(p)); return `${path}?${n}`; };
-  const link = "inline-flex h-9 items-center rounded-pill px-4 text-meta hover:bg-surface-warm";
+  const link = "inline-flex h-11 items-center rounded-pill px-4 text-meta hover:bg-surface-warm sm:h-9";
   return (
-    <nav aria-label="Pagination" className="mt-3 flex items-center justify-between text-meta text-ink-soft">
+    <nav aria-label="Pagination" className="mt-3 flex flex-wrap items-center justify-between gap-3 text-meta text-ink-soft">
       <span aria-live="polite">{total ? `${(page - 1) * pageSize + 1}-${Math.min(page * pageSize, total)} of ${total}` : "0 results"}</span>
       <span className="flex gap-2">
         {page > 1 ? <Link href={href(page - 1)} className={link}>Previous</Link> : <span className={clsx(link, "opacity-40")}>Previous</span>}
@@ -65,11 +38,11 @@ export function FilterBar({ filters }: { filters: FilterDef[] }) {
     for (const [k, x] of Object.entries(v)) if (x) n.set(k, x);
     router.push(`${path}?${n}`);
   };
-  const ctl = "h-10 rounded-sm border border-line bg-surface px-3 text-body focus:border-ink focus:outline-none";
+  const ctl = "h-11 rounded-sm border border-line bg-surface px-3 text-body focus:border-ink focus:outline-none";
   return (
-    <form role="search" onSubmit={(e) => { e.preventDefault(); go(vals); }} className="mb-4 flex flex-wrap items-end gap-3 rounded-md border border-line bg-surface p-4">
+    <form role="search" onSubmit={(e) => { e.preventDefault(); go(vals); }} className="mb-4 flex flex-wrap items-end gap-3 rounded-lg border border-line bg-surface p-3 sm:p-4">
       {filters.map((f) => (
-        <label key={f.key} className="flex flex-col gap-1 text-meta font-medium">
+        <label key={f.key} className="flex min-w-40 flex-1 flex-col gap-1 text-meta font-medium sm:flex-none">
           {f.label}
           {f.options ? (
             <select value={vals[f.key]} onChange={(e) => setVals({ ...vals, [f.key]: e.target.value })} className={ctl}>
@@ -88,4 +61,3 @@ export function FilterBar({ filters }: { filters: FilterDef[] }) {
 }
 
 /** Enum values to select options. */
-export const opts = (values: readonly string[]) => values.map((v) => ({ value: v, label: v.replace(/_/g, " ") }));

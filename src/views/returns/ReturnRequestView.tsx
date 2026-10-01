@@ -9,13 +9,14 @@ import { ReturnForm } from "./components/ReturnForm";
 
 export function ReturnRequestView({ order, items, preselect }: { order: Order | null; items: OrderItem[]; preselect?: string }) {
   return (
-    <div className="grid max-w-2xl gap-6">
+    <div className="grid max-w-2xl gap-8">
       <Link href={order ? `/account/orders/${order.number}` : "/account/returns"} className="inline-flex min-h-11 items-center gap-2 self-start text-meta text-ink-soft hover:text-ink">
         <ArrowLeft className="size-4" aria-hidden /> {ac.back}
       </Link>
-      <header>
+      <header className="grid gap-3">
+        <p className="t-overline">{ac.returns}</p>
         <h1 className="t-h1">{accountCopy.requestReturn}</h1>
-        {order && <p className="t-meta">{ac.returnFor(order.number)}</p>}
+        {order && <p className="text-body text-ink-soft">{ac.returnFor(order.number)}</p>}
       </header>
       {order && items.length > 0 ? (
         <ReturnForm order={order} items={items} preselect={items.some((i) => i.id === preselect) ? preselect : undefined} />

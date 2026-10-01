@@ -27,7 +27,7 @@ export function Filters({ query, categories, collections }: { query: ProductList
   }, [q, query, router]);
   const go = (patch: Partial<ProductListQuery>) => router.replace(listHref(query, patch));
   return (
-    <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+    <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
       <Input label="Search" type="search" value={q} placeholder="Name, brand or SKU" onChange={(e) => setQ(e.target.value)} />
       <Select label="Status" value={query.status ?? ""} onChange={(e) => go({ status: (e.target.value || undefined) as ProductListQuery["status"] })}>
         <option value="">All</option>{PRODUCT_STATUS.map((s) => <option key={s} value={s}>{s}</option>)}

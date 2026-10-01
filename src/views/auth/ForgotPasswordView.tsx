@@ -19,12 +19,12 @@ export function ForgotPasswordView() {
   const onSubmit = (v: ResetValues) => start(async () => setResult(await resetPassword(v)));
 
   return (
-    <AuthShell title={authCopy.forgot.title} body={authCopy.forgot.body}
+    <AuthShell overline={authCopy.forgot.overline} title={authCopy.forgot.title} body={authCopy.forgot.body}
       footer={<Link href="/login" className="font-medium text-ink underline underline-offset-4">{ac.auth.backToLogin}</Link>}>
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid gap-4">
         <FormAlert {...result} />
         <Input label={ac.auth.email} type="email" autoComplete="email" error={errors.email?.message} {...register("email")} />
-        <Button type="submit" full loading={pending}>{ac.auth.sendLink}</Button>
+        <Button type="submit" size="lg" full loading={pending}>{ac.auth.sendLink}</Button>
       </form>
     </AuthShell>
   );

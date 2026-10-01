@@ -41,14 +41,14 @@ export function AddressesView({ initial }: { initial: Address[] }) {
   }
 
   return (
-    <div className="grid gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="t-h1">{ac.addresses}</h1>
+    <div className="grid gap-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <header className="grid gap-3"><p className="t-overline">{ac.overline}</p><h1 className="t-h1">{ac.addresses}</h1></header>
         {editing === null && <Button onClick={() => setEditing("new")}><Plus className="size-4" aria-hidden /> {ac.addAddress}</Button>}
       </div>
 
       {editing !== null && (
-        <section aria-label={editing === "new" ? ac.newAddress : ac.editAddress} className="rounded-lg border border-ink bg-surface p-5">
+        <section aria-label={editing === "new" ? ac.newAddress : ac.editAddress} className="rounded-xl border border-ink bg-surface p-5 sm:p-8">
           <AddressForm key={editing} defaultValues={current as Partial<AddressValues> | undefined} onSubmit={save}
             submitLabel={ac.save} onCancel={() => setEditing(null)} showDefaultToggle />
         </section>
@@ -59,17 +59,17 @@ export function AddressesView({ initial }: { initial: Address[] }) {
       ) : (
         <ul className="grid gap-3 md:grid-cols-2">
           {list.map((a) => (
-            <li key={a.id} className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-5">
+            <li key={a.id} className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-5 sm:p-6">
               <div className="flex items-center gap-2">
-                <p className="font-medium">{a.label ? `${a.label} · ` : ""}{a.name}</p>
+                <p className="t-h3">{a.label ? `${a.label} · ` : ""}{a.name}</p>
                 {a.isDefault && <Badge tone="dark">{ac.default}</Badge>}
               </div>
-              <address className="flex-1 text-body not-italic text-ink-soft">
+              <address className="flex-1 border-t border-line pt-3 text-body not-italic text-ink-soft">
                 {[a.line1, a.line2, a.landmark].filter(Boolean).join(", ")}<br />{a.city}, {a.state} {a.postalCode}<br />{a.phone}
               </address>
               <div className="flex flex-wrap gap-2">
-                <Button size="sm" variant="secondary" onClick={() => setEditing(a.id ?? null)}>{ac.edit}<span className="sr-only"> {a.line1}</span></Button>
-                <Button size="sm" variant="ghost" onClick={() => void remove(a)}>{ac.delete}<span className="sr-only"> {a.line1}</span></Button>
+                <Button variant="secondary" onClick={() => setEditing(a.id ?? null)}>{ac.edit}<span className="sr-only"> {a.line1}</span></Button>
+                <Button variant="ghost" onClick={() => void remove(a)}>{ac.delete}<span className="sr-only"> {a.line1}</span></Button>
               </div>
             </li>
           ))}

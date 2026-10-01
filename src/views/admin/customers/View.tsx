@@ -4,7 +4,8 @@ import { StatusBadge } from "@/components/ui/Badge";
 import { formatPrice } from "@/lib/format";
 import type { AdminCustomerRow, Paginated } from "@/types/admin";
 import { fmtDateTime } from "../orders/components/fmt";
-import { FilterBar, opts, Pager, SimpleTable, type Col } from "../orders/components/list";
+import { FilterBar, Pager } from "../orders/components/list";
+import { opts, SimpleTable, type Col } from "../orders/components/table";
 
 const cols: Col<AdminCustomerRow>[] = [
   { header: "Customer", cell: (c) => <Link href={`/admin/customers/${c.id}`} className="font-medium hover:underline">{c.fullName ?? c.email ?? c.id}</Link> },

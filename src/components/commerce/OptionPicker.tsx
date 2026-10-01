@@ -5,9 +5,12 @@ import { productCopy } from "@/data/copy";
 import type { Product } from "@/types/domain";
 import { choicesFor, isColorAxis, selectOption, type Selection } from "./variantSelect";
 
+const focus = "has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus";
+
 /**
  * Generic option selectors driven by `product.optionNames`: colour swatches (when the value has a colorHex),
- * pills otherwise. Unavailable values stay selectable-looking but disabled, with the reason in text.
+ * pill chips otherwise (circles for short values like S / M / L). Unavailable values stay visible but disabled,
+ * with the reason in text.
  */
 export function OptionPicker({ product: p, selection, onChange, idPrefix }: {
   product: Product; selection: Selection; onChange: (s: Selection) => void; idPrefix: string;
@@ -19,11 +22,11 @@ export function OptionPicker({ product: p, selection, onChange, idPrefix }: {
         const swatch = isColorAxis(name) && choices.some((c) => c.colorHex);
         return (
           <fieldset key={name}>
-            <legend className="text-meta">
-              <span className="font-semibold text-ink">{name}:</span>{" "}
-              <span className="text-ink-soft">{selection[name] ?? productCopy.select(name)}</span>
+            <legend className="flex items-baseline gap-2">
+              <span className="t-overline">{name}</span>
+              <span className="text-meta font-medium text-ink">{selection[name] ?? productCopy.select(name)}</span>
             </legend>
-            <div className="mt-2.5 flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-wrap gap-2">
               {choices.map((c) => {
                 const on = selection[name] === c.value;
                 const input = (
@@ -35,7 +38,7 @@ export function OptionPicker({ product: p, selection, onChange, idPrefix }: {
                 const label = <span className="sr-only">{c.value}{!c.available && ` (${productCopy.soldOut})`}</span>;
                 return swatch ? (
                   <label key={c.value} title={c.value} className={clsx(
-                    "relative grid size-11 place-items-center rounded-pill border-2 transition-colors duration-(--dur-fast) has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus",
+                    "relative grid size-11 place-items-center rounded-pill border transition-colors duration-(--dur-fast)", focus,
                     on ? "border-ink" : "border-transparent hover:border-line",
                     c.available ? "cursor-pointer" : "cursor-not-allowed",
                   )}>
@@ -45,9 +48,10 @@ export function OptionPicker({ product: p, selection, onChange, idPrefix }: {
                   </label>
                 ) : (
                   <label key={c.value} className={clsx(
-                    "relative inline-flex min-h-11 min-w-11 items-center justify-center overflow-hidden rounded-pill border px-4 text-meta font-medium transition-colors duration-(--dur-fast)",
-                    "has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus",
-                    !c.available ? "cursor-not-allowed border-line-soft text-ink-muted line-through" : on ? "cursor-pointer border-ink bg-ink text-on-dark" : "cursor-pointer border-line bg-surface hover:border-ink",
+                    "relative inline-flex h-11 min-w-11 items-center justify-center rounded-pill border text-meta font-medium transition-colors duration-(--dur-fast)", focus,
+                    c.value.length > 3 && "px-4",
+                    !c.available ? "cursor-not-allowed border-line-soft text-ink-muted line-through"
+                      : on ? "cursor-pointer border-ink bg-ink text-canvas" : "cursor-pointer border-line text-ink hover:border-ink",
                   )}>
                     {input}
                     <span aria-hidden>{c.value}</span>{label}

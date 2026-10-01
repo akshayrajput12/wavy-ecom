@@ -39,15 +39,15 @@ export function DeliveryCheck() {
   }
 
   return (
-    <form onSubmit={check} className="rounded-md border border-line bg-surface p-4" noValidate aria-busy={loading}>
+    <form onSubmit={check} className="rounded-lg bg-surface-2 p-4" noValidate aria-busy={loading}>
       <label htmlFor="pincode" className="flex items-center gap-2 text-meta font-medium"><MapPin className="size-4" aria-hidden /> {c.title}</label>
       <div className="mt-2 flex gap-2">
         <input
           id="pincode" value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
           inputMode="numeric" autoComplete="postal-code" placeholder={c.placeholder} aria-describedby={msg ? "pincode-msg" : undefined} aria-invalid={msg && !msg.ok}
-          className="h-11 min-w-0 flex-1 rounded-sm border border-line bg-canvas px-3 text-body tabular-nums focus:border-ink focus:outline-none"
+          className="h-11 min-w-0 flex-1 rounded-pill border border-line bg-canvas px-4 text-body-lg tabular-nums focus:border-ink focus:outline-none sm:text-body"
         />
-        <button type="submit" disabled={loading} className="h-11 min-w-20 rounded-sm border border-ink px-4 text-meta font-semibold hover:bg-ink hover:text-on-dark focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-60">{loading ? c.loading : c.cta}</button>
+        <button type="submit" disabled={loading} className="h-11 min-w-20 rounded-pill bg-ink px-5 text-meta font-medium text-canvas transition-colors hover:bg-ink/85 disabled:opacity-60">{loading ? c.loading : c.cta}</button>
       </div>
       {msg && <p id="pincode-msg" role="status" className={msg.ok ? "mt-2 text-meta text-success" : "mt-2 text-meta text-danger"}>{msg.ok ? "✓ " : "⚠ "}{msg.text}</p>}
     </form>

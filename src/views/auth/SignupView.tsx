@@ -28,12 +28,12 @@ export function SignupView({ next }: { next?: string }) {
         <Input label={ac.auth.password} type="password" autoComplete="new-password" hint={ac.auth.passwordHint} error={errors.password?.message} {...register("password")} />
         <div className="grid gap-1">
           <label className="flex min-h-11 items-start gap-3 text-body">
-            <input type="checkbox" className="mt-1 size-4 accent-ink" aria-invalid={!!errors.terms} aria-describedby="terms-msg" {...register("terms")} />
+            <input type="checkbox" className="mt-0.5 size-5 shrink-0 accent-ink" aria-invalid={!!errors.terms} aria-describedby="terms-msg" {...register("terms")} />
             <span>{authCopy.terms}</span>
           </label>
-          {errors.terms && <p id="terms-msg" className="text-meta text-danger">⚠ {errors.terms.message}</p>}
+          {errors.terms && <p id="terms-msg" role="alert" className="text-meta text-danger">⚠ {errors.terms.message}</p>}
         </div>
-        <Button type="submit" full loading={pending}>{ac.auth.signup}</Button>
+        <Button type="submit" size="lg" full loading={pending}>{ac.auth.signup}</Button>
       </form>
     </AuthShell>
   );

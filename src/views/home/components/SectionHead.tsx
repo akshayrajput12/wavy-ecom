@@ -1,21 +1,29 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import type { Cta } from "@/types/domain";
+import { HeadingLines } from "./HeadingLines";
 
-/** Section title row with an optional "view all" link. */
-export function SectionHead({ title, subtitle, cta }: { title?: string; subtitle?: string; cta?: Cta }) {
+/** Small underlined "View all ›" style link. `context` is appended for screen readers ("View all: New arrivals"). */
+export function MoreLink({ cta, context }: { cta: Cta; context?: string }) {
+  return (
+    <Link href={cta.href} className="group inline-flex min-h-11 shrink-0 items-center gap-1 self-start text-meta font-medium underline decoration-line underline-offset-4 transition-colors hover:decoration-ink sm:self-end">
+      {cta.label}
+      {context && <span className="sr-only">: {context}</span>}
+      <ChevronRight className="size-3.5 transition-transform duration-(--dur-fast) group-hover:translate-x-0.5" aria-hidden />
+    </Link>
+  );
+}
+
+/** Overline + 2-line display heading (subtitle = greyed second line) left, "View all ›" bottom-right; stacks on mobile. */
+export function SectionHead({ overline, title, subtitle, cta }: { overline?: string; title?: string; subtitle?: string; cta?: Cta }) {
   if (!title && !cta) return null;
   return (
-    <div className="mb-8 flex items-end justify-between gap-6 lg:mb-10">
-      <div>
-        {title && <h2 className="t-display text-balance">{title}</h2>}
-        {subtitle && <p className="mt-2 max-w-xl text-body-lg text-ink-soft">{subtitle}</p>}
+    <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-8 lg:mb-12">
+      <div className="max-w-3xl">
+        {overline && <p className="t-overline mb-3">{overline}</p>}
+        {title && <HeadingLines line={title} soft={subtitle} />}
       </div>
-      {cta && (
-        <Link href={cta.href} className="group inline-flex min-h-11 shrink-0 items-center gap-2 text-body font-medium">
-          {cta.label} <ArrowRight className="size-4 transition-transform duration-(--dur-fast) group-hover:translate-x-1" aria-hidden />
-        </Link>
-      )}
+      {cta && <MoreLink cta={cta} context={title} />}
     </div>
   );
 }

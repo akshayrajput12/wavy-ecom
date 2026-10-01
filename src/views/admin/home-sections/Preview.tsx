@@ -26,7 +26,7 @@ export function Preview({ type, cfg, lookups }: { type: HomeSectionType; cfg: Cf
   const image = str(lead, "image");
   const showsImage = type === "hero_carousel" || type === "promo_banner";
   return (
-    <div className="overflow-hidden rounded-md border border-line bg-surface-warm" aria-label="Preview">
+    <div className="overflow-hidden rounded-lg border border-line bg-surface-warm" aria-label="Preview">
       {showsImage ? (
         <div className="relative flex min-h-40 items-end p-4">
           {image && <Image src={image} alt={str(lead, "imageAlt")} fill unoptimized sizes="600px" className="object-cover" />}

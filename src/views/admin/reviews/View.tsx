@@ -2,7 +2,8 @@ import { PageHeader } from "@/components/admin/Panel";
 import { ButtonLink } from "@/components/ui/Button";
 import type { AdminReview, Paginated } from "@/types/admin";
 import { REVIEW_STATUS } from "@/types/domain";
-import { FilterBar, opts, Pager } from "../orders/components/list";
+import { FilterBar, Pager } from "../orders/components/list";
+import { opts } from "../orders/components/table";
 import { ReviewsTable } from "./components/ReviewsTable";
 
 export function ReviewsView({ reviews }: { reviews: Paginated<AdminReview> }) {

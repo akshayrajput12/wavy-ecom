@@ -33,7 +33,7 @@ function moveIn(nodes: AdminCategory[], id: string, dir: -1 | 1): { nodes: Admin
 function Rows({ nodes, depth, onMove }: { nodes: AdminCategory[]; depth: number; onMove: (id: string, dir: -1 | 1) => void }) {
   return nodes.map((c, i) => (
     <li key={c.id}>
-      <div className="flex items-center gap-3 border-b border-line py-3" style={{ paddingLeft: `${depth * 24}px` }}>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line py-3" style={{ paddingLeft: `${depth * 24}px` }}>
         <div className="relative size-12 shrink-0 overflow-hidden rounded-sm bg-surface-warm">
           {c.imageUrl && <Image src={c.imageUrl} alt={c.imageAlt ?? c.name} fill sizes="48px" className="object-cover" />}
         </div>
@@ -41,7 +41,7 @@ function Rows({ nodes, depth, onMove }: { nodes: AdminCategory[]; depth: number;
           <Link href={`/admin/categories/${c.slug}/edit`} className="font-medium text-ink underline-offset-4 hover:underline">{c.name}</Link>
           <p className="t-meta">/{c.slug} · {c.productCount} product{c.productCount === 1 ? "" : "s"}</p>
         </div>
-        <div className="hidden gap-1.5 sm:flex">
+        <div className="flex flex-wrap gap-1.5 max-sm:order-last max-sm:basis-full max-sm:pl-15">
           <Badge tone={c.isActive ? "success" : "neutral"} dot>{c.isActive ? "Active" : "Inactive"}</Badge>
           {c.showOnHome && <Badge tone="info">On home</Badge>}
         </div>

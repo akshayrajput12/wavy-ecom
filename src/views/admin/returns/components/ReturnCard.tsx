@@ -41,7 +41,7 @@ export function ReturnCard({ ret }: { ret: AdminReturn }) {
             <span>Item x{i.quantity}</span>
             {s === "pickup_scheduled" || s === "approved" ? (
               <label className="flex items-center gap-2 text-meta">Condition
-                <select value={cond[i.id] ?? "unused"} onChange={(e) => setCond({ ...cond, [i.id]: e.target.value as Condition })} className="h-9 rounded-sm border border-line bg-surface px-2 text-body">
+                <select value={cond[i.id] ?? "unused"} onChange={(e) => setCond({ ...cond, [i.id]: e.target.value as Condition })} className="h-11 rounded-sm border border-line bg-surface px-2 text-body sm:h-9">
                   {CONDITIONS.map((c) => <option key={c}>{c}</option>)}
                 </select>
               </label>

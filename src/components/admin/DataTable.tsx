@@ -5,6 +5,9 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Search } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState, Skeleton } from "@/components/ui/States";
+import { adminCopy } from "@/data/copy";
+
+const c = adminCopy.table;
 
 export interface Column<T> {
   key: string; header: string; cell: (row: T) => ReactNode;
@@ -23,7 +26,7 @@ interface Props<T> {
 
 /** Admin list table: search, filter chips, sort, pagination, row selection + bulk actions, loading/empty states. */
 export function DataTable<T>({
-  caption, rows, columns, getId, search, searchPlaceholder = "Search", filters = [], initialFilters = {},
+  caption, rows, columns, getId, search, searchPlaceholder = c.search, filters = [], initialFilters = {},
   bulkActions, pageSize = 10, loading, empty, toolbar,
 }: Props<T>) {
   const [q, setQ] = useState("");
@@ -62,31 +65,31 @@ export function DataTable<T>({
   if (!loading && rows.length === 0 && empty) return <EmptyState {...empty} />;
 
   return (
-    <div className="rounded-md border border-line bg-surface">
-      <div className="flex flex-col gap-3 border-b border-line p-4">
+    <div className="min-w-0 rounded-lg border border-line bg-surface">
+      <div className="flex flex-col gap-3 border-b border-line p-3 sm:p-4">
         <div className="flex flex-wrap items-center gap-3">
           {search && (
-            <label className="relative min-w-52 flex-1">
+            <label className="relative w-full sm:w-auto sm:min-w-52 sm:flex-1">
               <span className="sr-only">{searchPlaceholder}</span>
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ink-muted" aria-hidden />
               <input
                 type="search" value={q} placeholder={searchPlaceholder}
                 onChange={(e) => { setQ(e.target.value); setPage(0); }}
-                className="h-10 w-full rounded-sm border border-line bg-surface pr-3 pl-9 text-body focus:border-ink focus:outline-none"
+                className="h-11 w-full rounded-pill border border-line bg-surface pr-4 pl-9 text-body focus:border-ink focus:outline-none"
               />
             </label>
           )}
           {toolbar}
         </div>
         {filters.map((f) => (
-          <div key={f.key} role="group" aria-label={`Filter by ${f.label}`} className="flex flex-wrap items-center gap-1.5">
+          <div key={f.key} role="group" aria-label={c.filterBy(f.label)} className="flex flex-wrap items-center gap-1.5">
             <span className="t-meta mr-1">{f.label}</span>
-            {[{ value: "", label: "All" }, ...f.options].map((o) => {
+            {[{ value: "", label: c.all }, ...f.options].map((o) => {
               const on = (active[f.key] ?? "") === o.value;
               return (
                 <button
                   key={o.value} type="button" aria-pressed={on} onClick={() => setFilter(f.key, o.value)}
-                  className={clsx("h-8 rounded-pill border px-3 text-meta transition-colors", on ? "border-ink bg-ink text-on-dark" : "border-line hover:border-ink")}
+                  className={clsx("h-11 rounded-pill border px-3 text-meta transition-colors sm:h-9", on ? "border-ink bg-ink text-on-dark" : "border-line hover:border-ink")}
                 >{o.label}</button>
               );
             })}
@@ -95,24 +98,24 @@ export function DataTable<T>({
       </div>
 
       {selectable && selected.size > 0 && (
-        <div className="flex flex-wrap items-center gap-2 border-b border-line bg-surface-warm px-4 py-2" role="region" aria-label="Bulk actions">
-          <span className="text-meta font-medium">{selected.size} selected</span>
+        <div className="flex flex-wrap items-center gap-2 border-b border-line bg-surface-warm px-4 py-2" role="region" aria-label={c.bulkActions}>
+          <span className="text-meta font-medium">{c.selected(selected.size)}</span>
           {bulkActions!.map((a) => (
             <Button key={a.label} size="sm" variant={a.danger ? "secondary" : "primary"} className={clsx(a.danger && "border-danger text-danger hover:bg-danger")}
               onClick={() => { a.onClick([...selected]); setSelected(new Set()); }}>{a.label}</Button>
           ))}
-          <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Clear</Button>
+          <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>{c.clear}</Button>
         </div>
       )}
 
-      <div className="overflow-x-auto">
+      <div className="relative overflow-x-auto overscroll-x-contain">
         <table className="w-full min-w-[640px] text-body">
           <caption className="sr-only">{caption}</caption>
           <thead className="bg-canvas text-left">
             <tr>
               {selectable && (
                 <th scope="col" className="w-10 px-4 py-2.5">
-                  <input type="checkbox" checked={allOnPage} onChange={togglePage} aria-label="Select all rows on this page" className="size-4 accent-ink" />
+                  <input type="checkbox" checked={allOnPage} onChange={togglePage} aria-label={c.selectPage} className="size-4 accent-ink" />
                 </th>
               )}
               {columns.map((c) => {
@@ -142,7 +145,7 @@ export function DataTable<T>({
               return (
                 <tr key={id} className={clsx("border-t border-line-soft hover:bg-canvas", selected.has(id) && "bg-surface-warm/60")}>
                   {selectable && (
-                    <td className="px-4 py-3"><input type="checkbox" checked={selected.has(id)} onChange={() => toggle(id)} aria-label={`Select row ${id}`} className="size-4 accent-ink" /></td>
+                    <td className="px-4 py-3"><input type="checkbox" checked={selected.has(id)} onChange={() => toggle(id)} aria-label={c.selectRow(id)} className="size-4 accent-ink" /></td>
                   )}
                   {columns.map((c) => <td key={c.key} className={clsx("px-4 py-3 align-middle", c.align === "right" && "text-right tabular-nums", c.className)}>{c.cell(row)}</td>)}
                 </tr>
@@ -152,19 +155,19 @@ export function DataTable<T>({
         </table>
         {!loading && visible.length === 0 && (
           <div className="p-6">
-            <EmptyState title={filtered ? "No matches" : (empty?.title ?? "Nothing here yet")} body={filtered ? "Try a different search or clear the filters." : empty?.body}
-              action={filtered ? <Button size="sm" variant="secondary" onClick={clear}>Clear filters</Button> : empty?.action} />
+            <EmptyState title={filtered ? c.noMatches : (empty?.title ?? c.emptyTitle)} body={filtered ? c.noMatchesBody : empty?.body}
+              action={filtered ? <Button size="sm" variant="secondary" onClick={clear}>{c.clearFilters}</Button> : empty?.action} />
           </div>
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-3 border-t border-line px-4 py-3 text-meta text-ink-soft">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-line px-4 py-3 text-meta text-ink-soft">
         <span aria-live="polite">
-          {visible.length ? `${current * pageSize + 1}–${Math.min((current + 1) * pageSize, visible.length)} of ${visible.length}` : "0 results"}
+          {visible.length ? c.range(current * pageSize + 1, Math.min((current + 1) * pageSize, visible.length), visible.length) : c.noResults}
         </span>
         <div className="flex gap-2">
-          <Button size="sm" variant="ghost" disabled={current === 0} onClick={() => setPage(current - 1)}>Previous</Button>
-          <Button size="sm" variant="ghost" disabled={current >= pages - 1} onClick={() => setPage(current + 1)}>Next</Button>
+          <Button size="sm" variant="ghost" disabled={current === 0} onClick={() => setPage(current - 1)}>{c.previous}</Button>
+          <Button size="sm" variant="ghost" disabled={current >= pages - 1} onClick={() => setPage(current + 1)}>{c.next}</Button>
         </div>
       </div>
     </div>

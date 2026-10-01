@@ -6,6 +6,17 @@ export const quickViewCopy = {
   open: (name: string) => `Quick view: ${name}`,
   label: "Quick view",
   viewDetails: "View full details",
+  close: "Close quick view",
+  dragToClose: "Drag down to close",
+} as const;
+
+export const floatingCardCopy = {
+  region: "Product spotlight",
+  kind: { new: "New arrival", bestseller: "Bestseller" },
+  move: "Move product spotlight. Drag, or use the arrow keys.",
+  pause: "Pause product spotlight",
+  play: "Resume product spotlight",
+  close: "Close product spotlight",
 } as const;
 
 export const homeCopy = {
@@ -18,6 +29,32 @@ export const homeCopy = {
   copied: "Code copied",
   products: (n: number) => `${n} ${n === 1 ? "product" : "products"}`,
   slideshow: "Featured",
+  /** Small overline above each home section heading, per section kind / product source. */
+  overline: {
+    categories: "Departments",
+    blog: "Journal",
+    products: { featured: "Featured", new: "Just in", best_rated: "Top rated", collection: "Curated", category: "Curated", manual: "Hand-picked" },
+  },
+  railPrev: "Previous products",
+  railNext: "Next products",
+  testimonialsChip: "Testimonials",
+  quotes: "Customer reviews",
+  faq: { overline: "FAQs", title: "Questions, answered.", body: "The things shoppers ask us most.", all: "All questions" },
+} as const;
+
+/** Home dark stages: hero carousel, lookbook rail, promo band. */
+export const homeStageCopy = {
+  prev: "Previous slide",
+  next: "Next slide",
+  pause: "Pause slideshow",
+  play: "Play slideshow",
+  slideOf: (i: number, n: number) => `${i} of ${n}`,
+  nextUp: (heading: string) => `Next slide: ${heading}`,
+  lookbookOverline: "Selected edits",
+  lookbookCount: (n: number) => `Collections (${n})`,
+  drag: "Drag to slide",
+  prevCollection: "Previous collection",
+  nextCollection: "Next collection",
 } as const;
 
 export const pdpCopy = {
@@ -32,6 +69,9 @@ export const pdpCopy = {
   showImage: (n: number) => `Show image ${n}`,
   reviewsLink: (n: number) => `${n} ${n === 1 ? "review" : "reviews"}`,
   noImage: "No image available",
+  prevImage: "Previous image",
+  nextImage: "Next image",
+  addBar: "Add to bag bar",
 } as const;
 
 export const reviewFormCopy = {

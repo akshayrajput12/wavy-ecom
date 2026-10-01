@@ -26,8 +26,8 @@ export function LoginView({ next }: { next?: string }) {
         <FormAlert {...result} />
         <Input label={ac.auth.email} type="email" autoComplete="email" error={errors.email?.message} {...register("email")} />
         <Input label={ac.auth.password} type="password" autoComplete="current-password" error={errors.password?.message} {...register("password")} />
-        <Link href="/forgot-password" className="justify-self-end text-meta underline underline-offset-4">{ac.auth.forgot}</Link>
-        <Button type="submit" full loading={pending}>{ac.auth.login}</Button>
+        <Link href="/forgot-password" className="inline-flex min-h-11 items-center justify-self-end text-meta underline underline-offset-4">{ac.auth.forgot}</Link>
+        <Button type="submit" size="lg" full loading={pending}>{ac.auth.login}</Button>
         {next?.startsWith("/checkout") && <Link href="/checkout" className="inline-flex min-h-11 items-center justify-center text-meta text-ink-soft underline underline-offset-4">{ac.auth.guest}</Link>}
       </form>
     </AuthShell>

@@ -5,7 +5,8 @@ import { ORDER_STATUS, PAYMENT_PROVIDER, PAYMENT_STATUS } from "@/types/domain";
 import type { AdminOrderRow, Paginated } from "@/types/admin";
 import { formatPrice } from "@/lib/format";
 import { fmtDateTime } from "./components/fmt";
-import { FilterBar, opts, Pager, SimpleTable, type Col } from "./components/list";
+import { FilterBar, Pager } from "./components/list";
+import { opts, SimpleTable, type Col } from "./components/table";
 
 const cols: Col<AdminOrderRow>[] = [
   { header: "Order", cell: (o) => <Link href={`/admin/orders/${o.orderNumber}`} className="font-medium hover:underline">{o.orderNumber}</Link> },

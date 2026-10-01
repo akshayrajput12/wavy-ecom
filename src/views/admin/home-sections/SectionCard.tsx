@@ -67,9 +67,9 @@ export function SectionCard({ section, type, lookups, onMove, onDone }: {
   };
 
   return (
-    <section className="rounded-md border border-line bg-surface p-5" aria-label={SECTION_LABEL[type]}>
+    <section className="min-w-0 rounded-lg border border-line bg-surface p-4 sm:p-5" aria-label={SECTION_LABEL[type]}>
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <h2 className="mr-auto text-body-lg font-semibold">{form.title || SECTION_LABEL[type]}</h2>
+        <h2 className="mr-auto min-w-0 text-body-lg font-semibold break-words">{form.title || SECTION_LABEL[type]}</h2>
         <Badge tone="neutral">{SECTION_LABEL[type]}</Badge>
         {!section ? <Badge tone="warning" dot>New, not saved</Badge> : dirty ? <Badge tone="warning" dot>Unsaved changes</Badge> : <Badge tone={form.isActive ? "success" : "neutral"} dot>{form.isActive ? "Active" : "Inactive"}</Badge>}
         {onMove && <>
@@ -77,8 +77,8 @@ export function SectionCard({ section, type, lookups, onMove, onDone }: {
           <button type="button" className={icon} onClick={() => onMove(1)} aria-label={`Move ${SECTION_LABEL[type]} down`}><ArrowDown className="size-4" aria-hidden /></button>
         </>}
       </div>
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="grid min-w-0 gap-4 sm:grid-cols-2">
           <Input label="Title (optional)" value={form.title} onChange={(e) => set({ title: e.target.value })} />
           <Input label="Subtitle (optional)" value={form.subtitle} onChange={(e) => set({ subtitle: e.target.value })} />
           <ScheduleFields startsAt={form.startsAt} endsAt={form.endsAt} error={errors.endsAt} onChange={set} />
@@ -90,7 +90,7 @@ export function SectionCard({ section, type, lookups, onMove, onDone }: {
       <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-line pt-4">
         <Button type="button" size="sm" loading={busy} disabled={!dirty && !!section} onClick={save}>{section ? "Update section" : "Save section"}</Button>
         {!confirm ? <Button type="button" size="sm" variant="ghost" onClick={() => (section ? setConfirm(true) : onDone())}>{section ? "Delete" : "Discard"}</Button> : (
-          <span className="flex items-center gap-2" role="alert">
+          <span className="flex flex-wrap items-center gap-2" role="alert">
             <Button type="button" size="sm" loading={busy} onClick={remove} className="bg-danger text-on-dark hover:bg-danger">Confirm delete</Button>
             <Button type="button" size="sm" variant="ghost" onClick={() => setConfirm(false)}>Cancel</Button>
           </span>

@@ -25,12 +25,12 @@ export function SeoView({ overrides, redirects }: { overrides: AdminSeoOverride[
     <>
       <PageHeader title="SEO" description="Per-path metadata overrides and redirects." />
       <section className="mb-10" aria-labelledby="ov">
-        <div className="mb-3 flex items-center justify-between"><h2 id="ov" className="t-h3">Metadata overrides</h2><ButtonLink size="sm" href="/admin/seo/overrides/new">New override</ButtonLink></div>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><h2 id="ov" className="t-h3">Metadata overrides</h2><ButtonLink size="sm" href="/admin/seo/overrides/new">New override</ButtonLink></div>
         <DataTable caption="SEO overrides" rows={overrides} columns={overrideCols} getId={(o) => o.id} search={(o) => `${o.path} ${o.title ?? ""}`} searchPlaceholder="Search paths"
           empty={{ title: "No overrides", body: "Pages use their default metadata." }} />
       </section>
       <section aria-labelledby="rd">
-        <div className="mb-3 flex items-center justify-between"><h2 id="rd" className="t-h3">Redirects</h2><ButtonLink size="sm" href="/admin/seo/redirects/new">New redirect</ButtonLink></div>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><h2 id="rd" className="t-h3">Redirects</h2><ButtonLink size="sm" href="/admin/seo/redirects/new">New redirect</ButtonLink></div>
         <DataTable caption="Redirects" rows={redirects} columns={redirectCols} getId={(r) => r.id} search={(r) => `${r.fromPath} ${r.toPath}`} searchPlaceholder="Search redirects"
           empty={{ title: "No redirects" }} />
       </section>

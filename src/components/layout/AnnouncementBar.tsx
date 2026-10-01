@@ -2,9 +2,9 @@ import { getStoreSettings } from "@/backend/settings/repo";
 import { layoutCopy } from "@/data/storefront";
 import { formatPrice } from "@/lib/format";
 
-/** Thin calm strip above the header, from store settings; renders nothing when there is nothing to announce. */
+/** Slim uppercase line under the floating pill (store routes except home); renders nothing when there is nothing to announce. */
 export async function AnnouncementBar() {
   const threshold = (await getStoreSettings())?.freeShippingThreshold;
   if (!threshold) return null;
-  return <p className="bg-accent-soft px-4 py-2 text-center text-micro font-medium text-ink">{layoutCopy.freeShipping(formatPrice(threshold))}</p>;
+  return <p className="t-overline px-4 pb-1 pt-2 text-center">{layoutCopy.freeShipping(formatPrice(threshold))}</p>;
 }

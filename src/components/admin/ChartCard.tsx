@@ -6,9 +6,9 @@ export function ChartCard({ title, description, actions, children, table }: {
   table?: { headers: string[]; rows: (string | number)[][] };
 }) {
   return (
-    <figure className="rounded-md border border-line bg-surface p-5">
+    <figure className="min-w-0 rounded-lg border border-line bg-surface p-4 sm:p-5">
       <figcaption className="mb-4 flex flex-wrap items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <p className="text-body-lg font-semibold">{title}</p>
           {description && <p className="t-meta mt-0.5">{description}</p>}
         </div>

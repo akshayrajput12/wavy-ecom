@@ -39,20 +39,20 @@ export function WishlistView({ signedIn, accountProducts }: { signedIn: boolean;
 
   return (
     <div className="container-x pb-24">
-      <header className="border-b border-line py-10 lg:py-16">
-        <h1 className="t-hero">{c.title} {local !== null && <span className="text-ink-soft">({products.length})</span>}</h1>
+      <header className="border-b border-line pb-8 pt-8 lg:pb-10 lg:pt-12">
+        <h1 className="t-display">{c.title} {local !== null && <span className="t-index align-top text-ink-soft">({String(products.length).padStart(2, "0")})</span>}</h1>
         {!signedIn && <p className="mt-3 text-body-lg text-ink-soft">{c.guestNote}</p>}
       </header>
       {local === null ? (
-        <ul className="mt-10 grid grid-cols-2 gap-x-3 gap-y-10 sm:gap-x-5 md:grid-cols-3 lg:grid-cols-4" aria-busy>
-          {Array.from({ length: 4 }, (_, i) => <li key={i}><Skeleton className="aspect-[4/5] w-full rounded-md" /><Skeleton className="mt-3 h-4 w-3/4" /></li>)}
+        <ul className="mt-10 grid grid-cols-2 gap-x-3 gap-y-10 sm:gap-x-4 md:grid-cols-3 lg:grid-cols-4" aria-busy>
+          {Array.from({ length: 4 }, (_, i) => <li key={i}><Skeleton className="aspect-[4/5] w-full rounded-lg" /><Skeleton className="mt-3 h-4 w-3/4" /></li>)}
         </ul>
       ) : products.length === 0 ? (
         <div className="mt-10">
           <EmptyState icon={<Heart className="size-7" aria-hidden />} title={c.empty.title} body={c.empty.body} action={<ButtonLink href="/collections">{c.emptyCta}</ButtonLink>} />
         </div>
       ) : (
-        <ul className="mt-10 grid grid-cols-2 gap-x-3 gap-y-12 sm:gap-x-5 md:grid-cols-3 lg:grid-cols-4">
+        <ul className="mt-10 grid grid-cols-2 gap-x-3 gap-y-12 sm:gap-x-4 md:grid-cols-3 lg:grid-cols-4">
           {products.map((p) => <WishlistItem key={p.id} product={p} onRemove={() => remove(p.id)} />)}
         </ul>
       )}
@@ -76,14 +76,14 @@ function WishlistItem({ product: p, onRemove }: { product: Product; onRemove: ()
         <>
           <label htmlFor={`w-${p.id}`} className="sr-only">{p.optionNames.join(" / ")}</label>
           <select id={`w-${p.id}`} value={variantId} onChange={(e) => setVariantId(e.target.value)}
-            className="h-11 rounded-sm border border-line bg-surface px-3 text-meta focus:border-ink focus:outline-none">
+            className="h-11 w-full min-w-0 rounded-pill border border-line bg-transparent px-4 text-meta font-medium focus:border-ink focus:outline-none">
             {available.map((v) => <option key={v.id} value={v.id}>{v.title}</option>)}
           </select>
         </>
       )}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        {available.length > 0 ? <Button size="sm" className="flex-1" onClick={moveToBag}>{c.moveToBag}</Button> : <span className="flex-1 text-meta font-medium text-danger">{c.soldOut}</span>}
-        <button type="button" onClick={onRemove} className="min-h-11 text-meta text-ink-soft underline underline-offset-4 hover:text-ink">
+        {available.length > 0 ? <Button size="sm" className="h-11 flex-1" onClick={moveToBag}>{c.moveToBag}</Button> : <span className="inline-flex flex-1 items-center gap-2 text-meta font-medium text-danger"><span className="size-1.5 rounded-pill bg-current" aria-hidden />{c.soldOut}</span>}
+        <button type="button" onClick={onRemove} className="min-h-11 text-meta text-ink-soft underline decoration-line underline-offset-4 hover:text-ink hover:decoration-ink">
           {c.remove}<span className="sr-only"> {p.name}</span>
         </button>
       </div>

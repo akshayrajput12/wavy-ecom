@@ -11,7 +11,7 @@ export default async function AccountGroupLayout({ children }: { children: React
   return (
     <>
       <Header />
-      <main id="main" className="container-x flex-1">{children}</main>
+      <main id="main" className="container-x flex-1 pt-(--header-h)">{children}</main>
       <Footer />
       <CartDrawer freeShippingThreshold={settings?.freeShippingThreshold} />
     </>

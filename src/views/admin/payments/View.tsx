@@ -6,7 +6,8 @@ import { formatPrice } from "@/lib/format";
 import type { AdminGateway, AdminPayment, AdminPaymentAttempt, AdminPaymentEvent, Paginated } from "@/types/admin";
 import { PAYMENT_PROVIDER } from "@/types/domain";
 import { fmtDateTime } from "../orders/components/fmt";
-import { FilterBar, opts, Pager, SimpleTable, type Col } from "../orders/components/list";
+import { FilterBar, Pager } from "../orders/components/list";
+import { opts, SimpleTable, type Col } from "../orders/components/table";
 import { Gateways } from "./components/Gateways";
 import { Reconcile } from "./components/Reconcile";
 
@@ -48,10 +49,10 @@ export function PaymentsView({ gateways, list }: { gateways: AdminGateway[]; lis
       <PageHeader title="Payments" description="Gateways, payments, attempts and webhook events. Failures show stage, code and reason." />
       <Gateways gateways={gateways} />
       <Reconcile />
-      <nav aria-label="Payment records" className="mb-3 flex gap-2">
+      <nav aria-label="Payment records" className="mb-3 flex flex-wrap gap-2">
         {KINDS.map((k) => (
           <Link key={k} href={`/admin/payments?kind=${k}`} aria-current={list.kind === k ? "page" : undefined}
-            className={clsx("inline-flex h-9 items-center rounded-pill border px-4 text-meta capitalize", list.kind === k ? "border-ink bg-ink text-on-dark" : "border-line hover:border-ink")}>{k}</Link>
+            className={clsx("inline-flex h-11 items-center rounded-pill border px-4 text-meta capitalize sm:h-9", list.kind === k ? "border-ink bg-ink text-on-dark" : "border-line hover:border-ink")}>{k}</Link>
         ))}
       </nav>
       <FilterBar key={list.kind} filters={[

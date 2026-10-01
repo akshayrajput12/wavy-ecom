@@ -19,7 +19,7 @@ export function SeoFields({ title, description, path, titleProps, descriptionPro
         <Input label="SEO title" hint={`${title.length}/60 characters`} {...titleProps} />
         <Textarea label="Meta description" hint={`${description.length}/160 characters`} {...descriptionProps} />
       </div>
-      <section aria-label="Google search preview" className="rounded-md border border-line bg-surface p-4">
+      <section aria-label="Google search preview" className="rounded-lg border border-line bg-surface p-4">
         <p className="t-overline mb-2 text-ink-soft" aria-hidden>Search preview</p>
         <p className="truncate text-meta text-ink-soft">{host}{path.split("/").filter(Boolean).map((s) => ` › ${s}`)}</p>
         <p className="mt-0.5 text-body-lg text-info">{cut(title || "Untitled page", 60)}</p>

@@ -48,19 +48,19 @@ export function Reviews({ productId, productName, initial }: { productId: string
   return (
     <section id="reviews" aria-labelledby="reviews-title" className="grid scroll-mt-24 gap-10 lg:grid-cols-12 lg:gap-12">
       <div className="lg:col-span-4">
-        <h2 id="reviews-title" className="t-h1">{c.title}</h2>
+        <h2 id="reviews-title" className="t-display">{c.title}</h2>
         {summary.count > 0 && (
           <>
-            <p className="mt-4 font-serif text-hero leading-none">{summary.average.toFixed(1)}</p>
+            <p className="t-hero mt-6 tabular-nums">{summary.average.toFixed(1)}<span className="text-h2 text-ink-soft">/5</span></p>
             <RatingStars rating={summary.average} size="md" className="mt-2" />
             <p className="mt-1 text-meta text-ink-soft">{c.basedOn(summary.count)}</p>
             <ul className="mt-6 space-y-1">
               {([5, 4, 3, 2, 1] as const).map((s) => (
                 <li key={s}>
                   <button type="button" aria-pressed={query.rating === s} onClick={() => load({ ...query, rating: query.rating === s ? undefined : s, page: 1 })}
-                    className="flex min-h-9 w-full items-center gap-3 rounded-sm px-1 text-meta transition-colors hover:bg-surface-warm aria-pressed:font-semibold">
+                    className="flex min-h-11 w-full items-center gap-3 rounded-pill px-2 text-meta transition-colors hover:bg-surface-warm aria-pressed:bg-surface-2 aria-pressed:font-semibold">
                     <span className="w-9 tabular-nums">{s} ★</span>
-                    <span className="h-1.5 flex-1 overflow-hidden rounded-pill bg-line-soft" aria-hidden>
+                    <span className="h-1 flex-1 overflow-hidden rounded-pill bg-line" aria-hidden>
                       <span className="block h-full origin-left rounded-pill bg-rating" style={{ transform: `scaleX(${summary.count ? summary.histogram[s] / summary.count : 0})` }} />
                     </span>
                     <span className="w-8 text-right tabular-nums text-ink-soft">{summary.histogram[s]}</span>
@@ -91,7 +91,7 @@ export function Reviews({ productId, productName, initial }: { productId: string
         ) : (
           <ul className={`divide-y divide-line transition-opacity duration-(--dur-base) ${loading ? "opacity-50" : ""}`}>
             {data.items.map((r) => (
-              <li key={r.id} className="py-6">
+              <li key={r.id} className="py-7">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <RatingStars rating={r.rating} />
                   <time dateTime={r.createdAt} className="text-meta text-ink-soft">{formatDate(r.createdAt)}</time>

@@ -3,9 +3,9 @@
 What is **implemented** in `src/app/globals.css`, `src/app/layout.tsx` and `src/components/ui/*`.
 Where this differs from older specs, the code wins.
 
-**Direction:** a multi-category store (electronics, home, beauty, fashion, grocery, books), so the look is
-calm, soft and neutral: warm off-white canvas, soft ink, one sage accent, diffuse shadows, gentle motion.
-Nothing loud, nothing dramatic.
+**Direction (2026-10-01):** premium warm monochrome, modelled on the reference in `REFERENCE_GENESIS.md`:
+paper canvas, near-black ink, no colour accent, dark "stages" for the hero / lookbook / CTA band, tight
+geometric display headings, pill controls, gentle motion. Product imagery supplies the colour.
 
 **The one rule:** components never contain hex, rgb or raw px sizes. Every value is a token in `:root`,
 exposed to Tailwind v4 through `@theme inline`. Change the token and the whole site follows.
@@ -14,52 +14,56 @@ exposed to Tailwind v4 through `@theme inline`. Change the token and the whole s
 
 | Token | Hex | Tailwind | Use |
 |---|---|---|---|
-| `--ink` | `#1D1C1A` | `text-ink`, `bg-ink` | Text, headings, icons, primary button (16.2:1 on canvas) |
-| `--ink-soft` | `#57534D` | `text-ink-soft` | Secondary text, `.t-meta` (7.3:1) |
-| `--ink-muted` | `#85807A` | `text-ink-muted` | Placeholders, disabled. **Not for body text** (3.7:1) |
-| `--canvas` | `#FAF9F6` | `bg-canvas` | Page background (also `themeColor` in layout) |
-| `--surface` | `#FFFFFF` | `bg-surface` | Cards, fields, panels |
-| `--surface-2` | `#F4F3EF` | `bg-surface-2` | **new.** Neutral inset fill: image wells, table heads, icon discs |
-| `--surface-warm` | `#F6F2EC` | `bg-surface-warm` | Soft sections, ghost hover, neutral badge |
-| `--line` / `--line-soft` | `#E6E3DD` / `#EFEDE8` | `border-line`, `border-line-soft` | Dividers, input borders; skeletons use `line-soft` |
-| `--accent` | `#BCD4C5` | `bg-accent` | Soft sage **fill** with ink text (10.8:1), selection |
-| `--accent-hover` | `#A7C6B3` | `bg-accent-hover` | Accent hover |
-| `--accent-soft` | `#E7EFE9` | `bg-accent-soft` | **new.** Accent tint: promo panels, selected rows, active drop zone |
-| `--accent-deep` | `#3D6853` | `text-accent-deep` | Accent as text, links, progress fill, focus ring (6.0:1, AA body) |
-| `--success` / `--warning` / `--danger` / `--info` | `#2D7A4F` / `#94600F` / `#B43C3C` / `#41639A` | `text-success`, `bg-danger/10`… | Status only, always with text. All ≥ 5:1 on canvas |
-| `--rating` | `#E0A13A` | `text-rating` | Stars (always beside the numeric rating) |
-| `--black` / `--on-dark` | `#151413` / `#FAF9F6` | `bg-black text-on-dark` | Admin rail, footer, dark hover |
-| `--overlay` | ink at 32% | `bg-overlay`, `backdrop:bg-overlay` | **new.** Dialog backdrops, image scrims |
-| `--focus-ring` | = `--accent-deep` | `outline-focus`, `ring-focus` | **new.** Global `:focus-visible` outline |
+| `--ink` | `#121211` | `text-ink`, `bg-ink` | Text, headings, icons, primary button (17.5:1 on canvas) |
+| `--ink-soft` | `#5B5954` | `text-ink-soft` | Secondary text, `.t-meta`, `.t-overline` (6.4:1) |
+| `--ink-muted` | `#8A8780` | `text-ink-muted` | Placeholders, disabled. **Not for body text** (3.3:1) |
+| `--canvas` | `#F3F1EC` | `bg-canvas` | Page background, warm paper (also `themeColor` in layout) |
+| `--surface` | `#FBFAF7` | `bg-surface` | Cards, fields, panels, floating nav |
+| `--surface-2` | `#E9E6DF` | `bg-surface-2` | Product image wells, table heads, icon discs |
+| `--surface-warm` | `#EBE8E1` | `bg-surface-warm` | Soft bands ("how it works"), ghost hover, neutral badge |
+| `--line` / `--line-soft` | `#DEDAD2` / `#E7E4DD` | `border-line`, `border-line-soft` | Hairlines, input borders; skeletons use `line-soft` |
+| `--accent` / `--accent-hover` | `#DCD6CA` / `#CFC8BA` | `bg-accent` | Stone **fill** with ink text, selection |
+| `--accent-soft` | `#E9E6DF` | `bg-accent-soft` | Promo panels, selected rows, active drop zone |
+| `--accent-deep` | `#2B2A27` | `text-accent-deep` | "Accent" as text, links, progress fill (monochrome system) |
+| `--success` / `--warning` / `--danger` / `--info` | `#2D7A4F` / `#94600F` / `#B43C3C` / `#41639A` | `text-success`, `bg-danger/10`… | Status only, always with text |
+| `--rating` | = ink | `text-rating` | Stars (always beside the numeric rating) |
+| `--black` / `--black-2` | `#0E0F11` / `#18191C` | `bg-black`, `bg-black-2` | Dark stages / raised surfaces on dark |
+| `--on-dark` / `--on-dark-soft` | `#F6F4EF` / `#A9A6A0` | `text-on-dark`, `text-on-dark-soft` | Text on dark (soft = 7.6:1 on black) |
+| `--line-dark` | on-dark at 14% | `border-line-dark` | Hairlines on dark |
+| `--overlay` | ink at 40% | `bg-overlay` | Dialog backdrops, image scrims |
+| `--focus-ring` | = ink | `outline-focus` | Global `:focus-visible` outline |
 
-Rules: light theme only. Accent is a fill, never text on white (use `accent-deep` for text). Tints use
-opacity modifiers on tokens (`bg-danger/10`). Status is never colour alone.
+**`.on-dark`**: put it on a dark section and it sets the background and remaps `--ink`, `--ink-soft`,
+`--canvas`, `--surface`, `--line` and `--focus-ring`, so `text-ink`, `border-line` and every Button variant
+read correctly on dark without per-component dark styles.
+
+Rules: no dark *mode*; dark sections are part of the design. Status is never colour alone.
 
 ## 2. Typography
 
 | Role | Font | CSS var (next/font) | Token | Tailwind |
 |---|---|---|---|---|
-| UI and body | **Plus Jakarta Sans** (variable 200–800) | `--font-jakarta` | `--font-ui` | `font-sans` (body default) |
-| Display, sparingly | **Newsreader** (variable, `opsz` axis, normal + italic) | `--font-newsreader` | `--font-editorial` | `font-serif` |
+| UI and body | **Plus Jakarta Sans** | `--font-jakarta` | `--font-ui` | `font-sans` (body default) |
+| Display (all headings) | **Urbanist** 600 | `--font-urbanist` | `--font-editorial` | `font-display` (`font-serif` is a legacy alias) |
+| Indices / counters | **Geist Mono** | `--font-geist-mono` | `--font-mono` | `font-mono`, `.t-index` |
 
-Why: Jakarta Sans has open, rounded-geometric forms, so it reads friendly and clearly non-system at 12–15 px
-without being quirky. Newsreader is a low-contrast book serif with optical sizing: soft and calm at display
-sizes, never "fashion magazine". Use the serif for `.t-hero`, `.t-display`, the logo and big numerals only.
+Why: the reference uses a tight geometric grotesk for headings; Urbanist is the closest Google font.
+Jakarta keeps small UI text open and legible. Mono is only for "(01)", "02 / 04" style labels.
 
 ### Fluid scale (390 → 1440 px viewports)
 
 | Token | Size | Class | Font / weight / leading / tracking |
 |---|---|---|---|
-| `--text-hero` | 40 → 64 px | `.t-hero` / `text-hero` | Serif 400, 1.12, −0.012em, balanced |
-| `--text-display` | 32 → 48 px | `.t-display` | Serif 400, 1.12, −0.012em |
-| `--text-h1` | 28 → 36 px | `.t-h1` | Sans 600, 1.3, −0.012em |
-| `--text-h2` | 22 → 26 px | `.t-h2` | Sans 600, 1.3 |
+| `--text-hero` | 44 → 80 px | `.t-hero` / `text-hero` | Display 600, 0.98, −0.035em, balanced |
+| `--text-display` | 36 → 60 px | `.t-display` | Display 600, 1, −0.035em |
+| `--text-h1` | 30 → 42 px | `.t-h1` | Display 600, 1.3, −0.012em |
+| `--text-h2` | 22 → 26 px | `.t-h2` | Display 600, 1.3 |
 | `--text-h3` | 19 px | `.t-h3` | Sans 500, 1.3 |
 | `--text-body-lg` | 16 px | `text-body-lg` | inputs on mobile (no iOS zoom) |
 | `--text-body` | 15 px | `.t-body` / body default | Sans 400, 1.6 |
 | `--text-meta` | 13 px | `.t-meta` | `ink-soft` |
-| `--text-micro` | 12 px | `text-micro` | badges, dense tables |
-| `--text-overline` | 11 px | `.t-overline` | 600, uppercase, +0.12em |
+| `--text-micro` | 12 px | `text-micro`, `.t-index` | badges, dense tables, mono labels |
+| `--text-overline` | 11 px | `.t-overline` | 500, uppercase, +0.14em, `ink-soft` |
 
 To swap a font: change the `next/font/google` import in `layout.tsx`, keep the `variable` name (or
 update `--font-ui` / `--font-editorial`). To restyle every H1: edit `.t-h1` once.

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AccountUser } from "@/backend/account/repo";
 import { Stepper } from "@/components/ui/Progress";
+import { checkoutCopy } from "@/data/copy";
 import { useCart, useCartQuote } from "@/stores/cart";
 import type { Address, PaymentOption, StoreSettings } from "@/types/domain";
 import { ContactStep } from "./components/ContactStep";
@@ -75,10 +76,13 @@ export function CheckoutFlow({ user, savedAddresses, paymentOptions, settings }:
   const a = draft.address as Partial<AddressValues>;
 
   return (
-    <div className="grid gap-6 pb-28 pt-6 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-x-12 lg:pb-16 lg:pt-10">
+    <div className="grid gap-6 pb-28 pt-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:gap-x-16 lg:pb-16 lg:pt-12">
       <div className="grid content-start gap-4">
-        <h1 className="t-h1">{co.title}</h1>
-        <Stepper steps={[...checkoutSteps3]} current={step} label={co.progress} className="mb-2" />
+        <header className="grid gap-3">
+          <p className="t-overline">{checkoutCopy.stepOf(step + 1, checkoutSteps3.length)}</p>
+          <h1 className="t-display">{co.title}</h1>
+        </header>
+        <Stepper steps={[...checkoutSteps3]} current={step} label={co.progress} className="my-4" />
 
         <StepCard index={0} label={checkoutSteps3[0]} state={state(0)} onEdit={edit(0)}
           summary={contact.success && `${contact.data.email} · ${contact.data.phone}`}>

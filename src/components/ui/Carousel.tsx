@@ -25,13 +25,15 @@ export type CarouselProps = {
   autoplay?: number;
   dots?: boolean;
   arrows?: boolean;
+  /** "sides": floating arrows over the track (default). "end": small circles under it, bottom-right (product rails). */
+  arrowsAt?: "sides" | "end";
   /** Pull the scroller to the page edge (rails inside `.container-x`). */
   bleed?: boolean;
   className?: string;
 };
 
 /** Scroll-snap carousel: native touch swipe, mouse drag, keyboard scroll, prev/next, dots, optional autoplay. */
-export function Carousel({ children, label, perView = { base: 1 }, gap = "var(--space-4)", autoplay, dots = false, arrows = true, bleed, className }: CarouselProps) {
+export function Carousel({ children, label, perView = { base: 1 }, gap = "var(--space-4)", autoplay, dots = false, arrows = true, arrowsAt = "sides", bleed, className }: CarouselProps) {
   const slides = Children.toArray(children);
   const ref = useRef<HTMLUListElement>(null);
   const reduce = useReducedMotion();
@@ -153,7 +155,18 @@ export function Carousel({ children, label, perView = { base: 1 }, gap = "var(--
         ))}
       </ul>
 
-      {arrows && slides.length > 1 && (
+      {arrows && arrowsAt === "end" && !(state.atStart && state.atEnd) && (
+        <div className="mt-6 flex justify-end gap-2">
+          {/* active = ink filled, inactive = outlined (reference rail) */}
+          {([["Previous slide", -1, state.atStart, ChevronLeft], ["Next slide", 1, state.atEnd, ChevronRight]] as const).map(([name, d, off, Icon]) => (
+            <button key={d} type="button" aria-label={name} onClick={() => goTo(state.index + d)} disabled={off}
+              className={clsx("grid size-11 place-items-center rounded-pill border transition-colors duration-(--dur-fast)", off ? "border-line text-ink-muted" : "border-ink bg-ink text-canvas hover:bg-ink/85")}>
+              <Icon className="size-4" aria-hidden />
+            </button>
+          ))}
+        </div>
+      )}
+      {arrows && arrowsAt === "sides" && slides.length > 1 && (
         <>
           <button type="button" aria-label="Previous slide" onClick={() => goTo(state.index - 1)} disabled={state.atStart} className={clsx(arrowBtn, "left-3")}>
             <ChevronLeft className="size-5" aria-hidden />

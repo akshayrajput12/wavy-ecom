@@ -33,7 +33,7 @@ export function StatusHistory({ history }: { history: AdminOrderDetail["history"
       <ol className="flex flex-col gap-3">
         {[...history].reverse().map((h) => (
           <li key={h.id} className="text-body">
-            <span className="flex items-center gap-2">{h.fromStatus && <><StatusBadge status={h.fromStatus} /> to</>} <StatusBadge status={h.toStatus} /></span>
+            <span className="flex flex-wrap items-center gap-2">{h.fromStatus && <><StatusBadge status={h.fromStatus} /> to</>} <StatusBadge status={h.toStatus} /></span>
             <span className="t-meta block">{h.actorType} · {fmtDateTime(h.createdAt)}{h.note ? ` · ${h.note}` : ""}</span>
           </li>
         ))}

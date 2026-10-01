@@ -24,7 +24,7 @@ export function ReviewsTable({ reviews }: { reviews: AdminReview[] }) {
   const ids = [...sel];
 
   return (
-    <div className="rounded-md border border-line bg-surface">
+    <div className="rounded-lg border border-line bg-surface">
       {ids.length > 0 && (
         <div role="region" aria-label="Bulk actions" className="flex flex-wrap items-center gap-2 border-b border-line bg-surface-warm px-4 py-2">
           <span className="text-meta font-medium">{ids.length} selected</span>
@@ -35,7 +35,7 @@ export function ReviewsTable({ reviews }: { reviews: AdminReview[] }) {
       )}
       <ul className="divide-y divide-line-soft">
         {reviews.map((r) => (
-          <li key={r.id} className="flex gap-3 p-4">
+          <li key={r.id} className="flex flex-wrap gap-3 p-4">
             <input type="checkbox" checked={sel.has(r.id)} onChange={() => toggle(r.id)} aria-label={`Select review by ${r.authorName}`} className="mt-1 size-4 accent-ink" />
             <div className="min-w-0 flex-1">
               <p className="font-medium">
@@ -47,13 +47,13 @@ export function ReviewsTable({ reviews }: { reviews: AdminReview[] }) {
                 {r.verifiedPurchase ? <Badge tone="success">Verified purchase</Badge> : <Badge>Unverified</Badge>}
               </p>
             </div>
-            <div className="flex shrink-0 flex-col items-end gap-2">
+            <div className="flex shrink-0 flex-col items-end gap-2 max-sm:basis-full max-sm:flex-row max-sm:flex-wrap max-sm:items-center max-sm:pl-7">
               <StatusBadge status={r.status} />
               <span className="flex flex-wrap justify-end gap-1">
                 {r.status !== "approved" && <Button size="sm" variant="secondary" loading={busy} onClick={() => void moderate([r.id], "approved")}>Approve</Button>}
                 {r.status !== "rejected" && <Button size="sm" variant="ghost" loading={busy} onClick={() => void moderate([r.id], "rejected")}>Reject</Button>}
                 {r.status === "approved" && <Button size="sm" variant="ghost" loading={busy} onClick={() => void moderate([r.id], "hidden")}>Hide</Button>}
-                <Link href={`/admin/reviews/${r.id}/edit`} className="inline-flex h-9 items-center px-3 text-meta underline">Edit</Link>
+                <Link href={`/admin/reviews/${r.id}/edit`} className="inline-flex h-11 items-center px-3 text-meta underline sm:h-9">Edit</Link>
               </span>
             </div>
           </li>

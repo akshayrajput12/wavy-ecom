@@ -8,39 +8,44 @@
  */
 
 :root {
-  /* ---------- Color palette: calm warm-neutral + one soft sage accent ---------- */
-  --ink: #1d1c1a;          /* 16.2:1 on canvas */
-  --ink-soft: #57534d;     /* 7.3:1 */
-  --ink-muted: #85807a;    /* 3.7:1 (placeholders / disabled only) */
-  --canvas: #faf9f6;
-  --surface: #ffffff;
-  --surface-2: #f4f3ef;    /* subtle neutral fill: image wells, table heads, inset panels */
-  --surface-warm: #f6f2ec; /* soft sections, ghost hover, neutral badge */
-  --line: #e6e3dd;
-  --line-soft: #efede8;
-  --accent: #bcd4c5;       /* fill only, with ink text (10.8:1) */
-  --accent-hover: #a7c6b3;
-  --accent-soft: #e7efe9;  /* accent tint: selected rows, promo panels */
-  --accent-deep: #3d6853;  /* accent as text / link / focus: 6.0:1 (AA body) */
+  /* ---------- Color palette: warm monochrome (paper canvas, near-black ink, dark stages) ---------- */
+  --ink: #121211;          /* 17.5:1 on canvas */
+  --ink-soft: #5b5954;     /* 6.4:1 */
+  --ink-muted: #8a8780;    /* 3.3:1 (placeholders / disabled only) */
+  --canvas: #f3f1ec;       /* warm paper */
+  --surface: #fbfaf7;      /* cards, fields, floating nav */
+  --surface-2: #e9e6df;    /* product image wells, table heads, inset panels */
+  --surface-warm: #ebe8e1; /* soft bands (e.g. "how it works"), ghost hover, neutral badge */
+  --line: #dedad2;
+  --line-soft: #e7e4dd;
+  --accent: #dcd6ca;       /* stone fill, with ink text */
+  --accent-hover: #cfc8ba;
+  --accent-soft: #e9e6df;  /* selected rows, promo panels */
+  --accent-deep: #2b2a27;  /* "accent" as text / link / progress / focus (monochrome system) */
   --success: #2d7a4f;
   --warning: #94600f;
   --danger: #b43c3c;
   --info: #41639a;
-  --rating: #e0a13a;
-  --black: #151413;
-  --on-dark: #faf9f6;
-  --overlay: color-mix(in srgb, var(--ink) 32%, transparent);
-  --focus-ring: var(--accent-deep);
+  --rating: #121211;       /* stars are ink, always beside the numeric rating */
+  --black: #0e0f11;        /* dark stages: hero, "in the wild", CTA band, footer accents */
+  --black-2: #18191c;      /* raised surface on dark (pills, cards) */
+  --line-dark: color-mix(in srgb, var(--on-dark) 14%, transparent);
+  --on-dark: #f6f4ef;
+  --on-dark-soft: #a9a6a0; /* secondary text on dark: 7.6:1 on --black */
+  --overlay: color-mix(in srgb, var(--ink) 40%, transparent);
+  --focus-ring: var(--ink);
 
   /* ---------- Typography ---------- */
   /* font vars are injected by next/font in app/layout.tsx */
   --font-ui: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
-  --font-editorial: var(--font-newsreader), ui-serif, Georgia, serif;
+  /* display: tight geometric grotesk for every heading (kept under the old "editorial" name) */
+  --font-editorial: var(--font-urbanist), var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace; /* indices "(01)", counters "02 / 04" */
 
   /* fluid type scale: min → max between 390px and 1440px viewports */
-  --text-hero: clamp(2.5rem, 1.9rem + 2.4vw, 4rem);        /* 40 → 64 */
-  --text-display: clamp(2rem, 1.6rem + 1.6vw, 3rem);       /* 32 → 48 */
-  --text-h1: clamp(1.75rem, 1.5rem + 1vw, 2.25rem);        /* 28 → 36 */
+  --text-hero: clamp(2.75rem, 1.8rem + 3.6vw, 5rem);       /* 44 → 80 */
+  --text-display: clamp(2.25rem, 1.6rem + 2.6vw, 3.75rem); /* 36 → 60 */
+  --text-h1: clamp(1.875rem, 1.5rem + 1.4vw, 2.625rem);    /* 30 → 42 */
   --text-h2: clamp(1.375rem, 1.25rem + 0.5vw, 1.625rem);   /* 22 → 26 */
   --text-h3: 1.1875rem;     /* 19 */
   --text-body-lg: 1rem;     /* 16 */
@@ -53,7 +58,8 @@
   --leading-snug: 1.3;
   --leading-body: 1.6;
   --tracking-tight: -0.012em;
-  --tracking-wide: 0.12em;
+  --tracking-wide: 0.14em;
+  --tracking-display: -0.035em;
 
   /* ---------- Spacing (8px rhythm) ---------- */
   --space-1: 0.25rem; /* 4 */
@@ -68,7 +74,7 @@
   --section-y: clamp(3rem, 2rem + 4vw, 6rem);
   --gutter: clamp(1rem, 0.5rem + 2.4vw, 3rem);
   --container: 1440px;
-  --header-h: 64px;
+  --header-h: 72px; /* floating pill nav incl. its top offset */
 
   /* ---------- Shape & elevation (soft, diffuse) ---------- */
   --radius-sm: 10px;
@@ -111,12 +117,17 @@
   --color-info: var(--info);
   --color-rating: var(--rating);
   --color-black: var(--black);
+  --color-black-2: var(--black-2);
+  --color-line-dark: var(--line-dark);
   --color-on-dark: var(--on-dark);
+  --color-on-dark-soft: var(--on-dark-soft);
   --color-overlay: var(--overlay);
   --color-focus: var(--focus-ring);
 
   --font-sans: var(--font-ui);
-  --font-serif: var(--font-editorial);
+  --font-serif: var(--font-editorial); /* legacy name: now the display grotesk */
+  --font-display: var(--font-editorial);
+  --font-mono: var(--font-mono);
 
   --text-hero: var(--text-hero);
   --text-display: var(--text-display);
@@ -182,20 +193,21 @@ body {
   .t-hero {
     font-family: var(--font-editorial);
     font-size: var(--text-hero);
-    line-height: var(--leading-tight);
-    letter-spacing: var(--tracking-tight);
-    font-weight: 400;
+    line-height: 0.98;
+    letter-spacing: var(--tracking-display);
+    font-weight: 600;
     text-wrap: balance;
   }
   .t-display {
     font-family: var(--font-editorial);
     font-size: var(--text-display);
-    line-height: var(--leading-tight);
-    letter-spacing: var(--tracking-tight);
-    font-weight: 400;
+    line-height: 1;
+    letter-spacing: var(--tracking-display);
+    font-weight: 600;
     text-wrap: balance;
   }
   .t-h1 {
+    font-family: var(--font-editorial);
     font-size: var(--text-h1);
     line-height: var(--leading-snug);
     letter-spacing: var(--tracking-tight);
@@ -203,6 +215,7 @@ body {
     text-wrap: balance;
   }
   .t-h2 {
+    font-family: var(--font-editorial);
     font-size: var(--text-h2);
     line-height: var(--leading-snug);
     letter-spacing: var(--tracking-tight);
@@ -225,7 +238,31 @@ body {
     font-size: var(--text-overline);
     text-transform: uppercase;
     letter-spacing: var(--tracking-wide);
-    font-weight: 600;
+    font-weight: 500;
+    color: var(--ink-soft);
+  }
+  /* small mono label: card indices "(01)", slide counters "02 / 04" */
+  .t-index {
+    font-family: var(--font-mono);
+    font-size: var(--text-micro);
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  /* dark stage: put on a section to flip it to light-on-dark (hero, "in the wild", CTA band) */
+  .on-dark {
+    background: var(--black);
+    color: var(--on-dark);
+    --ink: var(--on-dark);
+    --ink-soft: var(--on-dark-soft);
+    --ink-muted: color-mix(in srgb, var(--on-dark) 50%, transparent);
+    --canvas: var(--black);
+    --surface: var(--black-2);
+    --surface-2: color-mix(in srgb, var(--on-dark) 8%, transparent);
+    --surface-warm: color-mix(in srgb, var(--on-dark) 10%, transparent);
+    --accent-soft: color-mix(in srgb, var(--on-dark) 10%, transparent);
+    --line: var(--line-dark);
+    --line-soft: color-mix(in srgb, var(--on-dark) 8%, transparent);
+    --focus-ring: var(--on-dark);
   }
   .container-x {
     width: 100%;

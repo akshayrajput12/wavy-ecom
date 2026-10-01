@@ -1,32 +1,57 @@
 import { ImageWell } from "@/components/commerce/ImageWell";
 import { RatingStars } from "@/components/commerce/RatingStars";
-import { Carousel } from "@/components/ui/Carousel";
 import { homeCopy } from "@/data/storefront";
-import type { HomeSectionOf } from "@/types/domain";
-import { SectionHead } from "./SectionHead";
+import type { HomeSectionOf, Media, Testimonial } from "@/types/domain";
+import { HeadingLines } from "./HeadingLines";
+import { Mosaic } from "./Mosaic";
 
-export function Testimonials({ section }: { section: HomeSectionOf<"testimonials"> }) {
+const MIN_TILES = 6;
+const MAX_TILES = 12;
+const initials = (name: string) => name.split(/\s+/).map((w) => w[0] ?? "").join("").slice(0, 2).toUpperCase();
+
+function Quote({ t }: { t: Testimonial }) {
   return (
-    <section className="section-y bg-surface-warm">
+    <figure className="flex h-full flex-col gap-4 border-t border-line pt-6">
+      <figcaption className="flex items-center gap-3">
+        {t.avatar?.url
+          ? <ImageWell media={t.avatar} alt="" sizes="40px" className="size-10 shrink-0 rounded-pill" />
+          : <span aria-hidden className="t-index grid size-10 shrink-0 place-items-center rounded-pill bg-ink text-canvas">{initials(t.author)}</span>}
+        <span className="min-w-0">
+          <span className="block truncate text-body font-medium">{t.author}</span>
+          {t.role && <span className="block truncate text-meta text-ink-soft">{t.role}</span>}
+        </span>
+      </figcaption>
+      {t.rating ? <RatingStars rating={t.rating} /> : null}
+      <blockquote className="text-body-lg text-pretty">“{t.quote}”</blockquote>
+    </figure>
+  );
+}
+
+/**
+ * "Trusted by teams / on and off the pitch": photo mosaic (testimonial avatars, topped up with storefront imagery
+ * passed in by HomeView; skipped when there are too few), centred chip + heading, then quotes
+ * (3 columns desktop, horizontal scroll on mobile).
+ */
+export function Testimonials({ section, images = [] }: { section: HomeSectionOf<"testimonials">; images?: Media[] }) {
+  const pool = [...section.testimonials.flatMap((t) => (t.avatar?.url ? [t.avatar] : [])), ...images];
+  const tiles = [...new Map(pool.map((m) => [m.url, m])).values()].slice(0, MAX_TILES);
+  return (
+    <section className="section-y overflow-x-clip">
       <div className="container-x">
-        <SectionHead title={section.title} subtitle={section.subtitle} />
-        <Carousel label={section.title ?? homeCopy.slideshow} perView={{ base: 1.1, sm: 2, lg: 3 }} bleed dots>
+        {tiles.length >= MIN_TILES && <Mosaic images={tiles} />}
+        <div className="flex flex-col items-center text-center">
+          <p className="rounded-pill border border-line px-3.5 py-1 text-meta text-ink-soft">{homeCopy.testimonialsChip}</p>
+          {section.title && <HeadingLines line={section.title} soft={section.subtitle} className="mt-5 max-w-3xl" />}
+        </div>
+        <ul
+          tabIndex={0}
+          aria-label={homeCopy.quotes}
+          className="-mx-(--gutter) mt-12 flex snap-x snap-mandatory gap-4 overflow-x-auto px-(--gutter) scroll-px-(--gutter) [scrollbar-width:none] focus-visible:outline-offset-4 md:mx-0 md:mt-16 md:grid md:grid-cols-3 md:gap-x-8 md:gap-y-12 md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden"
+        >
           {section.testimonials.map((t) => (
-            <figure key={t.id} className="flex h-full flex-col justify-between gap-6 rounded-lg border border-line-soft bg-surface p-7">
-              <div>
-                {t.rating ? <RatingStars rating={t.rating} className="mb-4" /> : null}
-                <blockquote className="font-serif text-h2 leading-snug">“{t.quote}”</blockquote>
-              </div>
-              <figcaption className="flex items-center gap-3 text-meta">
-                {t.avatar && <ImageWell media={t.avatar} alt="" sizes="40px" className="size-10 shrink-0 rounded-pill" />}
-                <span>
-                  <span className="block font-semibold text-ink">{t.author}</span>
-                  {t.role && <span className="text-ink-soft">{t.role}</span>}
-                </span>
-              </figcaption>
-            </figure>
+            <li key={t.id} className="w-[82%] shrink-0 snap-start md:w-auto"><Quote t={t} /></li>
           ))}
-        </Carousel>
+        </ul>
       </div>
     </section>
   );

@@ -2,9 +2,10 @@ import { clsx } from "clsx";
 import Link from "next/link";
 import type { ComponentProps } from "react";
 
+// ink/canvas flip inside `.on-dark` sections, so the same variant reads correctly on paper and on dark stages.
 const variants = {
-  primary: "bg-ink text-on-dark hover:bg-black",
-  secondary: "border border-ink text-ink hover:bg-ink hover:text-on-dark",
+  primary: "bg-ink text-canvas hover:bg-ink/85",
+  secondary: "border border-ink/25 text-ink hover:border-ink hover:bg-ink hover:text-canvas",
   accent: "bg-accent text-ink hover:bg-accent-hover",
   ghost: "text-ink hover:bg-surface-warm",
   link: "text-ink underline underline-offset-4 hover:text-accent-deep px-0 h-auto",
@@ -15,7 +16,7 @@ type Base = { variant?: keyof typeof variants; size?: keyof typeof sizes; loadin
 
 export const buttonClass = ({ variant = "primary", size = "md", full }: Base = {}) =>
   clsx(
-    "inline-flex items-center justify-center gap-2 rounded-pill font-medium transition-colors duration-150",
+    "inline-flex items-center justify-center gap-2 rounded-pill font-medium transition-colors duration-(--dur-fast)",
     "disabled:pointer-events-none disabled:opacity-40",
     variants[variant], sizes[size], full && "w-full",
   );

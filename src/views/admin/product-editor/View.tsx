@@ -99,7 +99,7 @@ export function ProductEditorView({ product, categories, collections }: { produc
         </div>
       )}
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-        <fieldset disabled={!canWrite || saving} className={clsx("min-w-0 rounded-md border border-line bg-surface p-5", tab === "preview" && "max-xl:hidden")}>
+        <fieldset disabled={!canWrite || saving} className={clsx("min-w-0 rounded-lg border border-line bg-surface p-4 sm:p-5", tab === "preview" && "max-xl:hidden")}>
           <legend className="sr-only">Product</legend>
           <BasicsSection f={f} set={set} categories={categories} collections={collections} productId={product?.id} originalSlug={product?.slug} />
           <MediaSection f={f} set={set} />
@@ -121,7 +121,7 @@ export function ProductEditorView({ product, categories, collections }: { produc
             </div>
           )}
         </fieldset>
-        <aside aria-label="Live preview" className={clsx("xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto", tab === "edit" && "max-xl:hidden")}>
+        <aside aria-label="Live preview" className={clsx("xl:sticky xl:top-20 xl:max-h-[calc(100dvh-6rem)] xl:overflow-y-auto", tab === "edit" && "max-xl:hidden")}>
           <Preview f={f} real={real} />
         </aside>
       </div>

@@ -1,19 +1,28 @@
 "use client";
 
 import { clsx } from "clsx";
-import { ChevronRight, ExternalLink, Lock, Menu, X } from "lucide-react";
+import { ChevronRight, ExternalLink, Lock, Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { Drawer } from "@/components/ui/Drawer";
 import { EmptyState } from "@/components/ui/States";
+import { adminCopy as c } from "@/data/copy";
 import type { StaffRole, StaffSession } from "@/types/admin";
-import { ADMIN_NAV, can, navItemFor, ROLE_LABELS } from "@/views/admin/rbac";
+import { can, navItemFor, ROLE_LABELS } from "@/views/admin/rbac";
+import { AdminNav } from "./AdminNav";
+import { usePersisted } from "./usePersisted";
 import { RoleProvider, setPreviewRole, useRole } from "./useRole";
 
-const humanize = (s: string) => (s === "new" ? "New" : decodeURIComponent(s));
+const humanize = (s: string) => (s === "new" ? c.newCrumb : decodeURIComponent(s));
+const DRAWER_NAV_ID = "admin-drawer-nav";
+const navScroll = "min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain p-3 [scrollbar-color:var(--line)_transparent] [scrollbar-width:thin]";
 
-/** Admin chrome: black nav rail (filtered by role) + topbar with breadcrumb + route-level RBAC guard. */
-/** `me` = current staff session (null when Supabase is not configured; the UI then assumes super_admin, the server still enforces). */
+/**
+ * Admin chrome. lg+: sticky full-height sidebar (brand + user pinned, only the nav scrolls) that collapses
+ * to an icon rail (persisted). <lg: top bar + off-canvas Drawer (native dialog: Esc, focus trap, scroll lock).
+ * `me` = current staff session (null when Supabase is not configured; the UI then assumes super_admin, the server still enforces).
+ */
 export function AdminShell({ me, children }: { me: StaffSession | null; children: ReactNode }) {
   return <RoleProvider role={me?.role ?? "super_admin"}><Shell me={me}>{children}</Shell></RoleProvider>;
 }
@@ -22,98 +31,73 @@ function Shell({ me, children }: { me: StaffSession | null; children: ReactNode 
   const pathname = usePathname();
   const { role, allowPreview } = useRole();
   const [open, setOpen] = useState(false);
+  const [railRaw, setRail] = usePersisted("wavy.admin.rail");
+  const rail = railRaw === "1";
   const current = navItemFor(pathname);
   const allowed = !current || can(role, current.permission);
   const extra = current ? pathname.slice(current.href.length).split("/").filter(Boolean) : [];
+  const name = me?.name ?? me?.email ?? c.staffFallback;
+
+  // Close the drawer on navigation (render-time reset, no effect) and when the viewport reaches lg.
+  const [seenPath, setSeenPath] = useState(pathname);
+  if (seenPath !== pathname) { setSeenPath(pathname); setOpen(false); }
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 64rem)");
+    const onChange = () => { if (mq.matches) setOpen(false); };
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
 
   return (
-    <div className="flex min-h-dvh bg-canvas" onKeyDown={(e) => e.key === "Escape" && setOpen(false)}>
-      {open && <button aria-label="Close navigation" className="fixed inset-0 z-40 bg-ink/40 lg:hidden" onClick={() => setOpen(false)} />}
-      <aside
-        id="admin-rail"
-        className={clsx(
-          "fixed inset-y-0 left-0 z-50 flex w-60 flex-col bg-black text-on-dark transition-transform lg:sticky lg:top-0 lg:h-dvh lg:translate-x-0",
-          open ? "translate-x-0" : "-translate-x-full",
-        )}
-      >
-        <div className="flex h-16 items-center justify-between px-5">
-          <Link href="/admin/dashboard" className="text-h3 font-semibold tracking-tight">wavy <span className="t-overline text-on-dark/60">Admin</span></Link>
-          <button className="rounded-sm p-2 hover:bg-on-dark/10 lg:hidden" aria-label="Close navigation" onClick={() => setOpen(false)}><X className="size-5" /></button>
+    <div className="flex min-h-dvh bg-canvas">
+      <aside id="admin-sidebar" className={clsx("sticky top-0 hidden h-dvh shrink-0 flex-col border-r border-line bg-surface lg:flex transition-[width] duration-(--dur-base) ease-soft motion-reduce:transition-none", rail ? "w-20" : "w-64")}>
+        <div className={clsx("flex h-16 shrink-0 items-center border-b border-line", rail ? "justify-center" : "px-5")}>
+          <Brand compact={rail} />
         </div>
-        <nav aria-label="Admin" className="flex-1 overflow-y-auto px-3 pb-6">
-          {ADMIN_NAV.map((group) => {
-            const items = group.items.filter((i) => can(role, i.permission));
-            if (!items.length) return null;
-            return (
-              <div key={group.label} className="mt-5 first:mt-1">
-                <p className="t-overline px-3 pb-1.5 text-on-dark/50">{group.label}</p>
-                <ul className="flex flex-col gap-0.5">
-                  {items.map(({ href, label, icon: Icon }) => {
-                    const active = current?.href === href;
-                    return (
-                      <li key={href}>
-                        <Link
-                          href={href}
-                          onClick={() => setOpen(false)}
-                          aria-current={active ? "page" : undefined}
-                          className={clsx(
-                            "flex min-h-10 items-center gap-3 rounded-sm px-3 text-body transition-colors",
-                            active ? "bg-accent font-medium text-ink" : "text-on-dark/75 hover:bg-on-dark/10 hover:text-on-dark",
-                          )}
-                        >
-                          <Icon className="size-4 shrink-0" aria-hidden />{label}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            );
-          })}
-        </nav>
-        <div className="border-t border-on-dark/10 px-5 py-4">
-          <p className="text-body font-medium">{me?.name ?? me?.email ?? "Staff"}</p>
-          <p className="t-meta text-on-dark/60">{ROLE_LABELS[role]}</p>
+        <AdminNav role={role} currentHref={current?.href} rail={rail} className={navScroll} />
+        <div className={clsx("flex shrink-0 items-center gap-2 border-t border-line p-3", rail && "flex-col")}>
+          <UserCard name={name} role={role} compact={rail} />
+          <button
+            type="button" onClick={() => setRail(rail ? "0" : "1")}
+            aria-expanded={!rail} aria-controls="admin-sidebar" aria-label={rail ? c.expand : c.collapse} title={rail ? c.expand : c.collapse}
+            className="grid size-11 shrink-0 place-items-center rounded-pill text-ink-soft transition-colors hover:bg-surface-2 hover:text-ink"
+          >{rail ? <PanelLeftOpen className="size-5" aria-hidden /> : <PanelLeftClose className="size-5" aria-hidden />}</button>
         </div>
       </aside>
 
+      <Drawer open={open} onClose={() => setOpen(false)} side="left" title={<Brand />}
+        footer={<div className="grid gap-3"><UserCard name={name} role={role} />{allowPreview && <RolePreview role={role} />}</div>}>
+        <div id={DRAWER_NAV_ID} className="-mx-2">
+          <AdminNav role={role} currentHref={current?.href} onNavigate={() => setOpen(false)} />
+        </div>
+      </Drawer>
+
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-line bg-surface/95 px-4 backdrop-blur md:px-6">
+        <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b border-line bg-surface/95 px-3 backdrop-blur sm:gap-3 md:px-6">
           <button
-            className="-ml-1 rounded-sm p-2 hover:bg-surface-warm lg:hidden"
-            aria-label="Open navigation" aria-expanded={open} aria-controls="admin-rail"
-            onClick={() => setOpen(true)}
-          ><Menu className="size-5" /></button>
-          <nav aria-label="Breadcrumb" className="min-w-0 flex-1">
-            <ol className="flex items-center gap-1.5 truncate text-meta text-ink-soft">
-              <li><Link href="/admin/dashboard" className="hover:text-ink">Admin</Link></li>
+            type="button" onClick={() => setOpen(true)}
+            aria-label={c.openNav} aria-expanded={open} aria-controls={DRAWER_NAV_ID}
+            className="grid size-11 shrink-0 place-items-center rounded-pill transition-colors hover:bg-surface-2 lg:hidden"
+          ><Menu className="size-5" aria-hidden /></button>
+          <nav aria-label={c.breadcrumb} className="min-w-0 flex-1">
+            <ol className="flex min-w-0 items-center gap-1.5 text-meta whitespace-nowrap text-ink-soft">
+              <li className="hidden shrink-0 sm:block"><Link href="/admin/dashboard" className="hover:text-ink">{c.root}</Link></li>
               {current && <Crumb href={current.href} label={current.label} last={!extra.length} />}
               {extra.map((seg, i) => <Crumb key={seg} label={humanize(seg)} last={i === extra.length - 1} />)}
             </ol>
           </nav>
-          {allowPreview && (
-            <label className="hidden items-center gap-2 text-meta text-ink-soft sm:flex">
-              <span>Preview role</span>
-              <select
-                value={role}
-                onChange={(e) => setPreviewRole(e.target.value as StaffRole)}
-                className="h-9 rounded-sm border border-line bg-surface px-2 text-meta text-ink"
-              >
-                {(Object.keys(ROLE_LABELS) as StaffRole[]).map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
-              </select>
-            </label>
-          )}
-          <Link href="/" className="inline-flex h-9 items-center gap-1.5 rounded-pill border border-line px-3 text-meta hover:border-ink">
-            View store <ExternalLink className="size-3.5" aria-hidden />
+          {allowPreview && <div className="hidden md:block"><RolePreview role={role} /></div>}
+          <Link href="/" aria-label={c.viewStore} className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-pill border border-line px-3 text-meta transition-colors hover:border-ink sm:h-9">
+            <span className="hidden sm:inline">{c.viewStore}</span><ExternalLink className="size-4" aria-hidden />
           </Link>
         </header>
-        <main id="admin-main" className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 md:px-8 md:py-8">
+        <main id="admin-main" className="mx-auto w-full max-w-(--container) min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8">
           {allowed ? children : (
             <EmptyState
               icon={<Lock className="size-8" />}
-              title="No access"
-              body={`Your role (${ROLE_LABELS[role]}) can't open ${current?.label ?? "this page"}. Ask a super admin if you need it.`}
-              action={<Link href="/admin/dashboard" className="text-body underline underline-offset-4">Back to dashboard</Link>}
+              title={c.noAccess.title}
+              body={c.noAccess.body(ROLE_LABELS[role], current?.label ?? c.noAccess.thisPage)}
+              action={<Link href="/admin/dashboard" className="text-body underline underline-offset-4">{c.noAccess.cta}</Link>}
             />
           )}
         </main>
@@ -122,11 +106,49 @@ function Shell({ me, children }: { me: StaffSession | null; children: ReactNode 
   );
 }
 
+function Brand({ compact }: { compact?: boolean }) {
+  return (
+    <Link href="/admin/dashboard" className="flex min-h-11 min-w-0 items-center gap-2 rounded-pill">
+      <span className="font-display text-h2 leading-none font-semibold tracking-tight text-ink">{compact ? c.brand.charAt(0) : c.brand}</span>
+      {!compact && <span className="t-overline rounded-pill bg-accent-soft px-2 py-0.5 text-accent-deep">{c.brandTag}</span>}
+      {compact && <span className="sr-only">{c.brandTag}</span>}
+    </Link>
+  );
+}
+
+function UserCard({ name, role, compact }: { name: string; role: StaffRole; compact?: boolean }) {
+  return (
+    <div className={clsx("flex min-w-0 items-center gap-3", !compact && "flex-1")} title={compact ? `${name} · ${ROLE_LABELS[role]}` : undefined}>
+      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent text-meta font-semibold text-ink uppercase" aria-hidden>{name.charAt(0)}</span>
+      <div className={compact ? "sr-only" : "min-w-0"}>
+        <p className="truncate text-body font-medium">{name}</p>
+        <p className="truncate text-meta text-ink-soft">{ROLE_LABELS[role]}</p>
+      </div>
+    </div>
+  );
+}
+
+function RolePreview({ role }: { role: StaffRole }) {
+  return (
+    <label className="flex items-center gap-2 text-meta text-ink-soft">
+      <span className="shrink-0">{c.previewRole}</span>
+      <select
+        value={role}
+        onChange={(e) => setPreviewRole(e.target.value as StaffRole)}
+        className="h-11 min-w-0 flex-1 rounded-pill border border-line bg-surface px-3 text-meta text-ink md:h-9"
+      >
+        {(Object.keys(ROLE_LABELS) as StaffRole[]).map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
+      </select>
+    </label>
+  );
+}
+
 function Crumb({ href, label, last }: { href?: string; label: string; last: boolean }) {
   return (
-    <li className="flex items-center gap-1.5">
-      <ChevronRight className="size-3.5" aria-hidden />
-      {last || !href ? <span aria-current={last ? "page" : undefined} className={clsx(last && "font-medium text-ink")}>{label}</span>
+    <li className={clsx("flex items-center gap-1.5", last ? "min-w-0" : "hidden shrink-0 sm:flex")}>
+      {/* below sm only the last crumb shows, so its chevron would lead nowhere */}
+      <ChevronRight className={clsx("size-3.5 shrink-0", last && "max-sm:hidden")} aria-hidden />
+      {last || !href ? <span aria-current={last ? "page" : undefined} className={clsx("truncate", last && "font-medium text-ink")}>{label}</span>
         : <Link href={href} className="hover:text-ink">{label}</Link>}
     </li>
   );

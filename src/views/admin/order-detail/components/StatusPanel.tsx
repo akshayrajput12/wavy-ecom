@@ -20,7 +20,7 @@ export function StatusPanel({ order }: { order: AdminOrderDetail }) {
 
   return (
     <Panel title="Status">
-      <p className="mb-3 flex items-center gap-2">Current <StatusBadge status={order.status} /> <StatusBadge status={order.paymentStatus} /></p>
+      <p className="mb-3 flex flex-wrap items-center gap-2">Current <StatusBadge status={order.status} /> <StatusBadge status={order.paymentStatus} /></p>
       {next.length === 0 && !canCancel && <p className="t-meta">No further transitions from this status.</p>}
       {next.length > 0 && (
         <div className="flex flex-col gap-3">

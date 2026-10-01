@@ -21,7 +21,7 @@ export function DashboardView({ data, trend }: { data: AdminDashboard; trend: Ad
         {data.kpis.map((k) => <StatCard key={k.id} kpi={k} />)}
       </div>
       <div className="mt-6 grid gap-6 xl:grid-cols-3">
-        <div className="xl:col-span-2">
+        <div className="min-w-0 xl:col-span-2">
           {trend && (
             <ChartCard
               title="Revenue, last 30 days" description="Daily captured revenue incl. GST"
@@ -34,7 +34,7 @@ export function DashboardView({ data, trend }: { data: AdminDashboard; trend: Ad
         <Alerts alerts={buildAlerts(data)} />
       </div>
       <div className="mt-6 grid gap-6 xl:grid-cols-3">
-        <div className="xl:col-span-2"><RecentOrders orders={data.recentOrders} /></div>
+        <div className="min-w-0 xl:col-span-2"><RecentOrders orders={data.recentOrders} /></div>
         <LowStock items={data.lowStock} />
       </div>
     </>

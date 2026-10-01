@@ -1,5 +1,5 @@
 import { Check } from "lucide-react";
-import { Reveal } from "@/components/ui/Reveal";
+import { Accordion } from "@/components/ui/Controls";
 import { productCopy as c } from "@/data/copy";
 import { pdpCopy } from "@/data/storefront";
 import type { Product } from "@/types/domain";
@@ -7,8 +7,17 @@ import type { Product } from "@/types/domain";
 const dims = (d: NonNullable<Product["dimensions"]>) =>
   [d.lengthMm, d.widthMm, d.heightMm].every((n) => n) ? `${d.lengthMm} × ${d.widthMm} × ${d.heightMm} mm` : null;
 const weight = (g: number) => (g >= 1000 ? `${(g / 1000).toLocaleString("en-IN", { maximumFractionDigits: 2 })} kg` : `${g} g`);
+const row = "grid grid-cols-[minmax(7rem,2fr)_3fr] gap-4 py-2.5 text-meta";
 
-/** Highlights, description, grouped specifications and the general details table. */
+function Rows({ rows }: { rows: { label: string; value: string }[] }) {
+  return (
+    <dl className="divide-y divide-line-soft">
+      {rows.map((r) => <div key={r.label} className={row}><dt className="text-ink-soft">{r.label}</dt><dd className="text-ink">{r.value}</dd></div>)}
+    </dl>
+  );
+}
+
+/** Accordion details under the buy box: description, highlights, grouped specifications, general details. */
 export function ProductDetails({ product: p }: { product: Product }) {
   const general = [
     p.brand && [pdpCopy.brand, p.brand],
@@ -17,58 +26,41 @@ export function ProductDetails({ product: p }: { product: Product }) {
     p.warranty && [c.warranty, p.warranty],
     p.countryOfOrigin && [c.countryOfOrigin, p.countryOfOrigin],
     [c.returns, p.returnable && p.returnWindowDays ? c.returnable(p.returnWindowDays) : c.notReturnable],
-  ].filter((r): r is [string, string] => Array.isArray(r));
+  ].filter((r): r is [string, string] => Array.isArray(r)).map(([label, value]) => ({ label, value }));
 
   const groups = new Map<string, { label: string; value: string }[]>();
   for (const s of p.specifications) {
     const g = s.group || pdpCopy.general;
     groups.set(g, [...(groups.get(g) ?? []), s]);
   }
-  const row = "grid grid-cols-[minmax(8rem,2fr)_3fr] gap-4 py-3 text-body";
 
   return (
-    <div className="grid gap-14 lg:grid-cols-12 lg:gap-12">
-      <div className="space-y-10 lg:col-span-6">
-        {p.highlights.length > 0 && (
-          <Reveal>
-            <h2 className="t-h2">{c.highlights}</h2>
-            <ul className="mt-4 space-y-2.5">
-              {p.highlights.map((h) => (
-                <li key={h} className="flex gap-3 text-body-lg"><Check className="mt-1 size-4 shrink-0 text-accent-deep" aria-hidden />{h}</li>
-              ))}
-            </ul>
-          </Reveal>
-        )}
-        {p.description && (
-          <Reveal>
-            <h2 className="t-h2">{c.description}</h2>
-            <div className="mt-4 max-w-prose space-y-4 text-body-lg leading-relaxed text-ink-soft">
-              {p.description.split(/\n{2,}/).map((para, i) => <p key={i}>{para}</p>)}
+    <div className="mt-8 border-t border-line">
+      {p.description && (
+        <Accordion title={c.description} defaultOpen>
+          <div className="max-w-prose space-y-3 leading-relaxed">
+            {p.description.split(/\n{2,}/).map((para, i) => <p key={i}>{para}</p>)}
+          </div>
+        </Accordion>
+      )}
+      {p.highlights.length > 0 && (
+        <Accordion title={c.highlights}>
+          <ul className="space-y-2">
+            {p.highlights.map((h) => <li key={h} className="flex gap-3"><Check className="mt-1 size-4 shrink-0 text-ink" aria-hidden />{h}</li>)}
+          </ul>
+        </Accordion>
+      )}
+      {groups.size > 0 && (
+        <Accordion title={c.specifications}>
+          {[...groups].map(([group, specs]) => (
+            <div key={group} className="not-first:mt-4">
+              {groups.size > 1 && <h3 className="t-overline mb-1">{group}</h3>}
+              <Rows rows={specs} />
             </div>
-          </Reveal>
-        )}
-      </div>
-      <Reveal className="space-y-10 lg:col-span-6">
-        {groups.size > 0 && (
-          <section>
-            <h2 className="t-h2">{c.specifications}</h2>
-            {[...groups].map(([group, specs]) => (
-              <div key={group} className="mt-5">
-                {groups.size > 1 && <h3 className="t-overline text-ink-soft">{group}</h3>}
-                <dl className="mt-1 divide-y divide-line-soft border-y border-line-soft">
-                  {specs.map((s) => <div key={s.label} className={row}><dt className="text-ink-soft">{s.label}</dt><dd>{s.value}</dd></div>)}
-                </dl>
-              </div>
-            ))}
-          </section>
-        )}
-        <section>
-          <h2 className="t-h2">{pdpCopy.details}</h2>
-          <dl className="mt-4 divide-y divide-line-soft border-y border-line-soft">
-            {general.map(([k, v]) => <div key={k} className={row}><dt className="text-ink-soft">{k}</dt><dd>{v}</dd></div>)}
-          </dl>
-        </section>
-      </Reveal>
+          ))}
+        </Accordion>
+      )}
+      <Accordion title={pdpCopy.details}><Rows rows={general} /></Accordion>
     </div>
   );
 }

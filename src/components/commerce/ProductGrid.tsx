@@ -8,7 +8,7 @@ import { ProductCard } from "./ProductCard";
 export function ProductGrid({ products, cols = 4, className }: { products: Product[]; cols?: 3 | 4; className?: string }) {
   const sizes = cols === 4 ? "(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw" : "(min-width: 1024px) 24vw, (min-width: 768px) 33vw, 50vw";
   return (
-    <Stagger as="ul" className={clsx("grid grid-cols-2 gap-x-3 gap-y-10 sm:gap-x-5 md:grid-cols-3", cols === 4 && "lg:grid-cols-4", className)}>
+    <Stagger as="ul" className={clsx("grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-4 sm:gap-y-10 md:grid-cols-3", cols === 4 && "lg:grid-cols-4", className)}>
       {products.map((p, i) => (
         <StaggerItem as="li" key={p.id}>
           <ProductCard product={p} preload={i < 2} sizes={sizes} />
@@ -21,9 +21,9 @@ export function ProductGrid({ products, cols = 4, className }: { products: Produ
 /** Swipeable product rail (scroll-snap Carousel) for merchandising rows and related products. */
 export function ProductRail({ products, label }: { products: Product[]; label: string }) {
   return (
-    <Carousel label={label} perView={{ base: 1.7, sm: 2.6, lg: 4 }} gap="var(--space-4)" bleed>
+    <Carousel label={label} perView={{ base: 1.6, sm: 2.6, lg: 4.4 }} gap="var(--space-3)" arrowsAt="end" bleed>
       {products.map((p) => (
-        <ProductCard key={p.id} product={p} sizes="(min-width: 1024px) 25vw, (min-width: 640px) 38vw, 60vw" className="pb-2" />
+        <ProductCard key={p.id} product={p} sizes="(min-width: 1024px) 22vw, (min-width: 640px) 38vw, 62vw" className="pb-2" />
       ))}
     </Carousel>
   );

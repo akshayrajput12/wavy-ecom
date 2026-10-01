@@ -1,10 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { clsx } from "clsx";
-import { PackageOpen } from "lucide-react";
+import { ChevronRight, PackageOpen } from "lucide-react";
 import { ButtonLink } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/States";
-import { FilterPanel, FilterToolbar, Pagination, ProductGrid } from "@/components/commerce";
+import { FilterToolbar, Pagination, ProductGrid } from "@/components/commerce";
 import { filterCopy, productCopy } from "@/data/copy";
 import { collectionCopy } from "@/data/storefront";
 import type { ProductList } from "@/backend/catalog/repo";
@@ -15,60 +14,81 @@ export interface CollectionViewProps {
   isCategory: boolean; list: ProductList; path: string; params: Record<string, string | string[] | undefined>;
 }
 
-/** Category or collection listing: banner, subcategory chips, URL-synced facet filters, pagination. */
+function Crumbs({ trail, title }: { trail: CategoryRef[]; title: string }) {
+  const sep = <ChevronRight className="size-3" aria-hidden />;
+  return (
+    <nav aria-label="Breadcrumb" className="t-meta">
+      <ol className="flex flex-wrap items-center gap-1.5">
+        <li className="flex items-center gap-1.5"><Link href="/" className="hover:text-ink">{productCopy.breadcrumbHome}</Link>{sep}</li>
+        {trail.map((t) => <li key={t.id} className="flex items-center gap-1.5"><Link href={`/collections/${t.slug}`} className="hover:text-ink">{t.name}</Link>{sep}</li>)}
+        <li aria-current="page" className="text-ink">{title}</li>
+      </ol>
+    </nav>
+  );
+}
+
+/** Category or collection listing: dark banner (or plain heading), subcategory pills, filter/sort toolbar, 2/3/4 grid, pagination. */
 export function CollectionView({ title, description, banner, trail, subcategories, isCategory, list, path, params }: CollectionViewProps) {
   const refined = Object.keys(params).some((k) => ["opt", "brand", "min", "max", "inStock", "category"].includes(k));
   const filterProps = { facets: list.facets, hideCategories: isCategory };
+  const count = <p className="t-index text-ink-soft">{filterCopy.results(list.total)}</p>;
+
   return (
     <div className="pb-24">
-      <header className={clsx("relative", banner && "overflow-hidden bg-black text-on-dark")}>
-        {banner && <Image src={banner.url} alt={banner.alt} fill preload sizes="100vw" className="object-cover opacity-70" />}
-        <div className={clsx("container-x relative py-10 lg:py-16", banner && "bg-linear-to-t from-black/50 to-transparent")}>
-          <nav aria-label="Breadcrumb" className={clsx("text-meta", banner ? "text-on-dark/80" : "text-ink-soft")}>
-            <ol className="flex flex-wrap gap-1.5">
-              <li><Link href="/" className="hover:underline">{productCopy.breadcrumbHome}</Link> <span aria-hidden>/</span></li>
-              {trail.map((t) => <li key={t.id}><Link href={`/collections/${t.slug}`} className="hover:underline">{t.name}</Link> <span aria-hidden>/</span></li>)}
-              <li aria-current="page">{title}</li>
-            </ol>
-          </nav>
-          <h1 className="t-hero mt-4">{title}</h1>
-          {description && <p className={clsx("mt-4 max-w-xl text-body-lg", banner ? "text-on-dark/85" : "text-ink-soft")}>{description}</p>}
-        </div>
+      <header className="container-x pt-4">
+        {banner ? (
+          <div className="on-dark relative isolate overflow-hidden rounded-xl">
+            <Image src={banner.url} alt={banner.alt} fill preload sizes="(min-width: 1440px) 1392px, 100vw" className="-z-10 object-cover opacity-70" />
+            <div className="absolute inset-0 -z-10 bg-linear-to-t from-black via-black/40 to-transparent" aria-hidden />
+            <div className="flex min-h-80 flex-col justify-end gap-4 p-6 sm:p-10 lg:min-h-112 lg:p-14">
+              <Crumbs trail={trail} title={title} />
+              <h1 className="t-hero max-w-4xl">{title}</h1>
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                {description && <p className="max-w-xl text-body-lg text-ink-soft">{description}</p>}
+                {count}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="pt-4 lg:pt-8">
+            <Crumbs trail={trail} title={title} />
+            <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <h1 className="t-display max-w-4xl">{title}</h1>
+                {description && <p className="mt-4 max-w-xl text-body-lg text-ink-soft">{description}</p>}
+              </div>
+              {count}
+            </div>
+          </div>
+        )}
       </header>
 
       <div className="container-x">
         {subcategories.length > 0 && (
-          <nav aria-label={collectionCopy.subcategories} className="-mx-(--gutter) overflow-x-auto px-(--gutter) py-6 [scrollbar-width:none]">
+          <nav aria-label={collectionCopy.subcategories} className="-mx-(--gutter) overflow-x-auto px-(--gutter) pt-8 [scrollbar-width:none]">
             <ul className="flex gap-2">
               {subcategories.map((s) => (
                 <li key={s.id} className="shrink-0">
-                  <Link href={`/collections/${s.slug}`} className="inline-flex min-h-11 items-center rounded-pill border border-line bg-surface px-4 text-meta font-medium transition-colors duration-(--dur-fast) hover:border-ink">{s.name}</Link>
+                  <Link href={`/collections/${s.slug}`} className="inline-flex min-h-11 items-center rounded-pill border border-line px-5 text-meta font-medium transition-colors duration-(--dur-fast) hover:border-ink hover:bg-ink hover:text-canvas">{s.name}</Link>
                 </li>
               ))}
             </ul>
           </nav>
         )}
 
-        <div className="mt-6 grid gap-8 lg:grid-cols-12 lg:gap-10">
-          <aside className="hidden lg:col-span-3 lg:block" aria-label={filterCopy.title}>
-            <div className="sticky top-[calc(var(--header-h)+1.5rem)] max-h-[calc(100dvh-var(--header-h)-3rem)] overflow-y-auto pr-2" data-lenis-prevent>
-              <FilterPanel {...filterProps} />
-            </div>
-          </aside>
-          <div className="lg:col-span-9">
-            <FilterToolbar total={list.total} {...filterProps} />
-            <div className="mt-8">
-              {list.items.length ? (
-                <ProductGrid products={list.items} cols={3} />
-              ) : refined ? (
-                <EmptyState title={filterCopy.empty.title} body={filterCopy.empty.body} />
-              ) : (
-                <EmptyState icon={<PackageOpen className="size-7" aria-hidden />} title={collectionCopy.emptyScope.title} body={collectionCopy.emptyScope.body}
-                  action={<ButtonLink href="/collections" variant="secondary">{collectionCopy.browse}</ButtonLink>} />
-              )}
-            </div>
-            <Pagination page={list.page} total={list.total} pageSize={list.pageSize} path={path} params={params} />
+        <div className="mt-8">
+          <FilterToolbar total={list.total} {...filterProps} />
+          <div className="mt-8">
+            {list.items.length ? (
+              <ProductGrid products={list.items} />
+            ) : refined ? (
+              <EmptyState title={filterCopy.empty.title} body={filterCopy.empty.body} />
+            ) : (
+              <EmptyState icon={<PackageOpen className="size-7" aria-hidden />} title={collectionCopy.emptyScope.title} body={collectionCopy.emptyScope.body}
+                action={<ButtonLink href="/collections" variant="secondary">{collectionCopy.browse}</ButtonLink>} />
+            )}
           </div>
+          <Pagination page={list.page} total={list.total} pageSize={list.pageSize} path={path} params={params} />
         </div>
       </div>
     </div>

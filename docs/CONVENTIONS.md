@@ -60,8 +60,8 @@ docs/                         specs/, database/, system-design/, design/, api/
 - **No hex/rgb in components.** Colours, type, spacing, radii and shadows are tokens in `src/app/globals.css` (`:root`) exposed as Tailwind utilities: `bg-canvas text-ink border-line bg-accent text-ink-soft rounded-md shadow-md text-h1`…
 - Semantic type classes: `.t-hero .t-display .t-h1 .t-h2 .t-h3 .t-body .t-meta .t-overline`. To restyle every H1 on the site, edit `.t-h1` once.
 - Layout helpers: `.container-x` (max width + gutter), `.section-y` (vertical rhythm).
-- Fonts: **Instrument Serif** (editorial display, `font-serif`) + **Instrument Sans** (UI, `font-sans`).
-- Light theme only. Do not put peach text on white. Status is always shown with text, not colour alone.
+- Fonts: **Urbanist** (display headings, `font-display` / `.t-*`) + **Plus Jakarta Sans** (UI, `font-sans`) + **Geist Mono** (indices, `.t-index`).
+- No dark mode; dark sections use `.on-dark`. Visual reference: `docs/design/REFERENCE_GENESIS.md`. Status is always shown with text, not colour alone.
 - Motion: Framer Motion for component animation (respect `useReducedMotion`), Lenis for page scroll (global, skipped in /admin).
 
 ## 3. Code quality

@@ -34,7 +34,7 @@ export function DeleteZone({ noun, busy, disabled, onConfirm, children }: {
       ) : (
         <div className="grid gap-3" role="alert">
           {children}
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button type="button" size="sm" loading={busy} disabled={disabled} onClick={onConfirm} className="bg-danger text-on-dark hover:bg-danger">Confirm delete</Button>
             <Button type="button" size="sm" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
           </div>

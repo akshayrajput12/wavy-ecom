@@ -12,8 +12,8 @@ export function CustomerDetailView({ data }: { data: AdminCustomerDetail }) {
   return (
     <>
       <PageHeader title={c.fullName ?? c.email ?? "Customer"} description={c.email ?? undefined} actions={<StatusControl customer={c} />} />
-      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-        <div className="flex flex-col gap-6">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="flex min-w-0 flex-col gap-6">
           <Panel title="Orders" description={`${c.orders} orders · lifetime ${formatPrice(c.lifetimeValue)}`}>
             {orders.length === 0 ? <p className="t-meta">No orders yet.</p> : (
               <ul className="divide-y divide-line-soft">
@@ -28,7 +28,7 @@ export function CustomerDetailView({ data }: { data: AdminCustomerDetail }) {
           </Panel>
           <Journey entries={journey} />
         </div>
-        <div className="flex flex-col gap-6">
+        <div className="flex min-w-0 flex-col gap-6">
           <Panel title="Profile">
             <DefinitionList items={[
               { label: "Phone", value: c.phone ?? "-" }, { label: "Role", value: c.role.replace(/_/g, " ") },

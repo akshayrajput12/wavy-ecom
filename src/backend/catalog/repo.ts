@@ -1,13 +1,13 @@
 import "server-only";
 import { cached, TAGS } from "@/backend/_core/cache";
 import { publicDb, safe } from "@/backend/_core/db";
-import type { Category, CategoryRef, Collection, Media, Paginated, Product } from "@/types/domain";
+import type { Category, CategoryRef, Collection, Media, Paginated, Product, SpotlightItem } from "@/types/domain";
 import { computeFacets, EMPTY_FACETS, type FacetRow, type Facets } from "./facets";
 import {
   ancestors, buildTree, CATEGORY_COLS, COLLECTION_COLS, descendantIds, PRODUCT_CARD_SELECT, PRODUCT_DETAIL_SELECT,
   toCategory, toCollection, toMedia, toProduct, type CategoryRow, type CollectionRow, type ProductRow,
 } from "./mapper";
-import { searchTerm, type ProductQuery } from "./schema";
+import { ProductQuerySchema, searchTerm, type ProductQuery } from "./schema";
 
 export type ProductList = Paginated<Product> & { facets: Facets };
 export type CategoryWithPath = Category & { ancestors: CategoryRef[] };
@@ -196,6 +196,22 @@ export const listProducts = cached("catalog.list", [TAGS.catalog], async (q: Pro
     facets: facetRes ? computeFacets(facetRows, flat, scopeCategoryId) : EMPTY_FACETS,
   };
 });
+
+// ponytail: seeded collection slugs (supabase/seed.sql); a renamed collection just empties its half of the spotlight.
+const SPOTLIGHT = [["new", "new-arrivals", "newest"], ["bestseller", "best-sellers", "featured"]] as const;
+
+/** Floating card: New Arrivals and Best Sellers collections interleaved, deduped (both reads are cached). */
+export async function getSpotlight(perSet = 6): Promise<SpotlightItem[]> {
+  const sets = await Promise.all(SPOTLIGHT.map(async ([kind, collection, sort]) =>
+    (await listProducts(ProductQuerySchema.parse({ collection, sort, pageSize: perSet }), false)).items.map((product) => ({ product, kind }))));
+  const seen = new Set<string>();
+  const out: SpotlightItem[] = [];
+  for (let i = 0; i < perSet; i++) for (const set of sets) {
+    const item = set[i];
+    if (item && !seen.has(item.product.id)) { seen.add(item.product.id); out.push(item); }
+  }
+  return out;
+}
 
 const SORTS: Record<ProductQuery["sort"], [string, boolean][]> = {
   featured: [["is_featured", false], ["sort_order", true], ["published_at", false]],

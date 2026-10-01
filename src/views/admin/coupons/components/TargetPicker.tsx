@@ -16,7 +16,7 @@ type Item = { id: string; label: string };
 const KINDS: { value: Kind; label: string }[] = [
   { value: "product", label: "Product" }, { value: "variant", label: "Variant" }, { value: "category", label: "Category" }, { value: "collection", label: "Collection" },
 ];
-const ctl = "h-10 rounded-sm border border-line bg-surface px-3 text-body focus:border-ink focus:outline-none";
+const ctl = "h-11 rounded-sm border border-line bg-surface px-3 text-body focus:border-ink focus:outline-none";
 
 /** Include/exclude targeting: no include rows = applies to everything; exclude always wins; a category covers its descendants. */
 export function TargetPicker({ value, onChange, options }: { value: DiscountTarget[]; onChange: (v: DiscountTarget[]) => void; options: TargetOptions }) {

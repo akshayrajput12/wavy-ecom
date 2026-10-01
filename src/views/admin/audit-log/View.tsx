@@ -6,7 +6,7 @@ import type { AdminAuditEntry, Paginated } from "@/types/admin";
 
 export type AuditFilters = { entityType?: string; entityId?: string; action?: string; from?: string; to?: string };
 const FIELDS = [["entityType", "Entity type"], ["entityId", "Entity id"], ["action", "Action prefix"]] as const;
-const input = "h-11 rounded-sm border border-line bg-surface px-3 text-body focus:border-ink focus:outline-none";
+const input = "h-11 w-full min-w-0 rounded-sm border border-line bg-surface px-3 text-body focus:border-ink focus:outline-none";
 
 function href(f: AuditFilters, page: number) {
   const q = new URLSearchParams(Object.entries({ ...f, page: String(page) }).filter(([, v]) => v) as [string, string][]);
@@ -20,14 +20,14 @@ export function AuditLogView({ data, filters }: { data: Paginated<AdminAuditEntr
       <PageHeader title="Audit log" description="Every admin write, with who did it and what changed." />
       <form method="get" className="mb-4 flex flex-wrap items-end gap-3" aria-label="Filter audit log">
         {FIELDS.map(([k, label]) => (
-          <label key={k} className="grid gap-1.5 text-meta font-medium">{label}<input name={k} defaultValue={filters[k] ?? ""} className={input} /></label>
+          <label key={k} className="grid min-w-40 flex-1 gap-1.5 text-meta font-medium sm:flex-none">{label}<input name={k} defaultValue={filters[k] ?? ""} className={input} /></label>
         ))}
-        <label className="grid gap-1.5 text-meta font-medium">From<input type="date" name="from" defaultValue={filters.from?.slice(0, 10) ?? ""} className={input} /></label>
-        <label className="grid gap-1.5 text-meta font-medium">To<input type="date" name="to" defaultValue={filters.to?.slice(0, 10) ?? ""} className={input} /></label>
+        <label className="grid min-w-40 flex-1 gap-1.5 text-meta font-medium sm:flex-none">From<input type="date" name="from" defaultValue={filters.from?.slice(0, 10) ?? ""} className={input} /></label>
+        <label className="grid min-w-40 flex-1 gap-1.5 text-meta font-medium sm:flex-none">To<input type="date" name="to" defaultValue={filters.to?.slice(0, 10) ?? ""} className={input} /></label>
         <Button type="submit">Apply</Button>
         <Link href="/admin/audit-log" className={buttonClass({ variant: "ghost" })}>Clear</Link>
       </form>
-      <div className="overflow-x-auto rounded-md border border-line bg-surface">
+      <div className="relative overflow-x-auto overscroll-x-contain rounded-lg border border-line bg-surface">
         <table className="w-full min-w-[720px] text-body">
           <caption className="sr-only">Audit log entries</caption>
           <thead className="bg-canvas text-left text-meta text-ink-soft"><tr>
@@ -43,7 +43,7 @@ export function AuditLogView({ data, filters }: { data: Paginated<AdminAuditEntr
                 <td className="px-4 py-3">
                   <details>
                     <summary className="min-h-6 cursor-pointer text-meta underline">{e.changedFields?.length ? e.changedFields.join(", ") : "View"}</summary>
-                    <pre className="mt-2 max-h-64 max-w-md overflow-auto rounded-sm bg-surface-warm p-2 text-micro">{JSON.stringify({ before: e.before, after: e.after }, null, 2)}</pre>
+                    <pre className="mt-2 max-h-64 max-w-xs overflow-auto sm:max-w-md rounded-sm bg-surface-warm p-2 text-micro">{JSON.stringify({ before: e.before, after: e.after }, null, 2)}</pre>
                   </details>
                 </td>
               </tr>
@@ -52,7 +52,7 @@ export function AuditLogView({ data, filters }: { data: Paginated<AdminAuditEntr
         </table>
         {data.items.length === 0 && <p className="p-6 text-center text-body text-ink-soft">No entries match these filters.</p>}
       </div>
-      <nav className="mt-4 flex items-center justify-between text-meta text-ink-soft" aria-label="Pagination">
+      <nav className="mt-4 flex flex-wrap items-center justify-between gap-3 text-meta text-ink-soft" aria-label="Pagination">
         <span>Page {data.page} of {pages} ({data.total} entries)</span>
         <span className="flex gap-2">
           {data.page > 1 && <Link className={buttonClass({ variant: "ghost", size: "sm" })} href={href(filters, data.page - 1)}>Previous</Link>}

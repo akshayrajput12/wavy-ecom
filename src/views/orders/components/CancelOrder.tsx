@@ -30,7 +30,7 @@ export function CancelOrder({ number }: { number: string }) {
 
   return (
     <>
-      <Button size="sm" variant="ghost" onClick={() => setOpen(true)}>{accountCopy.cancel}</Button>
+      <Button variant="ghost" onClick={() => setOpen(true)}>{accountCopy.cancel}</Button>
       <Modal open={open} onClose={() => setOpen(false)} title={accountCopy.cancelConfirm} size="sm"
         footer={<div className="flex flex-wrap justify-end gap-2">
           <Button variant="ghost" onClick={() => setOpen(false)}>{ac.keep}</Button>
@@ -38,7 +38,7 @@ export function CancelOrder({ number }: { number: string }) {
         </div>}>
         <label htmlFor="cancel-reason" className="text-meta font-medium">{ac.cancelReason}</label>
         <textarea id="cancel-reason" rows={3} maxLength={200} value={reason} onChange={(e) => setReason(e.target.value)}
-          className="mt-1.5 w-full rounded-sm border border-line bg-surface p-3 text-body focus:border-ink focus:outline-none" />
+          className="mt-1.5 w-full rounded-md border border-line bg-surface p-3 text-body focus:border-ink focus:outline-none" />
         {error && <p role="alert" className="mt-2 text-meta text-danger">⚠ {error}</p>}
       </Modal>
     </>

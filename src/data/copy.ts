@@ -8,12 +8,14 @@ import type { OrderStatus, PaymentStatus, ReturnReason, ShipmentStatus } from "@
 export const headerCopy = {
   search: "Search", wishlist: "Wishlist", account: "Account", bag: "Bag",
   menu: "Open menu", closeMenu: "Close menu", allCategories: "All categories", collections: "Collections",
+  admin: "Admin dashboard", primaryNav: "Primary", mobileNav: "Menu",
 } as const;
 
 export const footerCopy = {
   shop: "Shop", collections: "Collections", help: "Help", company: "Company",
   faq: "FAQ", blog: "Blog", track: "Track an order", account: "Account",
   newsletterLabel: "Email address", newsletterCta: "Subscribe", newsletterThanks: "You're on the list.",
+  newsletterTitle: "New drops, restocks and the occasional note. No spam.", nav: "Footer",
 } as const;
 
 export const sortOptions = [
@@ -26,7 +28,7 @@ export const sortOptions = [
 
 export const filterCopy = {
   title: "Filter & sort", category: "Category", brand: "Brand", price: "Price", availability: "Availability",
-  inStock: "In stock only", sort: "Sort by", clearAll: "Clear all", apply: "Show results",
+  inStock: "In stock only", sort: "Sort by", clearAll: "Clear all", apply: "Show results", filters: "Filters",
   minPrice: "Min", maxPrice: "Max",
   results: (n: number) => `${n} ${n === 1 ? "product" : "products"}`,
   empty: { title: "Nothing matches those filters", body: "Try removing a filter or two." },
@@ -52,6 +54,9 @@ export const productCopy = {
   warranty: "Warranty", countryOfOrigin: "Country of origin", returns: "Returns",
   returnable: (days: number) => `Returnable within ${days} days of delivery`, notReturnable: "Not returnable",
   related: "You may also like", breadcrumbHome: "Home",
+  relatedOverline: "Complete the look", viewAll: "View all products",
+  from: "From", was: "Was", off: (pct: number) => `${pct}% off`,
+  rated: (r: string) => `Rated ${r} out of 5`, reviewsCount: (n: number) => `${n} ${n === 1 ? "review" : "reviews"}`,
 } as const;
 
 export const deliveryCopy = {
@@ -109,16 +114,20 @@ export const wishlistCopy = {
 export const faqPageCopy = {
   title: "Help & FAQ", searchLabel: "Search questions", searchPlaceholder: "Search questions",
   noResults: "No questions match that search.", contact: "Contact support", empty: "No questions yet.",
+  overline: "FAQs", heading: ["Questions,", "answered."], lede: "Orders, delivery, returns and payments: the things people ask us most.",
+  topics: "Topics",
 } as const;
 
 export const blogCopy = {
   title: "Blog", readMore: "Read more", back: "All posts", minRead: (n: number) => `${n} min read`,
   related: "Keep reading", empty: "No posts yet.",
+  overline: "Journal", lede: "Guides, stories and notes on the things we make and sell.", relatedOverline: "More from the journal",
 } as const;
 
 export const pageStates = {
-  notFound: { title: "Page not found", body: "The link may be old or the item is no longer available.", cta: "Back to home" },
-  error: { title: "Something went wrong", body: "We couldn't load this page. Please try again in a moment.", retry: "Try again" },
+  notFound: { title: "Page not found", body: "The link may be old or the item is no longer available.", cta: "Back to home", code: "(404)" },
+  error: { title: "Something went wrong", body: "We couldn't load this page. Please try again in a moment.", retry: "Try again", overline: "Error" },
+  loading: "Loading",
   unconfigured: "The store is being set up. Please check back soon.",
 } as const;
 
@@ -152,6 +161,7 @@ export const checkoutCopy = {
   failureNoCharge: "Your order is saved. If any amount was debited it will be refunded automatically; retrying will not charge you twice.",
   retry: "Retry payment", otherMethod: "Choose another method", support: "Need help? Contact us with your order number",
   successTitle: "Thank you, your order is placed", guestPrompt: "Create an account to track orders and check out faster next time.",
+  stepOf: (n: number, total: number) => `Step ${n} of ${total}`,
 } as const;
 
 // ---------- Account / orders / returns ----------
@@ -162,9 +172,14 @@ export const accountNav = [
 ] as const;
 
 export const authCopy = {
-  login: { title: "Welcome back", body: "Log in to track orders, manage returns and check out faster." },
-  signup: { title: "Create your account", body: "Save addresses and track every order." },
-  forgot: { title: "Reset your password", body: "Enter your email and we'll send a secure reset link.", sent: "If an account exists for that email, a reset link is on its way." },
+  login: { overline: "Log in", title: "Welcome back", body: "Log in to track orders, manage returns and check out faster." },
+  signup: { overline: "Join", title: "Create your account", body: "Save addresses and track every order." },
+  forgot: { overline: "Account help", title: "Reset your password", body: "Enter your email and we'll send a secure reset link.", sent: "If an account exists for that email, a reset link is on its way." },
+  panel: {
+    label: "Why create an account", overline: "Members", heading: ["Everything you order,", "in one place."],
+    body: "One account for tracking, returns and faster checkout.",
+    perks: ["Live order tracking", "Saved addresses for quicker checkout", "Returns started from your account"],
+  },
   terms: "I agree to the Terms of Service and Privacy Policy.",
   notConfigured: "Accounts aren't available yet. You can still check out as a guest.",
 } as const;
@@ -194,3 +209,25 @@ export const shipmentStatusLabels: Record<ShipmentStatus, string> = {
   created: "Label created", picked_up: "Picked up", in_transit: "In transit", out_for_delivery: "Out for delivery",
   delivered: "Delivered", exception: "Delivery issue", cancelled: "Cancelled",
 };
+
+// ---------- Admin console ----------
+export const adminCopy = {
+  brand: "wavy", brandTag: "Admin", navLabel: "Admin",
+  openNav: "Open navigation", close: "Close", collapse: "Collapse sidebar", expand: "Expand sidebar",
+  breadcrumb: "Breadcrumb", root: "Admin", newCrumb: "New",
+  previewRole: "Preview role", viewStore: "View store", staffFallback: "Staff",
+  noAccess: {
+    title: "No access", thisPage: "this page", cta: "Back to dashboard",
+    body: (role: string, page: string) => `Your role (${role}) can't open ${page}. Ask a super admin if you need it.`,
+  },
+  table: {
+    search: "Search", filterBy: (label: string) => `Filter by ${label}`, all: "All", clear: "Clear", clearFilters: "Clear filters",
+    selected: (n: number) => `${n} selected`, bulkActions: "Bulk actions", selectPage: "Select all rows on this page",
+    selectRow: (id: string) => `Select row ${id}`, noMatches: "No matches", noMatchesBody: "Try a different search or clear the filters.",
+    emptyTitle: "Nothing here yet", range: (from: number, to: number, total: number) => `${from}–${to} of ${total}`,
+    noResults: "0 results", previous: "Previous", next: "Next",
+  },
+  editor: {
+    save: "Save", cancel: "Cancel", delete: "Delete", confirmDelete: "Confirm delete", irreversible: "This cannot be undone.",
+  },
+} as const;

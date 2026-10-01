@@ -38,6 +38,10 @@ export const HOME_CONFIG = {
     heading: text(120).min(1), body: text(300).optional(), placeholder: text(60).optional(),
     buttonLabel: text(30).optional(), consentText: text(300).optional(),
   }),
+  tear_reveal: z.object({
+    word: text(24).min(1), tagline: text(60).optional(), variant: z.enum(["tiger", "image"]).optional(),
+    image: url.optional(), imageAlt: text(200).optional(), cta: cta.optional(),
+  }).refine((c) => c.variant !== "image" || !!c.image, { path: ["image"], message: "Add an image for the photo reveal" }),
 } satisfies Record<HomeSectionType, z.ZodType>;
 
 /** Validate + strip a config for its section type; throws ZodError (→ 422) with config.* paths. */

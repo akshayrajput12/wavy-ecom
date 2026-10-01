@@ -94,6 +94,25 @@
   --dur-fast: 180ms;
   --dur-base: 320ms;
   --dur-slow: 640ms;
+
+  /* ---------- Illustration only (TearReveal tiger art). Never use these for UI. ---------- */
+  --art-fur: #d07a2c;
+  --art-fur-light: #fbf6ec;  /* white patches over the eyes and muzzle */
+  --art-stripe: #140b05;
+  --art-hair-dark: #3b1c07;
+  --art-hair-gold: #f7c46e;
+  --art-hair-light: #fff6e4;
+  --art-shade: #2a1203;      /* fur top/bottom shading and vignette */
+  --art-sheen: #ffd08a;
+  --art-skin: #0c0603;       /* dark skin around the eyes, pupils */
+  --art-sclera: #3d1a05;
+  --art-lid: #9c5212;
+  --art-iris-core: #fff0a8;
+  --art-iris: #f0a526;
+  --art-iris-mid: #b8570f;
+  --art-iris-edge: #4d1f03;
+  --art-iris-fibre: #6b2d05;
+  --art-glint: #ffffff;
 }
 
 /* Expose tokens as Tailwind utilities: bg-canvas, text-ink, border-line, rounded-md, text-h1, ease-soft … */

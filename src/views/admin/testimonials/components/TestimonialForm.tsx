@@ -4,16 +4,19 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Select, Textarea, Toggle } from "@/components/admin/Fields";
 import { FormSection } from "@/components/admin/Panel";
+import { useCan } from "@/components/admin/useRole";
+import { adminCopy } from "@/data/copy";
 import { Input } from "@/components/ui/Input";
 import { TestimonialPatchSchema, TestimonialSchema } from "@/backend/admin/schemas/content";
 import type { AdminTestimonial } from "@/types/admin";
 import { mutate } from "../../api";
-import { ConfirmDelete } from "../../orders/components/ConfirmDelete";
+import { DeleteDialog } from "../../orders/components/DeleteDialog";
 import { detailErrors, fieldErrors } from "../../orders/components/fmt";
 import { FormActions } from "../../orders/components/FormActions";
 
 export function TestimonialForm({ testimonial, products }: { testimonial?: AdminTestimonial; products: { id: string; name: string }[] }) {
   const router = useRouter();
+  const canDelete = useCan("testimonials.write");
   const [f, setF] = useState({
     authorName: testimonial?.authorName ?? "", authorRole: testimonial?.authorRole ?? "", quote: testimonial?.quote ?? "", avatarUrl: testimonial?.avatarUrl ?? "",
     rating: String(testimonial?.rating ?? ""), productId: testimonial?.productId ?? "", isPublished: testimonial?.isPublished ?? false, sortOrder: String(testimonial?.sortOrder ?? 0),
@@ -39,10 +42,9 @@ export function TestimonialForm({ testimonial, products }: { testimonial?: Admin
     if (res.ok) done(); else setErrors(detailErrors(res.details));
   };
   const remove = async () => {
-    setSaving(true);
-    const res = await mutate("DELETE", `testimonials/${testimonial?.id}`, undefined, { success: "Testimonial deleted" });
-    setSaving(false);
+    const res = await mutate("DELETE", `testimonials/${testimonial?.id}`, undefined, { success: adminCopy.remove.testimonialDeleted });
     if (res.ok) done();
+    return res.ok;
   };
 
   return (
@@ -60,7 +62,9 @@ export function TestimonialForm({ testimonial, products }: { testimonial?: Admin
         <Input label="Sort order" type="number" {...text("sortOrder")} />
         <div className="sm:col-span-2"><Toggle label="Published" description="Shown on the storefront when on." checked={f.isPublished} onChange={(v) => set("isPublished", v)} /></div>
       </FormSection>
-      <FormActions saving={saving} backHref="/admin/testimonials" extra={testimonial && <ConfirmDelete busy={saving} onConfirm={() => void remove()} />} />
+      <FormActions saving={saving} backHref="/admin/testimonials" extra={testimonial && canDelete && (
+        <DeleteDialog title={adminCopy.remove.testimonialTitle} body={adminCopy.remove.testimonialBody(testimonial.authorName)} onConfirm={remove} />
+      )} />
     </form>
   );
 }

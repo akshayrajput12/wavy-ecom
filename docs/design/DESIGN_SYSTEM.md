@@ -93,7 +93,7 @@ Rules: animate only `transform` and `opacity`. Hover 180 ms; drawers open 640 ms
 640 ms, 16 px rise, 60 ms stagger, max ~6 staggered items. Checkout: fades and the progress fill only.
 Autoplay always has a pause button and pauses on hover, focus and hidden tab. Every Framer Motion helper
 checks `useReducedMotion()`, and the global reduced-motion rule zeroes CSS transitions.
-**Lenis** (`SmoothScroll.tsx`, `lerp 0.1`) is off for reduced motion and `/admin`; overlays call
+**Lenis** (`SmoothScroll.tsx`, `lerp 0.085`, wheel only, touch native) is off for reduced motion and `/admin` (follows client navigation); overlays call
 `lockScroll()` from the same file, which pauses Lenis and locks `<html>` (nest-safe).
 
 | Need | Use |

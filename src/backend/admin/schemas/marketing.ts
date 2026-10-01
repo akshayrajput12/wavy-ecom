@@ -103,6 +103,7 @@ const reviewShape = z.object({
 export const ReviewSchema = reviewShape;
 export const ReviewPatchSchema = reviewShape.omit({ productId: true }).partial();
 export const ModerateSchema = z.object({ ids: z.array(z.uuid()).min(1).max(200), status: z.enum(REVIEW_STATUS), note: optText(500) });
+export const ReviewDeleteSchema = ModerateSchema.pick({ ids: true });
 
 // ---------- Campaigns ----------
 const campaignShape = z.object({

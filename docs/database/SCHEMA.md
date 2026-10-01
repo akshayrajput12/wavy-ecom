@@ -139,6 +139,7 @@ Columns: `id, type home_section_type, title, subtitle, config jsonb, sort_order,
 | `testimonials` | `{limit?, testimonialIds?}` |
 | `blog_rail` | `{limit?, categorySlug?}` |
 | `newsletter` | `{heading, body?, placeholder?, buttonLabel?, consentText?}` |
+| `tear_reveal` | `{word, tagline?, variant?: 'tiger' or 'image', image?, imageAlt?, cta?}` (scroll-driven torn poster; `image` required when variant is `image`; migration 0020) |
 
 ## Storage buckets
 

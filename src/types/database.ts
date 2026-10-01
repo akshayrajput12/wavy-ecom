@@ -3486,7 +3486,7 @@ export type Database = {
       coupon_status: "draft" | "active" | "paused" | "expired" | "archived";
       coupon_type: "percent" | "fixed" | "free_shipping";
       gateway_mode: "test" | "live";
-      home_section_type: "hero_carousel" | "category_grid" | "collection_rail" | "product_carousel" | "floating_showcase" | "promo_banner" | "testimonials" | "blog_rail" | "newsletter";
+      home_section_type: "hero_carousel" | "category_grid" | "collection_rail" | "product_carousel" | "floating_showcase" | "promo_banner" | "testimonials" | "blog_rail" | "newsletter" | "tear_reveal";
       integration_status: "connected" | "needs_attention" | "disconnected";
       inventory_reason: "initial" | "restock" | "adjustment" | "reservation" | "release" | "sale" | "cancellation" | "return" | "damage" | "correction";
       notification_status: "queued" | "sent" | "delivered" | "bounced" | "failed" | "complained";

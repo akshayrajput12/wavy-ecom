@@ -15,6 +15,7 @@ function summary(type: HomeSectionType, cfg: Cfg, l: Lookups): string {
     case "testimonials": return `Testimonials${n}`;
     case "blog_rail": return `Latest blog posts${n}${str(cfg, "categorySlug") ? ` in ${str(cfg, "categorySlug")}` : ""}`;
     case "newsletter": return `${str(cfg, "heading") || "Newsletter"}: ${str(cfg, "body")}`;
+    case "tear_reveal": return `Tear reveal: "${str(cfg, "word") || "WORD"}" opens onto ${cfg.variant === "image" ? "a photo" : "the tiger"}${str(obj(cfg, "cta"), "label") ? `, then "${str(obj(cfg, "cta"), "label")}"` : ""}`;
     default: return "";
   }
 }

@@ -4,12 +4,14 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Select, Textarea, Toggle } from "@/components/admin/Fields";
 import { FormSection, PageHeader } from "@/components/admin/Panel";
+import { useCan } from "@/components/admin/useRole";
+import { adminCopy } from "@/data/copy";
 import { Input } from "@/components/ui/Input";
 import { ReviewPatchSchema, ReviewSchema } from "@/backend/admin/schemas/marketing";
 import type { AdminReview } from "@/types/admin";
 import { REVIEW_STATUS } from "@/types/domain";
 import { mutate } from "../api";
-import { ConfirmDelete } from "../orders/components/ConfirmDelete";
+import { DeleteDialog } from "../orders/components/DeleteDialog";
 import { detailErrors, fieldErrors, fromLocalInput, toLocalInput } from "../orders/components/fmt";
 import { FormActions } from "../orders/components/FormActions";
 import { RatingOverride } from "./components/RatingOverride";
@@ -19,6 +21,7 @@ interface Props { products: { id: string; name: string; slug: string }[]; review
 /** Create (/admin/reviews/new) or edit (/admin/reviews/[id]/edit) a review. The product is fixed once created. */
 export function ReviewComposerView({ products, review }: Props) {
   const router = useRouter();
+  const canDelete = useCan("reviews.moderate");
   const [f, setF] = useState({
     productId: review?.productId ?? "", authorName: review?.authorName ?? "", authorLocation: review?.authorLocation ?? "", rating: String(review?.rating ?? 5),
     title: review?.title ?? "", body: review?.body ?? "", status: review?.status ?? "approved", verifiedPurchase: review?.verifiedPurchase ?? false,
@@ -46,10 +49,9 @@ export function ReviewComposerView({ products, review }: Props) {
     if (res.ok) done(); else setErrors(detailErrors(res.details));
   };
   const remove = async () => {
-    setSaving(true);
-    const res = await mutate("DELETE", `reviews/${review?.id}`, undefined, { success: "Review deleted" });
-    setSaving(false);
+    const res = await mutate("DELETE", `reviews/${review?.id}`, undefined, { success: adminCopy.remove.reviewDeleted });
     if (res.ok) done();
+    return res.ok;
   };
 
   return (
@@ -70,7 +72,9 @@ export function ReviewComposerView({ products, review }: Props) {
           <Input label="Review date" type="datetime-local" {...text("createdAt")} hint="Optional: backdate an imported review" />
           <div className="sm:col-span-2"><Toggle label="Verified purchase" description="Shows the verified badge." checked={f.verifiedPurchase} onChange={(v) => set("verifiedPurchase", v)} /></div>
         </FormSection>
-        <FormActions saving={saving} backHref="/admin/reviews" extra={review && <ConfirmDelete busy={saving} onConfirm={() => void remove()} />} />
+        <FormActions saving={saving} backHref="/admin/reviews" extra={review && canDelete && (
+          <DeleteDialog title={adminCopy.remove.reviewTitle} body={adminCopy.remove.reviewBody(review.authorName, review.productName ?? "Unknown product")} onConfirm={remove} />
+        )} />
       </form>
       {product && <div className="mt-8"><RatingOverride key={product.slug} slug={product.slug} /></div>}
     </>

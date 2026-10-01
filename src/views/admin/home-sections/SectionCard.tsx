@@ -19,6 +19,7 @@ import { clean, uploadBlobs, type Cfg, type Lookups } from "./shared";
 export const SECTION_LABEL: Record<HomeSectionType, string> = {
   hero_carousel: "Hero carousel", category_grid: "Category grid", collection_rail: "Collection rail", product_carousel: "Product carousel",
   floating_showcase: "Floating showcase", promo_banner: "Promo banner", testimonials: "Testimonials", blog_rail: "Blog rail", newsletter: "Newsletter",
+  tear_reveal: "Tear reveal",
 };
 const icon = "grid size-11 place-items-center rounded-pill text-ink-soft hover:bg-surface-warm disabled:opacity-30";
 

@@ -1,6 +1,7 @@
 import { Store } from "lucide-react";
 import { ButtonLink } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/States";
+import { TearReveal } from "@/components/ui/TearReveal";
 import { homeCopy } from "@/data/storefront";
 import type { Faq, HomeSection, Media } from "@/types/domain";
 import { BlogRail } from "./components/BlogRail";
@@ -25,6 +26,7 @@ function Section({ section: s, images }: { section: HomeSection; images: Media[]
     case "testimonials": return <Testimonials section={s} images={images} />;
     case "blog_rail": return <BlogRail section={s} />;
     case "newsletter": return <NewsletterSection section={s} />;
+    case "tear_reveal": return <TearReveal {...s.config} />;
   }
 }
 

@@ -148,5 +148,5 @@ export async function audit(actor: Actor, action: string, entityType: string, en
   if (error) logger.error("audit.write_failed", error, { action, entityType, entityId });
 }
 
-export type CacheTag = "catalog" | "home" | "content" | "settings";
+export type CacheTag = "catalog" | "home" | "content" | "reviews" | "settings";
 export const revalidate = (...tags: CacheTag[]) => tags.forEach((t) => revalidateTag(t, { expire: 0 }));

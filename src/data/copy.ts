@@ -230,4 +230,15 @@ export const adminCopy = {
   editor: {
     save: "Save", cancel: "Cancel", delete: "Delete", confirmDelete: "Confirm delete", irreversible: "This cannot be undone.",
   },
+  remove: {
+    delete: "Delete", cancel: "Keep it", deleteLabel: (what: string) => `Delete ${what}`,
+    reviewTitle: "Delete this review?",
+    reviewBody: (author: string, product: string) => `The review by ${author} on ${product} is removed for good, with its photos and votes. This can't be undone.`,
+    reviewsTitle: (n: number) => `Delete ${n} review${n === 1 ? "" : "s"}?`,
+    reviewsBody: "The selected reviews are removed for good, with their photos and votes. Product ratings update right away. This can't be undone.",
+    reviewDeleted: "Review deleted", reviewsDeleted: (n: number) => `${n} review${n === 1 ? "" : "s"} deleted`,
+    testimonialTitle: "Delete this testimonial?",
+    testimonialBody: (author: string) => `The testimonial from ${author} is removed from the storefront for good. This can't be undone.`,
+    testimonialDeleted: "Testimonial deleted",
+  },
 } as const;

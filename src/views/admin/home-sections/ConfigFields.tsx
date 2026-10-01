@@ -76,5 +76,17 @@ export function ConfigFields({ type, c }: { type: HomeSectionType; c: Ctx }) {
       <Txt c={c} k="buttonLabel" label="Button label" />
       <Txt c={c} k="consentText" label="Consent text" />
     </>;
+    case "tear_reveal": return <>
+      <Txt c={c} k="word" label="Word that tears (short, e.g. UNTAMED)" />
+      <Txt c={c} k="tagline" label="Tagline above it (optional)" />
+      <Select label="Behind the tear" value={str(c.cfg, "variant")} onChange={(e) => c.set({ variant: e.target.value })}>
+        <option value="">Tiger illustration</option><option value="image">Photo (full bleed)</option>
+      </Select>
+      {str(c.cfg, "variant") === "image" && <>
+        <ImagePick files={c.files} url={str(c.cfg, "image")} alt={str(c.cfg, "imageAlt")} label="Photo revealed by the tear" error={c.errors["config.image"]} onChange={(image, imageAlt) => c.set({ image, imageAlt })} />
+        <Txt c={c} k="imageAlt" label="Image alt text" />
+      </>}
+      {cta(c)}
+    </>;
   }
 }

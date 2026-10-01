@@ -5,21 +5,32 @@ import { useState } from "react";
 import { Badge, StatusBadge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/States";
+import { useCan } from "@/components/admin/useRole";
+import { adminCopy } from "@/data/copy";
 import type { AdminReview } from "@/types/admin";
 import type { REVIEW_STATUS } from "@/types/domain";
 import { useAct } from "../../orders/components/act";
+import { DeleteDialog } from "../../orders/components/DeleteDialog";
 import { fmtDateTime } from "../../orders/components/fmt";
 
 type Status = (typeof REVIEW_STATUS)[number];
+const rc = adminCopy.remove;
 
 /** Moderation table for one server page of reviews: per-row and bulk status changes, each an explicit click. */
 export function ReviewsTable({ reviews }: { reviews: AdminReview[] }) {
   const { busy, run } = useAct();
+  const canDelete = useCan("reviews.moderate");
   const [sel, setSel] = useState<Set<string>>(new Set());
   if (!reviews.length) return <EmptyState title="No reviews match" />;
   const toggle = (id: string) => setSel((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const moderate = async (ids: string[], status: Status) => {
     if ((await run("POST", "reviews/moderate", { ids, status }, `${ids.length} review(s) ${status}`)).ok) setSel(new Set());
+  };
+  const remove = async (ids: string[]) => {
+    const res = await run<{ deleted: number }>("DELETE", ids.length === 1 ? `reviews/${ids[0]}` : "reviews", ids.length === 1 ? undefined : { ids },
+      ids.length === 1 ? rc.reviewDeleted : rc.reviewsDeleted(ids.length));
+    if (res.ok) setSel((s) => new Set([...s].filter((id) => !ids.includes(id))));
+    return res.ok;
   };
   const ids = [...sel];
 
@@ -31,6 +42,7 @@ export function ReviewsTable({ reviews }: { reviews: AdminReview[] }) {
           <Button size="sm" loading={busy} onClick={() => void moderate(ids, "approved")}>Approve</Button>
           <Button size="sm" variant="secondary" loading={busy} onClick={() => void moderate(ids, "rejected")}>Reject</Button>
           <Button size="sm" variant="ghost" loading={busy} onClick={() => void moderate(ids, "hidden")}>Hide</Button>
+          {canDelete && <DeleteDialog title={rc.reviewsTitle(ids.length)} body={rc.reviewsBody} onConfirm={() => remove(ids)} />}
         </div>
       )}
       <ul className="divide-y divide-line-soft">
@@ -54,6 +66,8 @@ export function ReviewsTable({ reviews }: { reviews: AdminReview[] }) {
                 {r.status !== "rejected" && <Button size="sm" variant="ghost" loading={busy} onClick={() => void moderate([r.id], "rejected")}>Reject</Button>}
                 {r.status === "approved" && <Button size="sm" variant="ghost" loading={busy} onClick={() => void moderate([r.id], "hidden")}>Hide</Button>}
                 <Link href={`/admin/reviews/${r.id}/edit`} className="inline-flex h-11 items-center px-3 text-meta underline sm:h-9">Edit</Link>
+                {canDelete && <DeleteDialog title={rc.reviewTitle} body={rc.reviewBody(r.authorName, r.productName ?? "Unknown product")}
+                  ariaLabel={rc.deleteLabel(`review by ${r.authorName}`)} onConfirm={() => remove([r.id])} />}
               </span>
             </div>
           </li>

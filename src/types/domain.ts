@@ -28,7 +28,7 @@ export const USER_ROLE = [
 export const PAYMENT_PROVIDER = ["razorpay", "payu", "cod"] as const;
 export const HOME_SECTION_TYPE = [
   "hero_carousel", "category_grid", "collection_rail", "product_carousel", "floating_showcase",
-  "promo_banner", "testimonials", "blog_rail", "newsletter",
+  "promo_banner", "testimonials", "blog_rail", "newsletter", "tear_reveal",
 ] as const;
 
 export type ProductStatus = (typeof PRODUCT_STATUS)[number];
@@ -225,5 +225,6 @@ export type HomeSection = HomeSectionBase & (
   | { type: "testimonials"; config: { limit?: number; testimonialIds?: string[] }; testimonials: Testimonial[] }
   | { type: "blog_rail"; config: { limit?: number; categorySlug?: string }; posts: BlogPost[] }
   | { type: "newsletter"; config: { heading: string; body?: string; placeholder?: string; buttonLabel?: string; consentText?: string } }
+  | { type: "tear_reveal"; config: { word: string; tagline?: string; variant?: "tiger" | "image"; image?: string; imageAlt?: string; cta?: Cta } }
 );
 export type HomeSectionOf<T extends HomeSectionType> = Extract<HomeSection, { type: T }>;

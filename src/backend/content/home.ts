@@ -56,6 +56,7 @@ export const getHomeSections = cached("home.sections", [TAGS.home, TAGS.catalog,
       case "hero_carousel": return { ...base, type: p.type, config: p.config };
       case "promo_banner": return { ...base, type: p.type, config: p.config };
       case "newsletter": return { ...base, type: p.type, config: p.config };
+      case "tear_reveal": return { ...base, type: p.type, config: p.config };
       case "category_grid": {
         const list = p.config.categoryIds?.length
           ? p.config.categoryIds.flatMap((id) => flat.find((c) => c.id === id) ?? [])

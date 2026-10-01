@@ -130,3 +130,11 @@ export const contentCopy = {
   notFound: "This page isn't available yet.",
   faqGeneral: "General",
 } as const;
+
+/** TearReveal (home "tear_reveal" sections, 404): the poster that rips open as you scroll. */
+export const tearRevealCopy = {
+  hint: "Scroll",
+  tiger: (word: string, tagline?: string) => `${tagline ? `${tagline}. ` : ""}${word}, a poster torn in two by a tiger looking through.`,
+  notFoundWord: "404",
+  image: (word: string, tagline?: string) => `${tagline ? `${tagline}. ` : ""}${word}, a poster tearing open onto a campaign photo.`,
+} as const;

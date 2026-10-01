@@ -1,7 +1,7 @@
 import { ok, parse, route } from "@/backend/_core/http";
 import { guard, query } from "@/backend/admin/_shared";
-import { createReview, listReviews } from "@/backend/admin/reviews";
-import { ReviewListQuery, ReviewSchema } from "@/backend/admin/schemas/marketing";
+import { createReview, deleteReviews, listReviews } from "@/backend/admin/reviews";
+import { ReviewDeleteSchema, ReviewListQuery, ReviewSchema } from "@/backend/admin/schemas/marketing";
 
 export const GET = route("admin.reviews", async ({ req }) => ok(await listReviews(query(req, ReviewListQuery))));
 
@@ -9,4 +9,10 @@ export const GET = route("admin.reviews", async ({ req }) => ok(await listReview
 export const POST = route("admin.reviews", async ({ req }) => {
   const actor = await guard("reviews.moderate");
   return ok(await createReview(actor, await parse(req, ReviewSchema)), { status: 201 });
+});
+
+/** Bulk hard delete: body `{ ids }` (1-200 uuids) -> `{ deleted }`. */
+export const DELETE = route("admin.reviews", async ({ req }) => {
+  const actor = await guard("reviews.moderate");
+  return ok(await deleteReviews(actor, (await parse(req, ReviewDeleteSchema)).ids));
 });

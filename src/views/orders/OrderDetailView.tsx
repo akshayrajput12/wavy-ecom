@@ -1,8 +1,8 @@
-import { ArrowLeft, RotateCcw, Truck } from "lucide-react";
+import { ArrowLeft, FileText, RotateCcw, Truck } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
-import { ButtonLink } from "@/components/ui/Button";
-import { accountCopy, orderStatusLabels, paymentStatusLabels } from "@/data/copy";
+import { ButtonLink, buttonClass } from "@/components/ui/Button";
+import { accountCopy, invoiceCopy, orderStatusLabels, paymentStatusLabels } from "@/data/copy";
 import { formatDate } from "@/lib/format";
 import type { Order } from "@/types/domain";
 import { ac } from "@/views/account/copy";
@@ -11,7 +11,8 @@ import { co } from "@/views/checkout/copy";
 import { Timeline } from "@/views/tracking/components/Timeline";
 import { CancelOrder } from "./components/CancelOrder";
 
-export function OrderDetailView({ order, canCancel, canReturn }: { order: Order; canCancel: boolean; canReturn: boolean }) {
+/** `invoiceHref`: set once the GST invoice exists (GET /api/orders/:number/invoice checks ownership). */
+export function OrderDetailView({ order, canCancel, canReturn, invoiceHref }: { order: Order; canCancel: boolean; canReturn: boolean; invoiceHref?: string }) {
   const a = order.shippingAddress;
   return (
     <div className="grid gap-8">
@@ -35,6 +36,11 @@ export function OrderDetailView({ order, canCancel, canReturn }: { order: Order;
           <ButtonLink href={`/account/returns/new?order=${encodeURIComponent(order.number)}`} variant="secondary">
             <RotateCcw className="size-4" aria-hidden /> {accountCopy.requestReturn}
           </ButtonLink>
+        )}
+        {invoiceHref && (
+          <a href={invoiceHref} download className={buttonClass({ variant: "secondary" })}>
+            <FileText className="size-4" aria-hidden /> {invoiceCopy.download}
+          </a>
         )}
         {canCancel && <CancelOrder number={order.number} />}
       </div>

@@ -5,6 +5,7 @@ import type { AdminCategory } from "@/types/admin";
 import type { TablesInsert, TablesUpdate } from "@/types/database";
 import { type Actor, audit, camel, db, exec, fetchAll, maybe, must, notFound, read, revalidate, snake } from "./_shared";
 import { slugTaken } from "./products";
+import { removeFiles, urlFiles } from "./remove";
 import type { CategoryPatchSchema, CategoryReorderSchema, CategorySchema } from "./schemas/catalog";
 import { createsCycle } from "./schemas/rules";
 
@@ -96,6 +97,8 @@ export async function deleteCategory(actor: Actor, slug: string, reassignTo?: st
     c.from("products").select("id", { count: "exact", head: true }).eq("category_id", cat.id),
     c.from("categories").select("id", { count: "exact", head: true }).eq("parent_id", cat.id),
   ]);
+  const { count: ruleCount } = await c.from("discount_targets").select("id", { count: "exact", head: true }).eq("category_id", cat.id);
+  if (ruleCount) throw new ApiError(409, "in_discount_rules", "Remove this category from coupon and offer rules first");
   if ((productCount ?? 0) > 0 && !reassignTo) {
     throw new ApiError(409, "category_in_use", `${productCount} product(s) are assigned; pass reassignTo`, { productCount, childCount });
   }
@@ -106,6 +109,7 @@ export async function deleteCategory(actor: Actor, slug: string, reassignTo?: st
   }
   exec(await c.from("categories").update({ parent_id: cat.parent_id }).eq("parent_id", cat.id));
   exec(await c.from("categories").delete().eq("id", cat.id));
+  await removeFiles("category", await urlFiles("category-media")([cat]));
   await audit(actor, "category.delete", "categories", cat.id, cat, { reassignTo: reassignTo ?? null, productCount, childCount });
   revalidate("catalog", "home");
   return { id: cat.id, movedProducts: productCount ?? 0, movedChildren: childCount ?? 0 };

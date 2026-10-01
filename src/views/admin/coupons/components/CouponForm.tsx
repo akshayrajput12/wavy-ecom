@@ -9,7 +9,7 @@ import { CouponPatchSchema, CouponSchema } from "@/backend/admin/schemas/marketi
 import type { AdminCoupon, DiscountTarget } from "@/types/admin";
 import { COUPON_STATUS } from "@/types/domain";
 import { mutate } from "../../api";
-import { ConfirmDelete } from "../../orders/components/ConfirmDelete";
+import { RemoveButton } from "../../_kit/Remove";
 import { detailErrors, fieldErrors, fromLocalInput, toLocalInput, toPaise, toRupees } from "../../orders/components/fmt";
 import { FormActions } from "../../orders/components/FormActions";
 import { TargetPicker, type TargetOptions } from "./TargetPicker";
@@ -50,13 +50,6 @@ export function CouponForm({ coupon, options }: { coupon?: AdminCoupon; options:
     setSaving(false);
     if (res.ok) { router.push("/admin/coupons"); router.refresh(); } else setErrors(detailErrors(res.details));
   };
-  const remove = async () => {
-    if (!coupon) return;
-    setSaving(true);
-    const res = await mutate("DELETE", `coupons/${coupon.id}`, undefined, { success: "Coupon deleted" });
-    setSaving(false);
-    if (res.ok) { router.push("/admin/coupons"); router.refresh(); }
-  };
 
   return (
     <form onSubmit={save} noValidate>
@@ -87,7 +80,7 @@ export function CouponForm({ coupon, options }: { coupon?: AdminCoupon; options:
           {errors.targets && <p className="mt-2 text-meta text-danger">⚠ {errors.targets}</p>}
         </div>
       </FormSection>
-      <FormActions saving={saving} backHref="/admin/coupons" extra={coupon && <ConfirmDelete busy={saving} onConfirm={() => void remove()} />} />
+      <FormActions saving={saving} backHref="/admin/coupons" extra={coupon && <RemoveButton noun="coupons" ids={[coupon.id]} name={coupon.code} back="/admin/coupons" />} />
     </form>
   );
 }

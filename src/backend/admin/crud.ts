@@ -97,16 +97,6 @@ export async function updateResource(actor: Actor, name: ResourceName, id: strin
   return camel(saved);
 }
 
-export async function deleteResource(actor: Actor, name: ResourceName, id: string) {
-  const r = spec(name);
-  const before = maybe(await table(r).select("*").eq("id", id).maybeSingle()) as Row | null;
-  if (!before) notFound(name);
-  exec(await table(r).delete().eq("id", id));
-  await audit(actor, `${name}.delete`, r.table, id, before, null);
-  revalidate(...r.tags);
-  return { id };
-}
-
 /** sort_order = position in `ids` (tables with a sort_order column). */
 export async function reorderResource(actor: Actor, name: ResourceName, ids: string[]) {
   const r = spec(name);

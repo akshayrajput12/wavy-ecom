@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { Input } from "@/components/ui/Input";
 import { PageHeader, Panel } from "@/components/admin/Panel";
 import { SETTINGS_SECTIONS } from "@/backend/admin/schemas/settings";
 import type { AdminStoreSettings } from "@/types/admin";
+import { resolveImg, toImgs } from "../category-editor/shared";
 import { EditorForm } from "../_kit/Chrome";
 import { useEditor } from "../_kit/useEditor";
+import { BRAND_KEYS, BrandFields, type BrandImages } from "./BrandFields";
 
 export function SettingsView({ settings }: { settings: AdminStoreSettings | null }) {
   const s = settings;
@@ -14,19 +17,30 @@ export function SettingsView({ settings }: { settings: AdminStoreSettings | null
     returnWindowDays: String(s?.returnWindowDays ?? 7), reservationTtlMinutes: String(s?.reservationTtlMinutes ?? 15),
     lowStockDefault: String(s?.lowStockDefault ?? 5), supportEmail: s?.supportEmail ?? "", supportPhone: s?.supportPhone ?? "",
   }, { schema: SETTINGS_SECTIONS.general.schema, back: "/admin/settings" });
+  const [brand, setBrand] = useState<BrandImages>({
+    logoUrl: toImgs(s?.logoUrl, ""), logoDarkUrl: toImgs(s?.logoDarkUrl, ""), faviconUrl: toImgs(s?.faviconUrl, ""),
+  });
+  const [uploading, setUploading] = useState(false);
   const text = (k: keyof typeof v, label: string, hint?: string, type = "text") =>
     <Input label={label} hint={hint} type={type} value={v[k]} error={errors[k]} onChange={(e) => set(k, e.target.value)} />;
 
   if (!s) return <><PageHeader title="Settings" /><p className="text-body text-ink-soft">Store settings are unavailable. Check the Supabase connection.</p></>;
-  const submit = () => save("PATCH", "settings/general", {
-    storeName: v.storeName, currency: v.currency.toUpperCase(), locale: v.locale, timezone: v.timezone,
-    returnWindowDays: Number(v.returnWindowDays), reservationTtlMinutes: Number(v.reservationTtlMinutes), lowStockDefault: Number(v.lowStockDefault),
-    supportEmail: v.supportEmail.trim() || null, supportPhone: v.supportPhone.trim() || null,
-  }, "Settings saved");
+  const submit = async () => {
+    setUploading(true);
+    const imgs = await Promise.all(BRAND_KEYS.map((k) => resolveImg(brand[k], "content-media")));
+    setUploading(false);
+    if (imgs.some((i) => !i)) return; // upload failed: toast shown, nothing saved
+    await save("PATCH", "settings/general", {
+      storeName: v.storeName, currency: v.currency.toUpperCase(), locale: v.locale, timezone: v.timezone,
+      returnWindowDays: Number(v.returnWindowDays), reservationTtlMinutes: Number(v.reservationTtlMinutes), lowStockDefault: Number(v.lowStockDefault),
+      supportEmail: v.supportEmail.trim() || null, supportPhone: v.supportPhone.trim() || null,
+      ...Object.fromEntries(BRAND_KEYS.map((k, i) => [k, imgs[i]?.url ?? null])),
+    }, "Settings saved");
+  };
   return (
     <>
       <PageHeader title="Settings" description="Store identity and operational defaults. Tax and shipping have their own pages." />
-      <EditorForm onSave={submit} busy={busy} back="/admin/settings">
+      <EditorForm onSave={submit} busy={busy || uploading} back="/admin/settings">
         <Panel title="Store">
           <div className="grid gap-4 sm:grid-cols-2">
             {text("storeName", "Store name")}
@@ -35,6 +49,7 @@ export function SettingsView({ settings }: { settings: AdminStoreSettings | null
             {text("timezone", "Timezone", "IANA name, e.g. Asia/Kolkata")}
           </div>
         </Panel>
+        <BrandFields value={brand} errors={errors} onChange={(k, imgs) => setBrand((b) => ({ ...b, [k]: imgs }))} />
         <Panel title="Operations">
           <div className="grid gap-4 sm:grid-cols-3">
             {text("returnWindowDays", "Return window (days)", "0 to 90", "number")}

@@ -5,11 +5,12 @@ import { Textarea } from "@/components/admin/Fields";
 import { PageHeader, Panel } from "@/components/admin/Panel";
 import { ShippingZoneSchema } from "@/backend/admin/schemas/settings";
 import type { AdminShippingZone } from "@/types/admin";
-import { BackLink, DeleteButton, EditorForm } from "../_kit/Chrome";
+import { BackLink, EditorForm } from "../_kit/Chrome";
+import { RemoveButton } from "../_kit/Remove";
 import { useEditor } from "../_kit/useEditor";
 
 export function ZoneEditorView({ zone }: { zone: AdminShippingZone | null }) {
-  const { v, set, errors, busy, save, remove } = useEditor({
+  const { v, set, errors, busy, save } = useEditor({
     name: zone?.name ?? "", states: (zone?.states ?? []).join(", "), isDefault: zone?.isDefault ?? false, isActive: zone?.isActive ?? true,
   }, { schema: ShippingZoneSchema, back: "/admin/shipping" });
   const submit = () => save(zone ? "PATCH" : "POST", zone ? `shipping-zones/${zone.id}` : "shipping-zones",
@@ -19,7 +20,7 @@ export function ZoneEditorView({ zone }: { zone: AdminShippingZone | null }) {
       <BackLink href="/admin/shipping">Shipping</BackLink>
       <PageHeader title={zone ? "Edit zone" : "New zone"} />
       <EditorForm onSave={submit} busy={busy} back="/admin/shipping"
-        danger={zone && <DeleteButton busy={busy} onConfirm={() => void remove(`shipping-zones/${zone.id}`, "Zone deleted")} />}>
+        danger={zone && <RemoveButton noun="shipping-zones" ids={[zone.id]} name={zone.name} back="/admin/shipping" />}>
         <Panel>
           <div className="grid gap-4">
             <Input label="Zone name" value={v.name} error={errors.name} onChange={(e) => set("name", e.target.value)} />

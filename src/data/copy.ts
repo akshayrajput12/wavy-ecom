@@ -164,6 +164,36 @@ export const checkoutCopy = {
   stepOf: (n: number, total: number) => `Step ${n} of ${total}`,
 } as const;
 
+// ---------- GST invoice (document + access UI) ----------
+export const invoiceCopy = {
+  title: "Tax invoice", heading: "Invoice", date: "Invoice date", order: "Order no.", orderDate: "Order date",
+  placeOfSupply: "Place of supply", payment: "Payment", reference: "Reference", billTo: "Bill to", shipTo: "Ship to", details: "Details",
+  gstin: "GSTIN", state: "State", unregistered: "Not registered",
+  cols: {
+    index: "#", item: "Item", hsn: "HSN", qty: "Qty", price: "Price", discount: "Discount", taxable: "Taxable",
+    cgst: "CGST", sgst: "SGST", igst: "IGST", amount: "Amount",
+  },
+  taxableValue: "Taxable value", roundOff: "Round off", totalIn: (currency: string) => `Total (${currency})`,
+  inWords: "Amount in words", rate: (r: number) => `${r}%`, half: (r: number) => `${Math.round((r / 2) * 100) / 100}%`,
+  inclusive: "Prices include GST.", exclusive: "GST is charged on top of listed prices.", reverseCharge: "Tax payable on reverse charge: No.",
+  computer: "This is a computer-generated invoice and needs no signature.",
+  paymentStatus: { paid: "Paid online", cod: "Cash on delivery", none: "No payment due" },
+  methods: { upi: "UPI", card: "Card", netbanking: "Netbanking", wallet: "Wallet", emi: "EMI", paylater: "Pay later", cod: "Cash" } as Record<string, string>,
+  shipping: "Shipping", codFee: "Cash handling fee", sku: "SKU",
+  download: "Download invoice", downloadPdf: "Download PDF", view: "View invoice",
+  guestNote: "Save this now: you won't be able to view this invoice again because you're not signed in. Create an account to keep your orders.",
+  createAccount: "Create account",
+  pendingCod: "Your GST invoice is issued when your order is dispatched.",
+  pendingPayment: "Your invoice will be ready once the payment is confirmed. Refresh this page in a minute.",
+  admin: {
+    panel: "Invoice", none: "No invoice yet. It is issued when the order is paid (COD: when it is packed or shipped).",
+    issued: (n: string, d: string) => `${n} · issued ${d}`, regenerate: "Regenerate PDF", regenerated: "Invoice PDF regenerated",
+    bulk: "Download invoices", range: "Download all for date range", selected: (n: number) => `${n} selected`,
+    selectPage: "Select all orders on this page", selectRow: (n: string) => `Select order ${n}`, max: (n: number) => `Up to ${n} at a time`,
+    failed: "Couldn't download invoices", skipped: (n: number) => `${n} order${n === 1 ? "" : "s"} skipped (no invoice yet)`,
+  },
+} as const;
+
 // ---------- Account / orders / returns ----------
 export const accountNav = [
   { href: "/account", label: "Account" }, { href: "/account/orders", label: "Orders" },
@@ -240,5 +270,37 @@ export const adminCopy = {
     testimonialTitle: "Delete this testimonial?",
     testimonialBody: (author: string) => `The testimonial from ${author} is removed from the storefront for good. This can't be undone.`,
     testimonialDeleted: "Testimonial deleted",
+    failed: "Couldn't delete", select: (what: string) => `Select ${what}`,
+    confirmTitle: (n: number, one: string, many: string) => (n === 1 ? `Delete this ${one}?` : `Delete ${n} ${many}?`),
+    done: (deleted: number, archived: number, one: string, many: string, kept: string) => [
+      deleted ? `${deleted} ${deleted === 1 ? one : many} deleted` : "",
+      archived ? `${archived} ${kept}` : "",
+    ].filter(Boolean).join(", "),
+    /** Keyed by admin API resource. `effect` is the confirm-dialog body: what happens to dependent data. */
+    nouns: {
+      products: { one: "product", many: "products", kept: "archived (used by orders or discount rules)",
+        effect: "Products with orders or coupon/offer rules are archived instead, so order history stays intact. The rest are removed for good with their variants, stock, images and reviews. This can't be undone." },
+      categories: { one: "category", many: "categories", kept: "",
+        effect: "Categories that still have products, or are used by coupon/offer rules, can't be deleted: move those first. Sub-categories move up to the nearest remaining parent. Images are removed. This can't be undone." },
+      collections: { one: "collection", many: "collections", kept: "",
+        effect: "Products stay in the catalog; only their membership is removed. Collections used by coupon/offer rules can't be deleted. Images are removed. This can't be undone." },
+      coupons: { one: "coupon", many: "coupons", kept: "archived (used on orders)",
+        effect: "Coupons already used on orders are archived instead, so order records stay intact. The rest are removed for good with their targeting rules." },
+      offers: { one: "offer", many: "offers", kept: "archived (applied to orders)",
+        effect: "Offers already applied to orders are archived instead. The rest are removed for good with their targeting rules. Linked campaigns keep running without them." },
+      campaigns: { one: "campaign", many: "campaigns", kept: "",
+        effect: "Campaigns are removed for good with their product and collection links. Linked coupons and offers are not affected." },
+      blog: { one: "post", many: "posts", kept: "", effect: "Posts are removed from the journal for good, with their tag links. This can't be undone." },
+      faqs: { one: "FAQ", many: "FAQs", kept: "", effect: "These questions are removed from the help pages for good. This can't be undone." },
+      pages: { one: "page", many: "pages", kept: "", effect: "These pages are removed for good and their links will 404. Add a redirect if they were public. This can't be undone." },
+      testimonials: { one: "testimonial", many: "testimonials", kept: "", effect: "These quotes are removed from the storefront for good. This can't be undone." },
+      "home-sections": { one: "section", many: "sections", kept: "", effect: "These sections are removed from the home page for good. This can't be undone." },
+      "seo-overrides": { one: "override", many: "overrides", kept: "", effect: "These paths go back to their default metadata." },
+      redirects: { one: "redirect", many: "redirects", kept: "", effect: "These old paths stop redirecting and may 404." },
+      "shipping-zones": { one: "zone", many: "zones", kept: "switched off (used by orders)",
+        effect: "Zones with methods used by past orders are switched off instead. The rest are removed with their methods. The default zone can't be deleted." },
+      "shipping-methods": { one: "method", many: "methods", kept: "switched off (used by orders)",
+        effect: "Methods used by past orders are switched off instead, so order records stay intact. The rest are removed for good." },
+    },
   },
 } as const;

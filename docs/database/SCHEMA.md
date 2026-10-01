@@ -145,14 +145,17 @@ Columns: `id, type home_section_type, title, subtitle, config jsonb, sort_order,
 
 Public read, staff write: `product-media`, `category-media`, `collection-media` (catalog.write) and `content-media` (content.write or blog.write). Private: `review-media` (owner `<uid>/…` and moderators; public once the review is approved) and `return-evidence` (owner + returns.read).
 
+## Reset and reseed
+
+`supabase/reset.sql` empties every table in `public` (found dynamically, so tables from later migrations are covered) except `profiles`, `staff_members`, `permissions` and `role_permissions`, so the owner can still sign in to /admin. It cannot be undone. Commented blocks at the end also remove staff, uploaded files and other auth users. Then run `supabase/seed.sql`: it restores the store settings, payment gateway and integration rows and loads the fashion catalogue without images (its header lists the placeholder home-page image paths to upload). Run both as `postgres`, in the SQL editor or with `psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/reset.sql`, then the same with `-f supabase/seed.sql`.
+
 ## Seed IDs (`supabase/seed.sql`)
 
 | Entity | Pattern |
 |---|---|
-| categories | `10000000-0000-4000-8000-0000000000NN`: 01 electronics, 02 home-kitchen, 03 beauty, 04 fashion, 05 books, 06 grocery-gourmet; children `<parent><n>` (11 smartphones, 12 audio, 13 computer-accessories, 14 wearables, 21–23, 31–33, 41–44, 51–53, 61–63) |
-| collections | `20000000-…-00000000000N`: 1 new-arrivals, 2 best-sellers, 3 festive-gifting, 4 under-999, 5 work-from-home |
-| products | `30000000-…-0000000000NN` (01–32, seed order) |
-| variants | `3100PPPP-0000-4000-8000-0000000000VV`, VV = (option1 index − 1) × count(option2 values) + option2 index (1-based; single-variant products use 01) |
-| media / reviews | `3200PPPP-…-0000000000MM` / `3300PPPP-…-0000000000RR` |
-| offer / coupons | offer `50000000-…-01` (any 3 books for Rs 999); coupons `51000000-…-0N`: WELCOME10, FREESHIP, AUDIO15 (products), BEAUTY20 (category, excludes the makeup kit), FESTIVE500 (collection), STORAGE2K (variants) |
-| home sections | `74000000-…-0000000000NN` (01–11) |
+| categories | `10000000-0000-4000-8000-0000000000NN`: 01 clothing, 02 shoes, 03 accessories; children `<parent><n>` (11–16 clothing, 21–24 shoes, 31–34 accessories) |
+| collections | `20000000-…-00000000000N`: 1 new-arrivals, 2 best-sellers, 3 festive-edit, 4 winter-layers, 5 weekend-uniform, 6 office-ready |
+| products | `30000000-…-0000000000NN` (01–23, catalogue order); SKU `WVY-<NN>-<COLOUR>-<SIZE>` (one size = `OS`) |
+| variants | `3100PPPP-0000-4000-8000-0000000000VV`, VV = (colour index − 1) × count(sizes) + size index (1-based) |
+| coupon | `51000000-…-01` FESTIVE15 (15% off over Rs 2,999, 15 Oct to 15 Nov 2026). No offers, reviews or product media are seeded. |
+| home sections | `74000000-…-0000000000NN` (01–12, in render order) |

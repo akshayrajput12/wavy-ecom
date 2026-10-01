@@ -21,7 +21,7 @@ export function CategoryCard({ category: c, index }: { category: Category; index
       {/* taller than the card so the parallax shift never shows an edge */}
       <motion.div className="absolute inset-x-0 -inset-y-[7%]" style={reduce ? undefined : { y }}>
         {c.image?.url && (
-          <Image src={c.image.url} alt="" fill sizes="(min-width: 1024px) 31vw, 48vw"
+          <Image src={c.image.url} alt="" fill sizes="(min-width: 1024px) 31vw, (min-width: 640px) 48vw, 82vw"
             className="object-cover transition-[scale] duration-(--dur-slow) ease-out group-hover:scale-[1.06] group-focus-visible:scale-[1.06]" />
         )}
       </motion.div>

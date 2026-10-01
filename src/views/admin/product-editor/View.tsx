@@ -9,7 +9,8 @@ import { useCan } from "@/components/admin/useRole";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { ProductUpsertSchema } from "@/backend/admin/schemas/catalog";
 import type { AdminProduct } from "@/types/admin";
-import { adminApi, mutate } from "../api";
+import { mutate } from "../api";
+import { RemoveButton } from "../_kit/Remove";
 import { BasicsSection, type Option } from "./components/BasicsSection";
 import { DescriptionSection, MediaSection } from "./components/DescriptionSection";
 import { RatingsSection, SeoSection, ShippingSection, SpecsSection } from "./components/DetailSections";
@@ -29,7 +30,6 @@ export function ProductEditorView({ product, categories, collections }: { produc
   const [f, setF] = useState(initial);
   const [issues, setIssues] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
-  const [confirming, setConfirming] = useState(false);
   const [tab, setTab] = useState<"edit" | "preview">("edit");
   const set = useCallback((p: Partial<EditorForm>) => setF((c) => ({ ...c, ...p })), []);
   const dirty = sig(f) !== sig(initial);
@@ -64,12 +64,6 @@ export function ProductEditorView({ product, categories, collections }: { produc
       router.refresh();
     }
     setSaving(false);
-  };
-
-  const remove = async () => {
-    if (!product) return;
-    const res = await adminApi("DELETE", `products/${product.slug}?mode=delete`);
-    if (res.ok) { toast.success("Product deleted"); router.push(base); } else toast.error(res.error);
   };
 
   const real = { avg: product?.ratingAvg ?? 0, count: product?.reviewCount ?? 0 };
@@ -109,16 +103,8 @@ export function ProductEditorView({ product, categories, collections }: { produc
           <ShippingSection f={f} set={set} />
           <SeoSection f={f} set={set} />
           <RatingsSection f={f} set={set} canRate={canRate} />
-          {product && canWrite && (
-            <div className="flex flex-wrap items-center gap-3 pt-6">
-              {confirming ? (
-                <>
-                  <Button type="button" size="sm" className="bg-danger hover:bg-danger" onClick={remove}>Confirm delete</Button>
-                  <Button type="button" size="sm" variant="ghost" onClick={() => setConfirming(false)}>Keep product</Button>
-                  <p className="t-meta">Permanent. Products with orders cannot be deleted: archive them instead.</p>
-                </>
-              ) : <Button type="button" size="sm" variant="secondary" onClick={() => setConfirming(true)}>Delete product</Button>}
-            </div>
+          {product && (
+            <div className="pt-6"><RemoveButton noun="products" ids={[product.id]} name={product.name} back={base} /></div>
           )}
         </fieldset>
         <aside aria-label="Live preview" className={clsx("xl:sticky xl:top-20 xl:max-h-[calc(100dvh-6rem)] xl:overflow-y-auto", tab === "edit" && "max-xl:hidden")}>

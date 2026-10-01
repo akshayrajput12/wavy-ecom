@@ -1,6 +1,7 @@
 import { ok, parse, route } from "@/backend/_core/http";
 import { guard, notFound } from "@/backend/admin/_shared";
-import { deleteCoupon, getCoupon, updateCoupon } from "@/backend/admin/marketing";
+import { getCoupon, updateCoupon } from "@/backend/admin/marketing";
+import { removeMany } from "@/backend/admin/remove";
 import { CouponPatchSchema } from "@/backend/admin/schemas/marketing";
 
 type P = { id: string };
@@ -13,7 +14,8 @@ export const PATCH = route<P>("admin.coupons", async ({ req, params }) => {
   return ok(await updateCoupon(actor, params.id, await parse(req, CouponPatchSchema)));
 });
 
+/** Same rules as the bulk DELETE -> `{deleted, archived}` (used ones are archived). */
 export const DELETE = route<P>("admin.coupons", async ({ params }) => {
   const actor = await guard("coupons.write");
-  return ok(await deleteCoupon(actor, params.id));
+  return ok(await removeMany(actor, "coupons", [params.id]));
 });

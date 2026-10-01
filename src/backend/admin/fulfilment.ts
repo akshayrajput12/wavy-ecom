@@ -1,6 +1,7 @@
 import "server-only";
 import type { z } from "zod";
 import { ApiError } from "@/backend/_core/http";
+import { issueInvoiceIfEligible } from "@/backend/invoices/service";
 import type { AdminReturn, Paginated } from "@/types/admin";
 import type { Enum } from "@/types/admin";
 import type { OrderStatus } from "@/types/domain";
@@ -67,6 +68,7 @@ async function followShipment(orderId: string, current: OrderStatus, target: Ord
     exec(await session.from("orders").update({ status: s }).eq("id", orderId));
     at = s;
   }
+  if (at !== current) await issueInvoiceIfEligible(orderId, "shipment"); // COD: dispatch issues the invoice
 }
 
 export async function createShipment(actor: Actor, number: string, input: z.infer<typeof ShipmentCreateSchema>) {

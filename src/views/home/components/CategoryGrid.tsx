@@ -1,19 +1,26 @@
-import { Stagger, StaggerItem } from "@/components/ui/Reveal";
 import { homeCopy } from "@/data/storefront";
 import type { HomeSectionOf } from "@/types/domain";
 import { CategoryCard } from "./CategoryCard";
+import { HomeRail } from "./HomeRail";
 import { SectionHead } from "./SectionHead";
 
-/** "Built for every squad": tall category tiles, 2 columns mobile / 3 desktop, each linking to its collection page. */
+// 1.2 cards mobile, 2 tablet, 3 desktop (gap-3 / sm:gap-4, see HomeRail). Three or fewer categories fit exactly on
+// desktop, so the rail does not overflow there: no arrows, no autoplay, a static row. Mobile stays a swipe rail.
+const ITEM = "basis-[82%] sm:basis-[calc((100%_-_1rem)/2)] lg:basis-[calc((100%_-_2rem)/3)]";
+
+/** "Built for every squad": tall category tiles in an autoplaying, edge-bleeding rail, each linking to its collection page. */
 export function CategoryGrid({ section }: { section: HomeSectionOf<"category_grid"> }) {
   return (
-    <section className="container-x section-y">
-      <SectionHead overline={homeCopy.overline.categories} title={section.title} subtitle={section.subtitle} cta={{ label: homeCopy.viewAll, href: "/collections" }} />
-      <Stagger as="ul" gap={0.08} className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-5">
-        {section.categories.map((c, i) => (
-          <StaggerItem as="li" key={c.id}><CategoryCard category={c} index={i} /></StaggerItem>
-        ))}
-      </Stagger>
+    <section className="@container section-y">
+      <div className="container-x">
+        <SectionHead overline={homeCopy.overline.categories} title={section.title} subtitle={section.subtitle} cta={{ label: homeCopy.viewAll, href: "/collections" }} />
+        <HomeRail
+          label={section.title ?? homeCopy.overline.categories} autoplay itemClassName={ITEM}
+          labels={{ prev: homeCopy.categoryPrev, next: homeCopy.categoryNext }}
+        >
+          {section.categories.map((c, i) => <CategoryCard key={c.id} category={c} index={i} />)}
+        </HomeRail>
+      </div>
     </section>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/backend/_core/auth";
+import { invoiceIfReady } from "@/backend/invoices/service";
 import { CUSTOMER_CANCELLABLE, getMyOrder } from "@/backend/orders/repo";
 import { OrderDetailView } from "@/views/orders/OrderDetailView";
 import { returnableItems } from "@/views/returns/eligibility";
@@ -16,5 +17,9 @@ export default async function OrderDetailPage({ params }: Props) {
   if (!session) redirect(`/login?next=/account/orders/${encodeURIComponent(number)}`);
   const order = await getMyOrder(session, number);
   if (!order) notFound();
-  return <OrderDetailView order={order} canCancel={CUSTOMER_CANCELLABLE.includes(order.status)} canReturn={returnableItems(order).length > 0} />;
+  const invoice = await invoiceIfReady(order.id); // issues it now if the order qualifies but no hook fired
+  return (
+    <OrderDetailView order={order} canCancel={CUSTOMER_CANCELLABLE.includes(order.status)} canReturn={returnableItems(order).length > 0}
+      invoiceHref={invoice ? `/api/orders/${encodeURIComponent(order.number)}/invoice` : undefined} />
+  );
 }

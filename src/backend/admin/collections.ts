@@ -5,6 +5,7 @@ import type { AdminCollection, AdminCollectionDetail } from "@/types/admin";
 import type { TablesInsert, TablesUpdate } from "@/types/database";
 import { type Actor, audit, camel, db, exec, fetchAll, maybe, must, notFound, read, revalidate, snake } from "./_shared";
 import { slugTaken } from "./products";
+import { removeMany } from "./remove";
 import type { CollectionPatchSchema, CollectionSchema } from "./schemas/catalog";
 
 export const listCollections = () => read("catalog.read", [] as AdminCollection[], async () => {
@@ -67,14 +68,11 @@ export async function updateCollection(actor: Actor, slug: string, input: z.infe
   return camel(row);
 }
 
-/** Membership rows cascade in the DB; products are untouched. */
+/** Same rules as the bulk delete (remove.ts): membership rows cascade, products are untouched, images are removed. */
 export async function deleteCollection(actor: Actor, slug: string) {
-  const col = maybe(await db().from("collections").select("*").eq("slug", slug).maybeSingle());
+  const col = maybe(await db().from("collections").select("id").eq("slug", slug).maybeSingle());
   if (!col) notFound("Collection");
-  exec(await db().from("collections").delete().eq("id", col.id));
-  await audit(actor, "collection.delete", "collections", col.id, col, null);
-  revalidate("catalog", "home");
-  return { id: col.id };
+  return removeMany(actor, "collections", [col.id]);
 }
 
 /** add = append at the end, remove = drop, reorder = productIds is the full new order. */

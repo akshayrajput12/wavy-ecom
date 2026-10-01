@@ -20,7 +20,7 @@ Everything reads and writes Supabase. There is no demo data and no fake success.
 | POST `products` | catalog.write | `[ProductUpsertSchema]` → `{product: AdminProduct, priceFrom, compareAtFrom}` (201) |
 | GET `products/:slug` | catalog.read | → `AdminProduct` (variants with stock, media, collectionIds) |
 | PATCH `products/:slug` | catalog.write | full `[ProductUpsertSchema]` (use `toProductInput(detail)`) → as POST |
-| DELETE `products/:slug` | catalog.write | `?mode=archive` (default, also needs catalog.publish) or `delete` (409 `product_has_orders`) → `{id, mode}` |
+| DELETE `products/:slug` | catalog.write | `?mode=archive` (default, also needs catalog.publish) or `delete` (same rules as the bulk delete below) → `{id, mode}` (+ `{deleted, archived}` for `delete`) |
 | POST `products/:slug/duplicate` | catalog.write | → as POST (draft, slug `-copy`, SKUs `-C1`) |
 | PATCH `products/:slug/rating` | reviews.moderate | `{ratingOverride: 0-5\|null, reviewCountOverride: int\|null}` → rating columns |
 | POST `products/bulk-status` | catalog.publish | `{ids, status}` → `{updated}` |
@@ -29,7 +29,7 @@ Everything reads and writes Supabase. There is no demo data and no fake success.
 | GET `categories` | catalog.read | → `AdminCategory[]` tree (`children`, `productCount`). `?flat=1` → `{id,name,slug,depth}[]` |
 | POST `categories` | catalog.write | `[CategorySchema]` → category |
 | GET/PATCH `categories/:slug` | catalog.read / write | `[CategoryPatchSchema]` (422 `category_cycle`) |
-| DELETE `categories/:slug` | catalog.write | `?reassignTo=<slug>`. Without it, returns 409 `category_in_use` `{productCount, childCount}`. Children move up one level. → `{id, movedProducts, movedChildren}` |
+| DELETE `categories/:slug` | catalog.write | `?reassignTo=<slug>`. Without it, returns 409 `category_in_use` `{productCount, childCount}`. 409 `in_discount_rules` while a coupon/offer targets it. Children move up one level. Images are removed from `category-media` → `{id, movedProducts, movedChildren}` |
 | POST `categories/reorder` | catalog.write | `{items:[{id, parentId, sortOrder}]}` → `{updated}` |
 | GET/POST `collections` | catalog.read / write | → `AdminCollection[]` / `[CollectionSchema]` |
 | GET/PATCH/DELETE `collections/:slug` | catalog.read / write | → `AdminCollectionDetail` (products in position order). `[CollectionPatchSchema]`. DELETE also removes the collection's membership rows (cascade) |
@@ -51,6 +51,9 @@ Everything reads and writes Supabase. There is no demo data and no fake success.
 | GET `orders/:number` | orders.read | → `AdminOrderDetail`: items, payments, attempts, events, refunds, shipments (items, events), history, staffNotes, returns (items), `refundable`, `allowedTransitions` |
 | PATCH `orders/:number` | orders.write | `{status, note?}` must follow `allowedTransitions`. `cancelled` runs `cancel_order` → `{order}` |
 | POST `orders/:number/cancel` | orders.write | `{reason?}` → `{result: {refundRequired, refundableAmount, …}, order}` (releases holds, restocks, reverses redemptions) |
+| GET `orders/:number/invoice` | orders.read | → `application/pdf` (issues the invoice if the order qualifies; 409 `invoice_not_ready`) |
+| POST `orders/:number/invoice` | orders.write | → `{number}`: re-render the stored PDF from the frozen snapshot (same number) |
+| POST `invoices` | orders.read | `{orderIds: uuid[1..200]}` or `{from, to}` (ISO, invoice `issued_at` range) → ONE `application/pdf`, one invoice per page; headers `x-invoices-count`, `x-invoices-skipped`; 422 `too_many_invoices`, 404 `no_invoices` |
 | POST `orders/:number/notes` | orders.write | `{body}` → `{order}` (notes are stored as `audit_logs` `order.note` rows) |
 | POST `orders/:number/refunds` | orders.refund | `{amount, reason, idempotencyKey, paymentId?, attemptId? (duplicate capture), returnRequestId?}` → `{refund, replayed}`. Creates a **pending** refund (422 `refund_exceeds_refundable`) |
 | PATCH `refunds/:id` | orders.refund | `{status: processing\|processed\|failed, providerRefundId?, failureReason?}`. `processed` updates the payment, the order and the return in the DB |
@@ -69,7 +72,7 @@ Everything reads and writes Supabase. There is no demo data and no fake success.
 ### Marketing and reviews
 | GET/POST `coupons` | marketing.read / coupons.write | → `AdminCoupon[]` (`targets`, `stats {applied, reserved, reversed, discountGiven}`). `[CouponSchema]` |
 |---|---|---|
-| GET/PATCH/DELETE `coupons/:id` | marketing.read / coupons.write | `[CouponPatchSchema]`. `targets`, when sent, replaces the whole list. DELETE on a redeemed coupon returns 409 `in_use`, so archive it instead |
+| GET/PATCH/DELETE `coupons/:id` | marketing.read / coupons.write | `[CouponPatchSchema]`. `targets`, when sent, replaces the whole list. DELETE follows the bulk delete rules (a used coupon is archived) → `{deleted, archived}` |
 | POST `coupons/bulk-status` | coupons.write | `{ids, status}` |
 | GET/POST `offers`, GET/PATCH/DELETE `offers/:id` | marketing.read / offers.write | `[OfferSchema]` / `[OfferPatchSchema]`. `tiers: [{minQty, percent}]` |
 | GET `reviews` | reviews.moderate | `?status&productId&source&rating&q&page` → `Paginated<AdminReview>` |
@@ -98,6 +101,24 @@ Everything reads and writes Supabase. There is no demo data and no fake success.
 | `shipping-methods` | shipping_methods | settings.read / settings.shipping.manage | `ShippingMethodSchema` | settings |
 
 `reorder` applies to faqs, testimonials, home-sections and shipping-methods (sets `sort_order` to the list index).
+
+### Bulk delete
+
+`DELETE <resource>` with body `{ids}` (1–200 uuids) → `{deleted, archived}`, 404 when no id matched. Same permission as the resource's
+writes. `DELETE :resource/:id`, `coupons/:id`, `offers/:id`, `blog/:id` and `collections/:slug` run the same rules for one row.
+Rules live in `src/backend/admin/remove.ts` (`REMOVABLE`); each run writes one `<entity>.delete` audit row and revalidates the resource's tags.
+
+| resource | dependent data |
+|---|---|
+| `products` | Products with order items, or used by a coupon/offer target (product or variant), are **archived** (`status = archived`, also needs catalog.publish). The rest are hard-deleted: variants, stock, media, reviews, wishlist and collection rows cascade; files leave `product-media` / `review-media` |
+| `categories` | 409 `category_in_use` (lists names and counts) while any has products; 409 `in_discount_rules` while a coupon/offer targets one. Child categories move to the nearest surviving ancestor. Images leave `category-media` |
+| `collections` | 409 `in_discount_rules` while targeted. Membership and campaign links cascade; products stay. Images leave `collection-media` |
+| `coupons` / `offers` | Redeemed ones (or coupons referenced by an order) are **archived**; the rest are deleted with their targets |
+| `blog`, `faqs`, `pages`, `testimonials`, `home-sections`, `campaigns`, `seo-overrides`, `redirects` | Hard delete (tag links, campaign product/collection links cascade) |
+| `shipping-methods` | Methods used by orders are **switched off** (`is_active = false`); `archived` counts them |
+| `shipping-zones` | 409 `default_zone` for the default zone. Zones whose methods are used by orders are switched off; the rest are deleted with their methods |
+
+Orders, payments, refunds, invoices, customers, staff and the audit log have no delete: they are financial, legal or security records.
 
 ### Customers, staff, settings, insights
 | GET `customers` | customers.read | `?q&status&page` → `Paginated<AdminCustomerRow>` (orders, lifetimeValue, lastOrderAt) |

@@ -84,12 +84,3 @@ export async function updateBlogPost(actor: Actor, id: string, { tags, ...input 
   revalidate("content", "home");
   return after;
 }
-
-export async function deleteBlogPost(actor: Actor, id: string) {
-  const before = await loadPost(id);
-  if (!before) notFound("Post");
-  exec(await db().from("blog_posts").delete().eq("id", id));
-  await audit(actor, "blog.delete", "blog_posts", id, before, null);
-  revalidate("content", "home");
-  return { id };
-}

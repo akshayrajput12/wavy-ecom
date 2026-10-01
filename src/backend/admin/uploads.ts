@@ -6,7 +6,7 @@ import { UPLOAD_BUCKETS, UploadDeleteSchema, UploadMetaSchema, type UploadBucket
 
 const BUCKET_PERM: Record<UploadBucket, Permission[]> = {
   "product-media": ["catalog.write"], "category-media": ["catalog.write"], "collection-media": ["catalog.write"],
-  "content-media": ["content.write", "blog.write"],
+  "content-media": ["content.write", "blog.write", "settings.write"], // settings.write: store logo / favicon
 };
 const EXT: Record<string, string> = {
   "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/avif": "avif", "image/svg+xml": "svg", "video/mp4": "mp4",

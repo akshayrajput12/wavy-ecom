@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/admin/Panel";
 import type { AdminHomeSection } from "@/types/admin";
 import { HOME_SECTION_TYPE, type HomeSectionType } from "@/types/domain";
 import { mutate } from "../api";
+import { BulkBar, RemoveButton, SelectBox, useCanRemove, useSelection } from "../_kit/Remove";
 import { SECTION_LABEL, SectionCard } from "./SectionCard";
 import type { Lookups } from "./shared";
 
@@ -17,6 +18,8 @@ export function HomeSectionsView({ sections, lookups }: { sections: AdminHomeSec
   const [seen, setSeen] = useState(sections);
   const [drafts, setDrafts] = useState<{ key: string; type: HomeSectionType }[]>([]);
   const [adding, setAdding] = useState<HomeSectionType>("hero_carousel");
+  const sel = useSelection();
+  const canDelete = useCanRemove("home-sections");
   if (sections !== seen) { setSeen(sections); setList(sections); } // server data refreshed after a save
 
   const onMove = async (i: number, dir: -1 | 1) => {
@@ -40,9 +43,11 @@ export function HomeSectionsView({ sections, lookups }: { sections: AdminHomeSec
           <Button size="sm" onClick={() => setDrafts((d) => [...d, { key: crypto.randomUUID(), type: adding }])}>Add</Button>
         </>
       } />
+      {canDelete && <BulkBar count={sel.ids.length} onClear={sel.clear}><RemoveButton noun="home-sections" ids={sel.ids} onDone={sel.clear} /></BulkBar>}
       <div className="grid gap-6">
         {list.map((s, i) => (
-          <SectionCard key={s.id} section={s} type={s.type} lookups={lookups} onMove={(d) => onMove(i, d)} onDone={() => router.refresh()} />
+          <SectionCard key={s.id} section={s} type={s.type} lookups={lookups} onMove={(d) => onMove(i, d)} onDone={() => router.refresh()}
+            select={canDelete && <SelectBox checked={sel.has(s.id)} onChange={() => sel.toggle(s.id)} label={s.title || SECTION_LABEL[s.type]} />} />
         ))}
         {drafts.map((d) => (
           <SectionCard key={d.key} section={null} type={d.type} lookups={lookups} onDone={() => { setDrafts((all) => all.filter((x) => x.key !== d.key)); router.refresh(); }} />

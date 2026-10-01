@@ -36,7 +36,7 @@ export async function Footer() {
     <footer className="mt-auto border-t border-line-soft bg-canvas text-ink">
       <div className="container-x grid gap-12 pb-12 pt-16 lg:grid-cols-12 lg:pt-20">
         <div className="lg:col-span-4">
-          <Logo storeName={storeName} />
+          <Logo storeName={storeName} logoUrl={settings?.logoUrl} />
           <p className="mt-4 max-w-xs text-meta text-ink-soft">{footerCopy.newsletterTitle}</p>
           <NewsletterForm />
         </div>

@@ -112,6 +112,19 @@ Home config zod schemas: `HomeSectionConfig` in `content/schema.ts` (admin edito
 
 Session helpers: `getSession()`, `requireUser()` in `_core/auth.ts`.
 
+### invoices (`invoices/service.ts`, `invoices/access.ts`; migration `0021_invoices.sql`)
+
+GST tax invoice per order, issued automatically: prepaid when the payment is captured (verify callback or webhook, idempotent), zero-total at placement, COD at dispatch (packed/shipped, GST s.31). Number `WVY/<FY>/<6-digit seq>`, gap-free per Indian financial year (April rollover, IST), allocated by `issue_invoice()` in the DB. The snapshot (seller, buyer, place of supply, lines with HSN, CGST+SGST or IGST, totals, amount in words, payment) is frozen at issue; tax is the order's own `tax_total` allocated across lines, never re-priced. Credit notes / re-issue: not built.
+
+| Function | Returns |
+|---|---|
+| `ensureInvoice(orderId)` | invoice row; issues it if the order qualifies, else `409 invoice_not_ready` |
+| `invoiceIfReady(orderId)` | `Invoice \| null` (never throws; issues if eligible) |
+| `getInvoicePdf(orderId)` | `{ pdf: Buffer, number, filename }` (stored PDF, rendered on first use). Email-ready |
+| `regenerateInvoicePdf(orderId)` | `{ number }` re-render from the frozen snapshot |
+| `bulkInvoicesPdf({orderIds} \| {from, to})` | `{ pdf, count, skipped }` one invoice per page, max 200 |
+| `guestInvoiceOffer(number, trackingToken)` | success page, signed out: `{state: "ready", invoice, href}` (href signed, 30 min) \| `{state: "pending_payment" \| "on_dispatch"}` \| `null` |
+
 ## HTTP routes
 
 | Method | Path | Request | Response `data` |
@@ -131,6 +144,7 @@ Session helpers: `getSession()`, `requireUser()` in `_core/auth.ts`.
 | POST | `/api/payments/failure` | `{ attemptId, stage?, code?, reason?, description?, razorpayPaymentId? }` | `{ result }` |
 | POST | `/api/webhooks/razorpay` | raw Razorpay body; headers `X-Razorpay-Signature`, `X-Razorpay-Event-Id` | `{ duplicate, status }` |
 | GET | `/api/orders/track?token=` | | `OrderTracking` (404 when unknown) |
+| GET | `/api/orders/:number/invoice` (owner, or guest `?t=`) | `t` = signed link from the success page (expires after 30 min) | `application/pdf`; `401` signed out without `t`, `404` not yours, `403 invoice_link_expired`, `409 invoice_not_ready` |
 | POST | `/api/orders/:number/cancel` (auth) | `{ reason? }` | `{ status, refundRequired, refundableAmount }` |
 | GET / POST | `/api/returns` (auth) | POST `{ orderNumber, reason: ReturnReason, resolution?=refund\|exchange\|store_credit, customerNote?, items: [{orderItemId, quantity, reason?}] }` | `ReturnRequest[]` / `201 ReturnRequest` |
 | GET / POST | `/api/account/addresses` (auth) | POST `Address` fields (+ `isDefault?`, `label?`) | `Address[]` / `201 Address` |
@@ -151,7 +165,7 @@ Session helpers: `getSession()`, `requireUser()` in `_core/auth.ts`.
 
 ## Environment
 
-`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (reads), `SUPABASE_SERVICE_ROLE_KEY` (pricing, checkout, payments, webhooks, guest order view), `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `SHIPROCKET_API_EMAIL`, `SHIPROCKET_API_PASSWORD`, `SHIPROCKET_PICKUP_POSTCODE`, `NEXT_PUBLIC_SITE_URL`.
+`INVOICE_LINK_SECRET` (optional; HMAC key for guest invoice links, else derived from the service-role key), `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (reads), `SUPABASE_SERVICE_ROLE_KEY` (pricing, checkout, payments, webhooks, guest order view), `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `SHIPROCKET_API_EMAIL`, `SHIPROCKET_API_PASSWORD`, `SHIPROCKET_PICKUP_POSTCODE`, `NEXT_PUBLIC_SITE_URL`.
 
 ## Not built
 

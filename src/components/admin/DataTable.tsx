@@ -2,7 +2,7 @@
 
 import { clsx } from "clsx";
 import { ArrowDown, ArrowUp, ArrowUpDown, Search } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { Fragment, useMemo, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState, Skeleton } from "@/components/ui/States";
 import { adminCopy } from "@/data/copy";
@@ -14,7 +14,11 @@ export interface Column<T> {
   sort?: (row: T) => string | number; align?: "right"; className?: string;
 }
 export interface FilterDef<T> { key: string; label: string; options: { value: string; label: string }[]; match: (row: T, value: string) => boolean }
-export interface BulkAction { label: string; onClick: (ids: string[]) => void; danger?: boolean }
+/** `render` (optional) replaces the button, e.g. a confirm dialog; call `clear` once it has finished. */
+export interface BulkAction {
+  label: string; onClick?: (ids: string[]) => void; danger?: boolean;
+  render?: (ids: string[], clear: () => void) => ReactNode;
+}
 
 interface Props<T> {
   caption: string; rows: T[]; columns: Column<T>[]; getId: (row: T) => string;
@@ -98,11 +102,11 @@ export function DataTable<T>({
       </div>
 
       {selectable && selected.size > 0 && (
-        <div className="flex flex-wrap items-center gap-2 border-b border-line bg-surface-warm px-4 py-2" role="region" aria-label={c.bulkActions}>
+        <div className="sticky top-16 z-20 flex flex-wrap items-center gap-2 border-b border-line bg-surface-warm px-4 py-2" role="region" aria-label={c.bulkActions}>
           <span className="text-meta font-medium">{c.selected(selected.size)}</span>
-          {bulkActions!.map((a) => (
+          {bulkActions!.map((a) => a.render ? <Fragment key={a.label}>{a.render([...selected], () => setSelected(new Set()))}</Fragment> : (
             <Button key={a.label} size="sm" variant={a.danger ? "secondary" : "primary"} className={clsx(a.danger && "border-danger text-danger hover:bg-danger")}
-              onClick={() => { a.onClick([...selected]); setSelected(new Set()); }}>{a.label}</Button>
+              onClick={() => { a.onClick?.([...selected]); setSelected(new Set()); }}>{a.label}</Button>
           ))}
           <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>{c.clear}</Button>
         </div>

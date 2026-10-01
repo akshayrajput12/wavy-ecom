@@ -5,6 +5,7 @@ import { ChevronRight, ExternalLink, Lock, Menu, PanelLeftClose, PanelLeftOpen }
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
+import { BrandImage } from "@/components/layout/Logo";
 import { Drawer } from "@/components/ui/Drawer";
 import { EmptyState } from "@/components/ui/States";
 import { adminCopy as c } from "@/data/copy";
@@ -23,11 +24,14 @@ const navScroll = "min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-c
  * to an icon rail (persisted). <lg: top bar + off-canvas Drawer (native dialog: Esc, focus trap, scroll lock).
  * `me` = current staff session (null when Supabase is not configured; the UI then assumes super_admin, the server still enforces).
  */
-export function AdminShell({ me, children }: { me: StaffSession | null; children: ReactNode }) {
-  return <RoleProvider role={me?.role ?? "super_admin"}><Shell me={me}>{children}</Shell></RoleProvider>;
+export function AdminShell({ me, brand, children }: { me: StaffSession | null; brand?: ShellBrand; children: ReactNode }) {
+  return <RoleProvider role={me?.role ?? "super_admin"}><Shell me={me} brand={brand ?? { name: c.brand }}>{children}</Shell></RoleProvider>;
 }
 
-function Shell({ me, children }: { me: StaffSession | null; children: ReactNode }) {
+/** Store brand from settings (logo; favicon for the collapsed rail). Falls back to the copy wordmark. */
+export interface ShellBrand { name: string; logoUrl?: string; iconUrl?: string }
+
+function Shell({ me, brand, children }: { me: StaffSession | null; brand: ShellBrand; children: ReactNode }) {
   const pathname = usePathname();
   const { role, allowPreview } = useRole();
   const [open, setOpen] = useState(false);
@@ -52,7 +56,7 @@ function Shell({ me, children }: { me: StaffSession | null; children: ReactNode 
     <div className="flex min-h-dvh bg-canvas">
       <aside id="admin-sidebar" className={clsx("sticky top-0 hidden h-dvh shrink-0 flex-col border-r border-line bg-surface lg:flex transition-[width] duration-(--dur-base) ease-soft motion-reduce:transition-none", rail ? "w-20" : "w-64")}>
         <div className={clsx("flex h-16 shrink-0 items-center border-b border-line", rail ? "justify-center" : "px-5")}>
-          <Brand compact={rail} />
+          <Brand brand={brand} compact={rail} />
         </div>
         <AdminNav role={role} currentHref={current?.href} rail={rail} className={navScroll} />
         <div className={clsx("flex shrink-0 items-center gap-2 border-t border-line p-3", rail && "flex-col")}>
@@ -65,7 +69,7 @@ function Shell({ me, children }: { me: StaffSession | null; children: ReactNode 
         </div>
       </aside>
 
-      <Drawer open={open} onClose={() => setOpen(false)} side="left" title={<Brand />}
+      <Drawer open={open} onClose={() => setOpen(false)} side="left" title={<Brand brand={brand} />}
         footer={<div className="grid gap-3"><UserCard name={name} role={role} />{allowPreview && <RolePreview role={role} />}</div>}>
         <div id={DRAWER_NAV_ID} className="-mx-2">
           <AdminNav role={role} currentHref={current?.href} onNavigate={() => setOpen(false)} />
@@ -106,10 +110,13 @@ function Shell({ me, children }: { me: StaffSession | null; children: ReactNode 
   );
 }
 
-function Brand({ compact }: { compact?: boolean }) {
+function Brand({ brand, compact }: { brand: ShellBrand; compact?: boolean }) {
+  const src = compact ? brand.iconUrl : brand.logoUrl;
   return (
     <Link href="/admin/dashboard" className="flex min-h-11 min-w-0 items-center gap-2 rounded-pill">
-      <span className="font-display text-h2 leading-none font-semibold tracking-tight text-ink">{compact ? c.brand.charAt(0) : c.brand}</span>
+      {src ? <BrandImage src={src} alt={brand.name} className={compact ? "size-9 rounded-sm" : "h-7"} /> : (
+        <span className="font-display text-h2 leading-none font-semibold tracking-tight text-ink">{compact ? brand.name.charAt(0) : brand.name}</span>
+      )}
       {!compact && <span className="t-overline rounded-pill bg-accent-soft px-2 py-0.5 text-accent-deep">{c.brandTag}</span>}
       {compact && <span className="sr-only">{c.brandTag}</span>}
     </Link>

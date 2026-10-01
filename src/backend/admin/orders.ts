@@ -1,6 +1,7 @@
 import "server-only";
 import type { z } from "zod";
 import { ApiError } from "@/backend/_core/http";
+import { issueInvoiceIfEligible } from "@/backend/invoices/service";
 import type { AdminOrderDetail, AdminOrderRow, Paginated } from "@/types/admin";
 import type { Tables } from "@/types/database";
 import type { OrderStatus } from "@/types/domain";
@@ -101,6 +102,7 @@ export async function setOrderStatus(actor: Actor, number: string, status: Order
     if (last) exec(await db().from("order_status_history").update({ note, actor_type: "staff", actor_id: actor.userId }).eq("id", last.id));
   }
   await audit(actor, "order.status", "orders", o.id, { status: o.status }, { status, note: note ?? null });
+  await issueInvoiceIfEligible(o.id, "admin.status"); // COD invoices are issued at dispatch (packed/shipped)
   return { order: await loadOrder(number) };
 }
 

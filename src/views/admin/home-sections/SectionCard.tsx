@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowDown, ArrowUp } from "lucide-react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -23,10 +23,13 @@ export const SECTION_LABEL: Record<HomeSectionType, string> = {
 };
 const icon = "grid size-11 place-items-center rounded-pill text-ink-soft hover:bg-surface-warm disabled:opacity-30";
 
-/** One home section: type-specific form, its own Save, inline preview. `section` null = a new, unsaved section of `type`. */
-export function SectionCard({ section, type, lookups, onMove, onDone }: {
+/**
+ * One home section: type-specific form, its own Save, inline preview. `section` null = a new, unsaved section of `type`.
+ * `select` is the bulk-selection checkbox slot.
+ */
+export function SectionCard({ section, type, lookups, onMove, onDone, select }: {
   section: AdminHomeSection | null; type: HomeSectionType; lookups: Lookups;
-  onMove?: (dir: -1 | 1) => void; onDone: () => void;
+  onMove?: (dir: -1 | 1) => void; onDone: () => void; select?: ReactNode;
 }) {
   const [files] = useState(() => new Map<string, File>());
   const initial = {
@@ -70,6 +73,7 @@ export function SectionCard({ section, type, lookups, onMove, onDone }: {
   return (
     <section className="min-w-0 rounded-lg border border-line bg-surface p-4 sm:p-5" aria-label={SECTION_LABEL[type]}>
       <div className="mb-4 flex flex-wrap items-center gap-2">
+        {select}
         <h2 className="mr-auto min-w-0 text-body-lg font-semibold break-words">{form.title || SECTION_LABEL[type]}</h2>
         <Badge tone="neutral">{SECTION_LABEL[type]}</Badge>
         {!section ? <Badge tone="warning" dot>New, not saved</Badge> : dirty ? <Badge tone="warning" dot>Unsaved changes</Badge> : <Badge tone={form.isActive ? "success" : "neutral"} dot>{form.isActive ? "Active" : "Inactive"}</Badge>}

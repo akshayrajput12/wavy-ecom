@@ -13,6 +13,7 @@ sneakers, built on Next.js 16, Supabase and Vercel. Read `docs/CONVENTIONS.md` f
 | [06_PRICING_TAX_OFFERS.md](06_PRICING_TAX_OFFERS.md) | Pure `pricing.quote()`: line prices → bundle offers with nudges → one coupon → shipping → GST (inclusive/exclusive, slabs) → paise rounding, with three worked examples. |
 | [07_SECURITY_RBAC.md](07_SECURITY_RBAC.md) | Auth flows (customer, staff invite with TOTP), 7-role permission matrix, four enforcement layers, secrets, webhook verification, OWASP checklist, PCI SAQ-A, DPDP. |
 | [08_ADMIN_MODULES.md](08_ADMIN_MODULES.md) | Admin information architecture: routes, permissions, content and backing tables per module, the SEO manager (overrides, JSON-LD, sitemap, robots, redirects), shared admin patterns. |
+| [PERFORMANCE.md](PERFORMANCE.md) | Public read-path audit: listing sort indexes (0023), rate limiting in `route()`, Cache-Control policy, image config, payload trims, before/after numbers, and the scaling path. |
 | [../design/DESIGN_SYSTEM.md](../design/DESIGN_SYSTEM.md) | The token system as implemented (colour, fluid type, Instrument Serif + Sans), spacing, motion, component states, accessibility, how to change typography globally. |
 | [../design/SCREENS.md](../design/SCREENS.md) | Maps each Stitch screen to its route and view folder, with section order and deviations to apply. |
 

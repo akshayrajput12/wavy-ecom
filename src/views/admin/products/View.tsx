@@ -14,6 +14,7 @@ import type { AdminProduct, AdminProductRow, Paginated } from "@/types/admin";
 import type { ProductStatus } from "@/types/domain";
 import type { ProductListQuery } from "@/backend/admin/schemas/catalog";
 import { adminApi, mutate } from "../api";
+import { BulkBar, RemoveButton, useCanRemove } from "../_kit/Remove";
 import { Filters, listHref } from "./Filters";
 
 type Opt = { id: string; name: string; depth?: number };
@@ -26,6 +27,7 @@ export function ProductsView({ data, query, categories, collections }: { data: P
   const router = useRouter();
   const canWrite = useCan("catalog.write");
   const canPublish = useCan("catalog.publish");
+  const canDelete = useCanRemove("products");
   const [picked, setPicked] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const pages = Math.max(1, Math.ceil(data.total / data.pageSize));
@@ -47,14 +49,15 @@ export function ProductsView({ data, query, categories, collections }: { data: P
       <PageHeader title="Products" description="Catalog items, variants and publish state."
         actions={canWrite && <ButtonLink href="/admin/products/new" size="sm">New product</ButtonLink>} />
       <Filters query={query} categories={categories} collections={collections} />
-      {picked.length > 0 && canPublish && (
-        <div role="region" aria-label="Bulk actions" className="mb-3 flex flex-wrap items-center gap-2 rounded-md bg-surface-warm p-3">
-          <span className="text-meta font-medium">{picked.length} selected</span>
-          <Button size="sm" variant="secondary" disabled={busy} onClick={() => bulk("published")}>Publish</Button>
-          <Button size="sm" variant="secondary" disabled={busy} onClick={() => bulk("unpublished")}>Unpublish</Button>
-          <Button size="sm" variant="secondary" disabled={busy} onClick={() => bulk("archived")}>Archive</Button>
-          <Button size="sm" variant="ghost" onClick={() => setPicked([])}>Clear</Button>
-        </div>
+      {(canPublish || canDelete) && (
+        <BulkBar count={picked.length} onClear={() => setPicked([])}>
+          {canPublish && <>
+            <Button size="sm" variant="secondary" disabled={busy} onClick={() => bulk("published")}>Publish</Button>
+            <Button size="sm" variant="secondary" disabled={busy} onClick={() => bulk("unpublished")}>Unpublish</Button>
+            <Button size="sm" variant="secondary" disabled={busy} onClick={() => bulk("archived")}>Archive</Button>
+          </>}
+          <RemoveButton noun="products" ids={picked} onDone={() => setPicked([])} />
+        </BulkBar>
       )}
       <div className="relative overflow-x-auto overscroll-x-contain rounded-lg border border-line bg-surface">
         <table className="w-full min-w-[52rem] text-left text-body">
@@ -85,6 +88,7 @@ export function ProductsView({ data, query, categories, collections }: { data: P
                 <td className="p-3 text-right whitespace-nowrap">
                   <Link href={`/admin/products/${p.slug}/edit`} className="inline-grid min-h-11 place-items-center px-2 text-meta underline underline-offset-4">Edit</Link>
                   {canWrite && <button type="button" onClick={() => duplicate(p.slug)} className="min-h-11 px-2 text-meta underline underline-offset-4">Duplicate</button>}
+                  <span className="inline-block align-middle"><RemoveButton compact noun="products" ids={[p.id]} name={p.name} /></span>
                 </td>
               </tr>
             ))}

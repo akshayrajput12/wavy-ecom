@@ -3129,6 +3129,8 @@ export type Database = {
           tax_percentage: number;
           tax_inclusive: boolean;
           gst_number: string | null;
+          legal_name: string | null;
+          registered_address: string | null;
           free_shipping_threshold: number | null;
           flat_shipping_fee: number;
           cod_enabled: boolean;
@@ -3139,6 +3141,9 @@ export type Database = {
           low_stock_default: number;
           support_email: string | null;
           support_phone: string | null;
+          logo_url: string | null;
+          logo_dark_url: string | null;
+          favicon_url: string | null;
           updated_by: string | null;
           updated_at: string;
         };
@@ -3151,6 +3156,8 @@ export type Database = {
           tax_percentage?: number;
           tax_inclusive?: boolean;
           gst_number?: string | null;
+          legal_name?: string | null;
+          registered_address?: string | null;
           free_shipping_threshold?: number | null;
           flat_shipping_fee?: number;
           cod_enabled?: boolean;
@@ -3161,6 +3168,9 @@ export type Database = {
           low_stock_default?: number;
           support_email?: string | null;
           support_phone?: string | null;
+          logo_url?: string | null;
+          logo_dark_url?: string | null;
+          favicon_url?: string | null;
           updated_by?: string | null;
           updated_at?: string;
         };
@@ -3173,6 +3183,8 @@ export type Database = {
           tax_percentage?: number;
           tax_inclusive?: boolean;
           gst_number?: string | null;
+          legal_name?: string | null;
+          registered_address?: string | null;
           free_shipping_threshold?: number | null;
           flat_shipping_fee?: number;
           cod_enabled?: boolean;
@@ -3183,6 +3195,9 @@ export type Database = {
           low_stock_default?: number;
           support_email?: string | null;
           support_phone?: string | null;
+          logo_url?: string | null;
+          logo_dark_url?: string | null;
+          favicon_url?: string | null;
           updated_by?: string | null;
           updated_at?: string;
         };

@@ -10,6 +10,9 @@ import { EmptyState } from "@/components/ui/States";
 import { PageHeader, Panel } from "@/components/admin/Panel";
 import type { AdminCategory } from "@/types/admin";
 import { mutate } from "../api";
+import { BulkBar, RemoveButton, SelectBox, useCanRemove, useSelection } from "../_kit/Remove";
+
+type Sel = ReturnType<typeof useSelection> | null;
 
 /** Swap `id` with its previous/next sibling anywhere in the tree. Returns the new tree and the affected sibling list. */
 function moveIn(nodes: AdminCategory[], id: string, dir: -1 | 1): { nodes: AdminCategory[]; siblings?: AdminCategory[] } {
@@ -30,10 +33,11 @@ function moveIn(nodes: AdminCategory[], id: string, dir: -1 | 1): { nodes: Admin
   return { nodes: out, siblings };
 }
 
-function Rows({ nodes, depth, onMove }: { nodes: AdminCategory[]; depth: number; onMove: (id: string, dir: -1 | 1) => void }) {
+function Rows({ nodes, depth, onMove, sel }: { nodes: AdminCategory[]; depth: number; onMove: (id: string, dir: -1 | 1) => void; sel: Sel }) {
   return nodes.map((c, i) => (
     <li key={c.id}>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line py-3" style={{ paddingLeft: `${depth * 24}px` }}>
+        {sel && <SelectBox checked={sel.has(c.id)} onChange={() => sel.toggle(c.id)} label={c.name} />}
         <div className="relative size-12 shrink-0 overflow-hidden rounded-sm bg-surface-warm">
           {c.imageUrl && <Image src={c.imageUrl} alt={c.imageAlt ?? c.name} fill sizes="48px" className="object-cover" />}
         </div>
@@ -47,14 +51,19 @@ function Rows({ nodes, depth, onMove }: { nodes: AdminCategory[]; depth: number;
         </div>
         <button type="button" className="grid size-11 place-items-center rounded-pill hover:bg-surface-warm disabled:opacity-30" disabled={i === 0} onClick={() => onMove(c.id, -1)} aria-label={`Move ${c.name} up`}><ArrowUp className="size-4" aria-hidden /></button>
         <button type="button" className="grid size-11 place-items-center rounded-pill hover:bg-surface-warm disabled:opacity-30" disabled={i === nodes.length - 1} onClick={() => onMove(c.id, 1)} aria-label={`Move ${c.name} down`}><ArrowDown className="size-4" aria-hidden /></button>
+        <RemoveButton compact noun="categories" ids={[c.id]} name={c.name} />
       </div>
-      {c.children.length > 0 && <ul><Rows nodes={c.children} depth={depth + 1} onMove={onMove} /></ul>}
+      {c.children.length > 0 && <ul><Rows nodes={c.children} depth={depth + 1} onMove={onMove} sel={sel} /></ul>}
     </li>
   ));
 }
 
 export function CategoriesView({ categories }: { categories: AdminCategory[] }) {
   const [tree, setTree] = useState(categories);
+  const [seen, setSeen] = useState(categories);
+  if (categories !== seen) { setSeen(categories); setTree(categories); } // server data refreshed after a delete
+  const selection = useSelection();
+  const sel = useCanRemove("categories") ? selection : null;
 
   const onMove = async (id: string, dir: -1 | 1) => {
     const before = tree;
@@ -69,8 +78,9 @@ export function CategoriesView({ categories }: { categories: AdminCategory[] }) 
   return (
     <>
       <PageHeader title="Categories" description="Order and nest the shop's categories. Reordering saves immediately." actions={<ButtonLink href="/admin/categories/new" size="sm">New category</ButtonLink>} />
+      {sel && <BulkBar count={sel.ids.length} onClear={sel.clear}><RemoveButton noun="categories" ids={sel.ids} onDone={sel.clear} /></BulkBar>}
       <Panel>
-        {tree.length === 0 ? <EmptyState title="No categories yet" action={<ButtonLink href="/admin/categories/new" size="sm">Create one</ButtonLink>} /> : <ul><Rows nodes={tree} depth={0} onMove={onMove} /></ul>}
+        {tree.length === 0 ? <EmptyState title="No categories yet" action={<ButtonLink href="/admin/categories/new" size="sm">Create one</ButtonLink>} /> : <ul><Rows nodes={tree} depth={0} onMove={onMove} sel={sel} /></ul>}
       </Panel>
     </>
   );

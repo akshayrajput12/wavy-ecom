@@ -37,6 +37,10 @@ export const homeCopy = {
   },
   railPrev: "Previous products",
   railNext: "Next products",
+  railPause: "Pause carousel",
+  railPlay: "Play carousel",
+  categoryPrev: "Previous categories",
+  categoryNext: "Next categories",
   testimonialsChip: "Testimonials",
   quotes: "Customer reviews",
   faq: { overline: "FAQs", title: "Questions, answered.", body: "The things shoppers ask us most.", all: "All questions" },
@@ -137,4 +141,9 @@ export const tearRevealCopy = {
   tiger: (word: string, tagline?: string) => `${tagline ? `${tagline}. ` : ""}${word}, a poster torn in two by a tiger looking through.`,
   notFoundWord: "404",
   image: (word: string, tagline?: string) => `${tagline ? `${tagline}. ` : ""}${word}, a poster tearing open onto a campaign photo.`,
+} as const;
+
+/** Storefront preloader (first visit per session). The cover itself is aria-hidden; this is its sr-only status. */
+export const preloaderCopy = {
+  status: (store: string) => `Loading ${store}`,
 } as const;

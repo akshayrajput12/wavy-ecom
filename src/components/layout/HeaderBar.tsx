@@ -14,7 +14,9 @@ import { MobileMenu } from "./MobileMenu";
 import { SearchBox } from "./SearchBox";
 import { useHeaderScroll } from "./useHeaderScroll";
 
-export interface HeaderProps { storeName: string; categories: NavLink[]; collections: NavLink[]; isStaff?: boolean }
+export interface HeaderProps {
+  storeName: string; logoUrl?: string; logoDarkUrl?: string; categories: NavLink[]; collections: NavLink[]; isStaff?: boolean;
+}
 
 const EASE_SOFT = [0.32, 0.72, 0, 1] as const; // mirrors --ease-soft
 
@@ -22,7 +24,7 @@ const EASE_SOFT = [0.32, 0.72, 0, 1] as const; // mirrors --ease-soft
  * Floating pill nav, fixed and out of flow (pages offset themselves by --header-h, see StoreMain; home's
  * hero sits underneath). Turns dark-glass while a `.on-dark` stage is beneath it. The logo is not an h1.
  */
-export function HeaderBar({ storeName, categories, collections, isStaff }: HeaderProps) {
+export function HeaderBar({ storeName, logoUrl, logoDarkUrl, categories, collections, isStaff }: HeaderProps) {
   const pathname = usePathname();
   const pill = useRef<HTMLDivElement>(null);
   // SSR guess (home opens on its dark hero) until the first scroll probe measures it
@@ -49,7 +51,7 @@ export function HeaderBar({ storeName, categories, collections, isStaff }: Heade
               dark ? "on-dark bg-black/40" : "bg-surface/80 text-ink",
             )}
           >
-            <div className="flex min-w-0 flex-1"><Logo storeName={storeName} /></div>
+            <div className="flex min-w-0 flex-1"><Logo storeName={storeName} logoUrl={logoUrl} logoDarkUrl={logoDarkUrl} dark={dark} /></div>
             <MegaMenu categories={categories} collections={collections} pathname={pathname} />
             <HeaderActions isStaff={isStaff} onSearch={() => setSearch(true)} onMenu={() => setMenu(true)} menuOpen={menu} />
           </div>

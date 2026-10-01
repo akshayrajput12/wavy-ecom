@@ -7,5 +7,12 @@ export const formatPrice = (paise: number) => inr.format(paise / 100);
 const dt = new Intl.DateTimeFormat(site.locale, { day: "numeric", month: "short", year: "numeric" });
 export const formatDate = (d: string | Date) => dt.format(new Date(d));
 
+/** Invoices: paise as rupees with 2 decimals and lakh grouping, no symbol (headers say INR). */
+const amt = new Intl.NumberFormat(site.locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+export const formatAmount = (paise: number) => amt.format(paise / 100);
+/** Legal dates (invoices) are IST whatever the server timezone is. */
+const istDate = new Intl.DateTimeFormat(site.locale, { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" });
+export const formatDateIST = (d: string | Date) => istDate.format(new Date(d));
+
 export const slugify = (s: string) =>
   s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");

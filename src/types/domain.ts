@@ -176,6 +176,26 @@ export interface PaymentOption {
   provider: PaymentProvider; displayName: string; description?: string;
   supportedMethods: string[]; minAmount?: number; maxAmount?: number;
 }
+// ---------- GST invoice (invoices.snapshot, frozen at issue; money in paise) ----------
+export interface InvoiceParty {
+  name: string; lines: string[]; state?: string; stateCode?: string; gstin?: string; email?: string; phone?: string;
+}
+export interface InvoiceLine {
+  kind: "item" | "shipping" | "cod_fee"; description: string; detail?: string; hsn?: string;
+  quantity: number; unitPrice: number; discount: number; taxable: number; cgst: number; sgst: number; igst: number; total: number;
+}
+export interface InvoiceTotals {
+  discount: number; taxable: number; cgst: number; sgst: number; igst: number; tax: number; roundOff: number; total: number;
+}
+export interface Invoice {
+  number: string; issuedAt: string; orderNumber: string; orderDate: string; currency: string;
+  seller: InvoiceParty & { storeName: string; logoUrl?: string; supportEmail?: string; supportPhone?: string };
+  billTo: InvoiceParty; shipTo: InvoiceParty;
+  placeOfSupply: { state: string; code?: string };
+  interState: boolean; taxRate: number; taxInclusive: boolean;
+  lines: InvoiceLine[]; totals: InvoiceTotals; amountInWords: string;
+  payment: { provider: PaymentProvider; status: "paid" | "cod" | "none"; method?: string; reference?: string; paidAt?: string };
+}
 export interface ReturnRequest {
   id: string; rmaNumber: string; orderId: string; status: ReturnStatus; reason: ReturnReason;
   customerNote?: string; refundAmount?: number; createdAt: string;
@@ -201,6 +221,8 @@ export interface StoreSettings {
   storeName: string; currency: string; locale: string; supportEmail?: string; supportPhone?: string;
   freeShippingThreshold?: number; flatShippingFee: number; codEnabled: boolean; codFee: number;
   codMaxOrderAmount?: number; returnWindowDays: number; taxPercentage: number; taxInclusive: boolean;
+  /** Brand assets (0024). logoDarkUrl is the light variant for dark stages. */
+  logoUrl?: string; logoDarkUrl?: string; faviconUrl?: string;
 }
 export interface NavLink { label: string; href: string; children?: NavLink[] }
 

@@ -5,6 +5,7 @@ import { dbError } from "@/backend/_core/db";
 import type { Json } from "@/types/database";
 import { type Actor, assertCan, audit, db, exec, maybe, must, notFound, revalidate, userDb } from "./_shared";
 import { loadProduct, slugTaken } from "./products";
+import { removeMany } from "./remove";
 import { ProductUpsertSchema, toProductInput, type ProductUpsert } from "./schemas/catalog";
 import { computePriceFrom } from "./schemas/rules";
 
@@ -100,13 +101,10 @@ export async function removeProduct(actor: Actor, slug: string, mode: "archive" 
     assertCan(actor, "catalog.publish");
     exec(await c.from("products").update({ status: "archived" }).eq("id", p.id));
   } else {
-    const sold = must(await c.from("order_items").select("id").eq("product_id", p.id).limit(1));
-    if (sold.length) throw new ApiError(409, "product_has_orders", "This product has orders; archive it instead");
-    exec(await c.from("products").delete().eq("id", p.id));
-    const paths = p.media.map((m) => m.storagePath).filter((x): x is string => !!x);
-    if (paths.length) await c.storage.from("product-media").remove(paths);
+    // Same rules as the bulk delete: a product with orders or discount rules is archived instead.
+    return { id: p.id, mode, ...(await removeMany(actor, "products", [p.id])) };
   }
-  await audit(actor, `product.${mode}`, "products", p.id, p, mode === "archive" ? { ...p, status: "archived" } : null);
+  await audit(actor, "product.archive", "products", p.id, p, { ...p, status: "archived" });
   revalidate("catalog", "home");
   return { id: p.id, mode };
 }

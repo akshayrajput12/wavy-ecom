@@ -1,6 +1,7 @@
 import "server-only";
 import { must, serviceDb } from "@/backend/_core/db";
 import { ApiError } from "@/backend/_core/http";
+import { issueInvoiceIfEligible } from "@/backend/invoices/service";
 import { getStoreSettings } from "@/backend/settings/repo";
 import { logger } from "@/lib/logger";
 import type { Json } from "@/types/database";
@@ -87,6 +88,8 @@ async function markCaptured(orderId: string, attemptId: string, p: RazorpayPayme
   const clog = log.child({ orderId, attemptId, source });
   if (res.refundRequired) clog.warn("payment.refund_required", { result: res.result, paymentId: p.id });
   else clog.info("payment.captured", { result: res.result, amount: p.amount });
+  // GST invoice at capture; idempotent, so webhook + callback racing each other still yield one invoice
+  if (res.result === "captured" || res.result === "already_captured") await issueInvoiceIfEligible(orderId, source, clog);
   return res;
 }
 

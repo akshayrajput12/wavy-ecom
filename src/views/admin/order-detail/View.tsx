@@ -4,6 +4,7 @@ import { StatusBadge } from "@/components/ui/Badge";
 import { formatPrice } from "@/lib/format";
 import type { AdminOrderDetail } from "@/types/admin";
 import { fmtDateTime } from "../orders/components/fmt";
+import { InvoicePanel } from "./components/InvoicePanel";
 import { Items } from "./components/Items";
 import { Notes, StatusHistory } from "./components/Notes";
 import { PaymentTimeline } from "./components/PaymentTimeline";
@@ -17,7 +18,7 @@ function addressLines(a: unknown): string[] {
   return ["name", "line1", "line2", "landmark", "city", "state", "postalCode", "postal_code", "phone"].map((k) => r[k]).filter((v): v is string => typeof v === "string" && !!v);
 }
 
-export function OrderDetailView({ order }: { order: AdminOrderDetail }) {
+export function OrderDetailView({ order, invoice }: { order: AdminOrderDetail; invoice: { number: string; issuedAt: string } | null }) {
   return (
     <>
       <PageHeader title={`Order ${order.orderNumber}`} description={`Placed ${fmtDateTime(order.placedAt)} · ${formatPrice(order.total)}`}
@@ -37,6 +38,7 @@ export function OrderDetailView({ order }: { order: AdminOrderDetail }) {
         </div>
         <div className="flex min-w-0 flex-col gap-6">
           <StatusPanel order={order} />
+          <InvoicePanel orderNumber={order.orderNumber} invoice={invoice} />
           <Panel title="Customer">
             <DefinitionList items={[
               { label: "Name", value: order.customerName }, { label: "Email", value: order.email }, { label: "Phone", value: order.phone },

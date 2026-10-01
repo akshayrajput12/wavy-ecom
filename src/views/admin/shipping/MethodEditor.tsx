@@ -5,12 +5,13 @@ import { Select } from "@/components/admin/Fields";
 import { PageHeader, Panel } from "@/components/admin/Panel";
 import { ShippingMethodSchema } from "@/backend/admin/schemas/settings";
 import type { AdminShippingMethod, AdminShippingZone } from "@/types/admin";
-import { BackLink, DeleteButton, EditorForm } from "../_kit/Chrome";
+import { BackLink, EditorForm } from "../_kit/Chrome";
+import { RemoveButton } from "../_kit/Remove";
 import { useEditor } from "../_kit/useEditor";
 import { paise, rupees } from "./money";
 
 export function MethodEditorView({ method, zones, zoneId }: { method: AdminShippingMethod | null; zones: AdminShippingZone[]; zoneId?: string }) {
-  const { v, set, errors, busy, save, remove } = useEditor({
+  const { v, set, errors, busy, save } = useEditor({
     zoneId: method?.zoneId ?? zoneId ?? zones[0]?.id ?? "", code: method?.code ?? "", name: method?.name ?? "", description: method?.description ?? "",
     rate: rupees(method?.rate ?? 0), freeAbove: method?.freeAbove == null ? "" : rupees(method.freeAbove), codAvailable: method?.codAvailable ?? true,
     minDays: String(method?.minDays ?? 3), maxDays: String(method?.maxDays ?? 7), isActive: method?.isActive ?? true, sortOrder: String(method?.sortOrder ?? 0),
@@ -27,7 +28,7 @@ export function MethodEditorView({ method, zones, zoneId }: { method: AdminShipp
       <BackLink href="/admin/shipping">Shipping</BackLink>
       <PageHeader title={method ? "Edit method" : "New method"} />
       <EditorForm onSave={submit} busy={busy} back="/admin/shipping"
-        danger={method && <DeleteButton busy={busy} onConfirm={() => void remove(`shipping-methods/${method.id}`, "Method deleted")} />}>
+        danger={method && <RemoveButton noun="shipping-methods" ids={[method.id]} name={method.name} back="/admin/shipping" />}>
         <Panel>
           <div className="grid gap-4 sm:grid-cols-2">
             <Select label="Zone" value={v.zoneId} error={errors.zoneId} onChange={(e) => set("zoneId", e.target.value)}>

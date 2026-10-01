@@ -75,16 +75,6 @@ export async function updateCoupon(actor: Actor, id: string, { targets, ...input
   return after;
 }
 
-/** Redeemed coupons cannot be deleted (409 in_use): archive them. */
-export async function deleteCoupon(actor: Actor, id: string) {
-  const before = await loadCoupon(id);
-  if (!before) notFound("Coupon");
-  exec(await db().from("coupons").delete().eq("id", id));
-  await audit(actor, "coupon.delete", "coupons", id, before, null);
-  revalidate("home");
-  return { id };
-}
-
 export async function bulkCouponStatus(actor: Actor, { ids, status }: z.infer<typeof BulkCouponStatusSchema>) {
   const rows = must(await db().from("coupons").update({ status }).in("id", ids).select("id"));
   await audit(actor, "coupon.bulk_status", "coupons", null, null, { ids: rows.map((r) => r.id), status });
@@ -142,13 +132,4 @@ export async function updateOffer(actor: Actor, id: string, { targets, tiers, ..
   await audit(actor, "offer.update", "offers", id, before, after);
   revalidate("catalog", "home");
   return after;
-}
-
-export async function deleteOffer(actor: Actor, id: string) {
-  const before = await loadOffer(id);
-  if (!before) notFound("Offer");
-  exec(await db().from("offers").delete().eq("id", id));
-  await audit(actor, "offer.delete", "offers", id, before, null);
-  revalidate("catalog", "home");
-  return { id };
 }

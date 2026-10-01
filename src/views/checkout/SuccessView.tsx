@@ -1,8 +1,12 @@
-import { Truck } from "lucide-react";
-import { ButtonLink } from "@/components/ui/Button";
-import { cartCopy, checkoutCopy } from "@/data/copy";
+import { FileText, Truck } from "lucide-react";
+import type { GuestInvoiceOffer } from "@/backend/invoices/access";
+import { domKit } from "@/components/invoice/DomKit";
+import { InvoiceDocument } from "@/components/invoice/InvoiceDocument";
+import { ButtonLink, buttonClass } from "@/components/ui/Button";
+import { cartCopy, checkoutCopy, invoiceCopy } from "@/data/copy";
 import { formatDate } from "@/lib/format";
 import type { Order } from "@/types/domain";
+import { GuestInvoice } from "./components/GuestInvoice";
 import { OrderSummary } from "./components/OrderSummary";
 import { SuccessCelebration } from "./components/SuccessCelebration";
 import { co } from "./copy";
@@ -13,9 +17,15 @@ const eta = (placedAt: string, d: { minDays: number; maxDays: number }) => {
   return `${formatDate(new Date(t + d.minDays * DAY))} - ${formatDate(new Date(t + d.maxDays * DAY))}`;
 };
 
-/** Order confirmation. `order` is null when the viewer can't be verified (no token): show the number only. */
-export function SuccessView({ number, order, token, days, signedIn }: {
+export type SuccessInvoice = { state: "owner"; href: string } | GuestInvoiceOffer;
+
+/**
+ * Order confirmation. `order` is null when the viewer can't be verified (no token): show the number only.
+ * `invoice`: owner download link, or the guest's one-time invoice (modal + signed link), or why it isn't ready.
+ */
+export function SuccessView({ number, order, token, days, signedIn, invoice }: {
   number: string; order: Order | null; token?: string; days?: { minDays: number; maxDays: number }; signedIn: boolean;
+  invoice?: SuccessInvoice | null;
 }) {
   const trackToken = order?.trackingToken ?? token;
   const pending = order?.status === "pending_payment";
@@ -46,8 +56,18 @@ export function SuccessView({ number, order, token, days, signedIn }: {
       <div className="flex flex-wrap justify-center gap-3">
         {trackToken && <ButtonLink href={`/track/${trackToken}`} size="lg"><Truck className="size-4" aria-hidden /> {co.success.track}</ButtonLink>}
         {signedIn && <ButtonLink href={`/account/orders/${number}`} size="lg" variant="secondary">{co.success.viewOrder}</ButtonLink>}
+        {invoice?.state === "owner" && (
+          <a href={invoice.href} download className={buttonClass({ size: "lg", variant: "secondary" })}>
+            <FileText className="size-4" aria-hidden /> {invoiceCopy.download}
+          </a>
+        )}
+        {invoice?.state === "ready" && <GuestInvoice href={invoice.href}><InvoiceDocument invoice={invoice.invoice} kit={domKit} /></GuestInvoice>}
         <ButtonLink href="/" size="lg" variant="ghost">{cartCopy.continue}</ButtonLink>
       </div>
+
+      {(invoice?.state === "on_dispatch" || (invoice?.state === "pending_payment" && !pending)) && (
+        <p role="status" className="t-meta text-center">{invoice.state === "on_dispatch" ? invoiceCopy.pendingCod : invoiceCopy.pendingPayment}</p>
+      )}
 
       {!signedIn && (
         <section className="grid justify-items-center gap-3 rounded-lg bg-surface-warm p-6 text-center">

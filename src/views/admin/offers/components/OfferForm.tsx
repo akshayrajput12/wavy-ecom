@@ -12,7 +12,7 @@ import type { AdminOffer, DiscountTarget } from "@/types/admin";
 import { COUPON_STATUS } from "@/types/domain";
 import { mutate } from "../../api";
 import { TargetPicker, type TargetOptions } from "../../coupons/components/TargetPicker";
-import { ConfirmDelete } from "../../orders/components/ConfirmDelete";
+import { RemoveButton } from "../../_kit/Remove";
 import { detailErrors, fieldErrors, fromLocalInput, toLocalInput, toPaise, toRupees } from "../../orders/components/fmt";
 import { FormActions } from "../../orders/components/FormActions";
 
@@ -56,12 +56,6 @@ export function OfferForm({ offer, options }: { offer?: AdminOffer; options: Tar
     setSaving(false);
     if (res.ok) done(); else setErrors(detailErrors(res.details));
   };
-  const remove = async () => {
-    setSaving(true);
-    const res = await mutate("DELETE", `offers/${offer?.id}`, undefined, { success: "Offer deleted" });
-    setSaving(false);
-    if (res.ok) done();
-  };
   const setTier = (i: number, k: "minQty" | "percent", v: string) => setTiers(tiers.map((t, j) => (j === i ? { ...t, [k]: v } : t)));
 
   return (
@@ -102,7 +96,7 @@ export function OfferForm({ offer, options }: { offer?: AdminOffer; options: Tar
       <FormSection title="Targeting" description="Limit the offer to specific products, variants, categories or collections.">
         <div className="sm:col-span-2"><TargetPicker value={targets} onChange={setTargets} options={options} />{errors.targets && <p className="mt-2 text-meta text-danger">⚠ {errors.targets}</p>}</div>
       </FormSection>
-      <FormActions saving={saving} backHref="/admin/offers" extra={offer && <ConfirmDelete busy={saving} onConfirm={() => void remove()} />} />
+      <FormActions saving={saving} backHref="/admin/offers" extra={offer && <RemoveButton noun="offers" ids={[offer.id]} name={offer.name} back="/admin/offers" />} />
     </form>
   );
 }

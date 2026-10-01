@@ -64,6 +64,8 @@ export const HomeSectionPatchSchema = z.object({ config: z.unknown().optional(),
   .refine(windowOk, { path: ["endsAt"], message: "End must be after start" });
 
 export const ReorderSchema = z.object({ ids: z.array(z.uuid()).min(1).max(500) });
+/** DELETE body for every admin bulk delete. */
+export const BulkDeleteSchema = z.object({ ids: z.array(z.uuid()).min(1).max(200) });
 
 // ---------- Blog ----------
 const blogShape = z.object({

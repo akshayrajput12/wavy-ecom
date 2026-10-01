@@ -3,6 +3,7 @@ import type { Session } from "@/backend/_core/auth";
 import { must, serviceDb } from "@/backend/_core/db";
 import { ApiError } from "@/backend/_core/http";
 import { createAddress } from "@/backend/account/repo";
+import { issueInvoiceIfEligible } from "@/backend/invoices/service";
 import { startRazorpayPayment, type ClientContext, type PaymentInstructions } from "@/backend/payments/service";
 import { logger } from "@/lib/logger";
 import type { OrderStatus, PaymentProvider, PaymentStatus } from "@/types/domain";
@@ -55,6 +56,7 @@ export async function placeOrder(input: CheckoutInput, idempotencyKey: string, s
       .catch((e: unknown) => log.warn("checkout.save_address_failed", { reason: e instanceof Error ? e.message : String(e) }));
   }
 
+  if (order.status === "paid") await issueInvoiceIfEligible(order.id, "checkout", log); // zero-total: paid at placement
   if (order.status !== "pending_payment" || order.paymentProvider === "cod") {
     return { order, payment: { provider: "none", orderId: order.id, orderNumber: order.number } };
   }

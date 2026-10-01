@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { requireUser } from "@/backend/_core/auth";
-import { ok, parse, route, searchParamsObject } from "@/backend/_core/http";
+import { ok, parse, PUBLIC_CACHE, route, searchParamsObject } from "@/backend/_core/http";
 import { listProductReviews, submitReview } from "@/backend/reviews/repo";
 import { ReviewListQuery, SubmitReviewSchema } from "@/backend/reviews/schema";
 
@@ -8,7 +8,7 @@ import { ReviewListQuery, SubmitReviewSchema } from "@/backend/reviews/schema";
 export const GET = route("reviews", async ({ req }) => {
   const sp = searchParamsObject(req.nextUrl.searchParams);
   const productId = z.string().uuid().parse(sp.productId);
-  return ok(await listProductReviews(productId, ReviewListQuery.parse(sp)));
+  return ok(await listProductReviews(productId, ReviewListQuery.parse(sp)), { headers: PUBLIC_CACHE });
 });
 
 /** POST /api/reviews (signed in) -> { id, status: "pending", verifiedPurchase } */

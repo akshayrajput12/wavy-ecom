@@ -157,7 +157,8 @@ export const listProducts = cached("catalog.list", [TAGS.catalog], async (q: Pro
   const scoped = (select: string, refine: boolean) => {
     const joins = [collectionId && "cf:collection_products!collection_products_product_id_fkey!inner(collection_id)", refine && variantFilter && "vf:product_variants!product_variants_product_id_fkey!inner(id)"];
     const sel = [select, ...joins.filter(Boolean)].join(", ");
-    let b = db.from("products").select(sel, refine ? { count: "exact" } : undefined).eq("status", "published");
+    // "estimated": exact below PostgREST max-rows, planner estimate above it (no full count scan on huge result sets)
+    let b = db.from("products").select(sel, refine ? { count: "estimated" } : undefined).eq("status", "published");
     if (categoryIds) b = b.in("category_id", categoryIds);
     if (collectionId) b = b.eq("cf.collection_id", collectionId);
     if (term) {

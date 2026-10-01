@@ -7,10 +7,11 @@ interface SettingsRow {
   store_name: string; currency: string; locale: string; support_email: string | null; support_phone: string | null;
   free_shipping_threshold: number | null; flat_shipping_fee: number; cod_enabled: boolean; cod_fee: number;
   cod_max_order_amount: number | null; return_window_days: number; tax_percentage: number; tax_inclusive: boolean;
+  logo_url: string | null; logo_dark_url: string | null; favicon_url: string | null;
 }
 const COLS =
   "store_name, currency, locale, support_email, support_phone, free_shipping_threshold, flat_shipping_fee, cod_enabled, " +
-  "cod_fee, cod_max_order_amount, return_window_days, tax_percentage, tax_inclusive";
+  "cod_fee, cod_max_order_amount, return_window_days, tax_percentage, tax_inclusive, logo_url, logo_dark_url, favicon_url";
 
 /** Singleton store_settings (non-secret). Null when Supabase is not configured. */
 export const getStoreSettings = cached("settings.store", [TAGS.settings], async (): Promise<StoreSettings | null> => {
@@ -24,6 +25,7 @@ export const getStoreSettings = cached("settings.store", [TAGS.settings], async 
     freeShippingThreshold: r.free_shipping_threshold ?? undefined, flatShippingFee: r.flat_shipping_fee,
     codEnabled: r.cod_enabled, codFee: r.cod_fee, codMaxOrderAmount: r.cod_max_order_amount ?? undefined,
     returnWindowDays: r.return_window_days, taxPercentage: Number(r.tax_percentage), taxInclusive: r.tax_inclusive,
+    logoUrl: r.logo_url ?? undefined, logoDarkUrl: r.logo_dark_url ?? undefined, faviconUrl: r.favicon_url ?? undefined,
   };
 });
 

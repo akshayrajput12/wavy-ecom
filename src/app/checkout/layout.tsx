@@ -8,7 +8,7 @@ export default async function CheckoutLayout({ children }: { children: React.Rea
   const settings = await getStoreSettings();
   return (
     <>
-      <CheckoutHeader storeName={settings?.storeName ?? "wavy"} supportEmail={settings?.supportEmail} />
+      <CheckoutHeader storeName={settings?.storeName ?? "wavy"} logoUrl={settings?.logoUrl} supportEmail={settings?.supportEmail} />
       <main id="main" className="container-x flex-1">{children}</main>
     </>
   );

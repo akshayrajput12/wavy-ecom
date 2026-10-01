@@ -4,6 +4,9 @@ import { optText } from "./catalog";
 
 const page = { page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(100).default(25) };
 
+/** Public URL of an uploaded brand asset (logo, favicon); null clears it. */
+const assetUrl = z.url({ protocol: /^https?$/ }).max(1024).nullable();
+
 /** PATCH /settings/:section. Each section maps to one permission (store_settings_guard enforces the same split). */
 export const SETTINGS_SECTIONS = {
   general: {
@@ -13,6 +16,7 @@ export const SETTINGS_SECTIONS = {
       timezone: z.string().min(1).max(60), returnWindowDays: z.number().int().min(0).max(90),
       reservationTtlMinutes: z.number().int().min(5).max(1440), lowStockDefault: z.number().int().min(0),
       supportEmail: z.email().nullable(), supportPhone: z.string().max(20).nullable(),
+      logoUrl: assetUrl, logoDarkUrl: assetUrl, faviconUrl: assetUrl,
     }).partial(),
   },
   tax: {
@@ -20,6 +24,8 @@ export const SETTINGS_SECTIONS = {
     schema: z.object({
       taxPercentage: z.number().min(0).max(100).multipleOf(0.01), taxInclusive: z.boolean(),
       gstNumber: z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/, "Invalid GSTIN").nullable(),
+      // seller identity printed on GST invoices (0021_invoices.sql)
+      legalName: z.string().trim().min(1).max(200).nullable(), registeredAddress: z.string().trim().min(1).max(500).nullable(),
     }).partial(),
   },
   shipping: {

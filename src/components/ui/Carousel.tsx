@@ -1,9 +1,10 @@
 "use client";
 
 import { clsx } from "clsx";
-import { useReducedMotion } from "framer-motion";
+import { useReducedMotion } from "./useMediaQuery";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { Children, useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
+import { uiCopy } from "@/data/copy";
 
 type PerView = { base: number; sm?: number; lg?: number };
 
@@ -136,7 +137,7 @@ export function Carousel({ children, label, perView = { base: 1 }, gap = "var(--
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
         className={clsx(
-          "flex snap-x snap-mandatory gap-(--gap) overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+          "relative flex snap-x snap-mandatory gap-(--gap) overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
           "[--pv:var(--pv-base)] sm:[--pv:var(--pv-sm,var(--pv-base))] lg:[--pv:var(--pv-lg,var(--pv-sm,var(--pv-base)))]",
           "rounded-md focus-visible:outline-offset-4",
           bleed && "-mx-(--gutter) scroll-px-(--gutter) px-(--gutter)",
@@ -147,8 +148,8 @@ export function Carousel({ children, label, perView = { base: 1 }, gap = "var(--
             key={i}
             role="group"
             aria-roledescription="slide"
-            aria-label={`${i + 1} of ${slides.length}`}
-            className="w-[calc((100%_-_(var(--pv)_-_1)_*_var(--gap))_/_var(--pv))] shrink-0 snap-start [&_a]:select-none [&_img]:pointer-events-none"
+            aria-label={uiCopy.slideOf(i + 1, slides.length)}
+            className="w-[calc((100%_-_(var(--pv)_-_1)_*_var(--gap))_/_var(--pv))] min-w-0 shrink-0 snap-start [&_a]:select-none [&_img]:pointer-events-none"
           >
             {slide}
           </li>
@@ -158,7 +159,7 @@ export function Carousel({ children, label, perView = { base: 1 }, gap = "var(--
       {arrows && arrowsAt === "end" && !(state.atStart && state.atEnd) && (
         <div className="mt-6 flex justify-end gap-2">
           {/* active = ink filled, inactive = outlined (reference rail) */}
-          {([["Previous slide", -1, state.atStart, ChevronLeft], ["Next slide", 1, state.atEnd, ChevronRight]] as const).map(([name, d, off, Icon]) => (
+          {([[uiCopy.prevSlide, -1, state.atStart, ChevronLeft], [uiCopy.nextSlide, 1, state.atEnd, ChevronRight]] as const).map(([name, d, off, Icon]) => (
             <button key={d} type="button" aria-label={name} onClick={() => goTo(state.index + d)} disabled={off}
               className={clsx("grid size-11 place-items-center rounded-pill border transition-colors duration-(--dur-fast)", off ? "border-line text-ink-muted" : "border-ink bg-ink text-canvas hover:bg-ink/85")}>
               <Icon className="size-4" aria-hidden />
@@ -168,10 +169,10 @@ export function Carousel({ children, label, perView = { base: 1 }, gap = "var(--
       )}
       {arrows && arrowsAt === "sides" && slides.length > 1 && (
         <>
-          <button type="button" aria-label="Previous slide" onClick={() => goTo(state.index - 1)} disabled={state.atStart} className={clsx(arrowBtn, "left-3")}>
+          <button type="button" aria-label={uiCopy.prevSlide} onClick={() => goTo(state.index - 1)} disabled={state.atStart} className={clsx(arrowBtn, "left-3")}>
             <ChevronLeft className="size-5" aria-hidden />
           </button>
-          <button type="button" aria-label="Next slide" onClick={() => goTo(state.index + 1)} disabled={state.atEnd} className={clsx(arrowBtn, "right-3")}>
+          <button type="button" aria-label={uiCopy.nextSlide} onClick={() => goTo(state.index + 1)} disabled={state.atEnd} className={clsx(arrowBtn, "right-3")}>
             <ChevronRight className="size-5" aria-hidden />
           </button>
         </>
@@ -180,12 +181,12 @@ export function Carousel({ children, label, perView = { base: 1 }, gap = "var(--
       {(dots || autoplay) && state.pages > 1 && (
         <div className="mt-3 flex items-center justify-center">
           {autoplay && !reduce && (
-            <button type="button" onClick={() => setPaused((p) => !p)} aria-label={paused ? "Play slideshow" : "Pause slideshow"} className="grid size-11 place-items-center rounded-pill text-ink-soft transition-colors hover:text-ink">
+            <button type="button" onClick={() => setPaused((p) => !p)} aria-label={paused ? uiCopy.play : uiCopy.pause} className="grid size-11 place-items-center rounded-pill text-ink-soft transition-colors hover:text-ink">
               {paused ? <Play className="size-4" aria-hidden /> : <Pause className="size-4" aria-hidden />}
             </button>
           )}
           {dots && Array.from({ length: state.pages }, (_, i) => (
-            <button key={i} type="button" onClick={() => goTo(i)} aria-label={`Go to slide ${i + 1}`} aria-current={i === state.index || undefined} className="group grid h-11 w-7 place-items-center">
+            <button key={i} type="button" onClick={() => goTo(i)} aria-label={uiCopy.goToSlide(i + 1)} aria-current={i === state.index || undefined} className="group grid h-11 w-7 place-items-center">
               <span className={clsx("h-1.5 rounded-pill transition-all duration-(--dur-base)", i === state.index ? "w-5 bg-ink" : "w-1.5 bg-line group-hover:bg-ink-muted")} />
             </button>
           ))}

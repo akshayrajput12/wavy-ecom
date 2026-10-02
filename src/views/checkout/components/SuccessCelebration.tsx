@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
+import { useReducedMotion } from "@/components/ui/useMediaQuery";
 import { useEffect } from "react";
 import { useCart } from "@/stores/cart";
 import { clearDraft } from "../draft";

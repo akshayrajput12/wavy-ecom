@@ -1,6 +1,6 @@
 -- =============================================================================
 -- wavy seed: the fashion catalogue (clothing, shoes, accessories). DATA ONLY, NO IMAGES.
--- Run on a database with migrations 0001-0020 applied, ideally right after supabase/reset.sql:
+-- Run on a database with migrations 0001-0025 applied, ideally right after supabase/reset.sql:
 --   psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/seed.sql   (or paste it in the Supabase SQL editor)
 -- One transaction, dependency order, `on conflict do nothing` (re-running it adds nothing; stock is
 -- only set on variants that still have none). Prices are integer PAISE (Rs 1 = 100).
@@ -16,6 +16,7 @@
 --   /images/hero/hero-04-satin-slip-midi-dress.png         hero slide 4 (transparent 1:1 cut-out)
 --   /images/promo/promo-crafted-to-last.webp               promo banner "Crafted to last" (light)
 --   /images/promo/promo-festive-drop.webp                  promo banner "Festive drop" (dark)
+--   /images/tear/tear-untamed.webp                         tear reveal "UNTAMED" (full-bleed photo)
 --   /images/tear/tear-made-to-move.webp                    tear reveal "MADE TO MOVE" (full-bleed photo)
 --
 -- Deterministic UUIDs:
@@ -405,40 +406,46 @@ insert into public.home_sections (id, type, title, subtitle, config, sort_order)
   ('74000000-0000-4000-8000-000000000002', 'category_grid', 'Shop by category', 'Built for every day',
    '{"categoryIds": ["10000000-0000-4000-8000-000000000001", "10000000-0000-4000-8000-000000000002",
                      "10000000-0000-4000-8000-000000000003"], "limit": 3}', 2),
+  -- subcategory_grid: the "Categories" overline comes from UI copy; title is the heading, subtitle its greyed second line.
+  -- Empty config = every active sub-category under the home departments, with department tabs and offer lines.
+  ('74000000-0000-4000-8000-000000000013', 'subcategory_grid', 'Shop the edit', 'Every category, one tap away',
+   '{"columns": 6, "showOffer": true}', 3),
   ('74000000-0000-4000-8000-000000000003', 'product_carousel', 'Best sellers', 'Team favourites',
    '{"source": "collection", "collectionId": "20000000-0000-4000-8000-000000000002", "limit": 10,
-     "cta": {"label": "View all", "href": "/collections/best-sellers"}}', 3),
+     "cta": {"label": "View all", "href": "/collections/best-sellers"}}', 4),
   ('74000000-0000-4000-8000-000000000004', 'tear_reveal', null, null,
-   '{"word": "UNTAMED", "tagline": "WEAR IT LOUD", "variant": "tiger"}', 4),
+   '{"word": "UNTAMED", "tagline": "WEAR IT LOUD", "variant": "image",
+     "image": "/images/tear/tear-untamed.webp", "imageAlt": "Model in an olive waxed field jacket striding through tall dry grass at golden hour",
+     "cta": {"label": "Shop new arrivals", "href": "/collections/new-arrivals"}}', 5),
   ('74000000-0000-4000-8000-000000000005', 'product_carousel', 'New arrivals', 'Just landed',
    '{"source": "collection", "collectionId": "20000000-0000-4000-8000-000000000001", "limit": 10,
-     "cta": {"label": "View all", "href": "/collections/new-arrivals"}}', 5),
+     "cta": {"label": "View all", "href": "/collections/new-arrivals"}}', 6),
   -- collection_rail: subtitle renders as the overline, title as the heading.
   ('74000000-0000-4000-8000-000000000006', 'collection_rail', 'Worn, not stored', 'In the wild',
    '{"collectionIds": ["20000000-0000-4000-8000-000000000003", "20000000-0000-4000-8000-000000000004",
-                       "20000000-0000-4000-8000-000000000005", "20000000-0000-4000-8000-000000000006"], "limit": 4}', 6),
+                       "20000000-0000-4000-8000-000000000005", "20000000-0000-4000-8000-000000000006"], "limit": 4}', 7),
   ('74000000-0000-4000-8000-000000000007', 'promo_banner', 'Crafted to last', null,
    '{"image": "/images/promo/promo-crafted-to-last.webp", "imageAlt": "Close-up of selvedge denim, linen and full-grain leather",
      "heading": "Fabric first. Always.",
      "body": "Long-staple cotton, European linen and full-grain leather, chosen to wear in rather than wear out.",
-     "cta": {"label": "Shop clothing", "href": "/collections/clothing"}, "theme": "light"}', 7),
+     "cta": {"label": "Shop clothing", "href": "/collections/clothing"}, "theme": "light"}', 8),
   ('74000000-0000-4000-8000-000000000008', 'tear_reveal', null, null,
    '{"word": "MADE TO MOVE", "tagline": "THE SHOE EDIT", "variant": "image",
      "image": "/images/tear/tear-made-to-move.webp", "imageAlt": "Leather sneakers, loafers and Chelsea boots lined up on a stone floor",
-     "cta": {"label": "Shop shoes", "href": "/collections/shoes"}}', 8),
+     "cta": {"label": "Shop shoes", "href": "/collections/shoes"}}', 9),
   -- testimonials: the "Testimonials" chip comes from UI copy, so the title is the heading.
-  ('74000000-0000-4000-8000-000000000009', 'testimonials', 'Loved by people who wear it daily', null, '{"limit": 6}', 9),
+  ('74000000-0000-4000-8000-000000000009', 'testimonials', 'Loved by people who wear it daily', null, '{"limit": 6}', 10),
   ('74000000-0000-4000-8000-000000000010', 'promo_banner', 'Festive drop', null,
    '{"image": "/images/promo/promo-festive-drop.webp", "imageAlt": "Satin slip dress, suede loafers and a leather tote styled for a festive evening",
      "heading": "Ready for the new season.",
      "body": "15% off orders over ₹2,999 with FESTIVE15, 15 October to 15 November.",
-     "couponCode": "FESTIVE15", "cta": {"label": "Shop the edit", "href": "/collections/festive-edit"}, "theme": "dark"}', 10),
+     "couponCode": "FESTIVE15", "cta": {"label": "Shop the edit", "href": "/collections/festive-edit"}, "theme": "dark"}', 11),
   -- blog_rail: the "Journal" overline comes from UI copy.
-  ('74000000-0000-4000-8000-000000000011', 'blog_rail', 'Notes on wearing well', null, '{"limit": 3}', 11),
+  ('74000000-0000-4000-8000-000000000011', 'blog_rail', 'Notes on wearing well', null, '{"limit": 3}', 12),
   ('74000000-0000-4000-8000-000000000012', 'newsletter', 'Stay close', null,
    '{"heading": "First look at every drop.", "body": "New arrivals, restocks and the occasional care guide. No spam.",
      "placeholder": "Your email", "buttonLabel": "Subscribe",
-     "consentText": "By subscribing you agree to receive marketing emails. Unsubscribe anytime."}', 12)
+     "consentText": "By subscribing you agree to receive marketing emails. Unsubscribe anytime."}', 13)
 on conflict do nothing;
 
 -- ---------- FAQs ----------

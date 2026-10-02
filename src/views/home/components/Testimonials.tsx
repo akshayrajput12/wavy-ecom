@@ -1,5 +1,6 @@
 import { ImageWell } from "@/components/commerce/ImageWell";
 import { RatingStars } from "@/components/commerce/RatingStars";
+import { Reveal } from "@/components/ui/Reveal";
 import { homeCopy } from "@/data/storefront";
 import type { HomeSectionOf, Media, Testimonial } from "@/types/domain";
 import { HeadingLines } from "./HeadingLines";
@@ -46,10 +47,10 @@ export function Testimonials({ section, images = [] }: { section: HomeSectionOf<
         <ul
           tabIndex={0}
           aria-label={homeCopy.quotes}
-          className="-mx-(--gutter) mt-12 flex snap-x snap-mandatory gap-4 overflow-x-auto px-(--gutter) scroll-px-(--gutter) [scrollbar-width:none] focus-visible:outline-offset-4 md:mx-0 md:mt-16 md:grid md:grid-cols-3 md:gap-x-8 md:gap-y-12 md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden"
+          className="relative -mx-(--gutter) mt-12 flex snap-x snap-mandatory gap-4 overflow-x-auto px-(--gutter) scroll-px-(--gutter) [scrollbar-width:none] focus-visible:outline-offset-4 md:mx-0 md:mt-16 md:grid md:grid-cols-3 md:gap-x-8 md:gap-y-12 md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden"
         >
-          {section.testimonials.map((t) => (
-            <li key={t.id} className="w-[82%] shrink-0 snap-start md:w-auto"><Quote t={t} /></li>
+          {section.testimonials.map((t, i) => (
+            <Reveal as="li" key={t.id} delay={Math.min(i, 5) * 0.06} className="w-[82%] shrink-0 snap-start md:w-auto"><Quote t={t} /></Reveal>
           ))}
         </ul>
       </div>

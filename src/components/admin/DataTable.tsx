@@ -118,8 +118,11 @@ export function DataTable<T>({
           <thead className="bg-canvas text-left">
             <tr>
               {selectable && (
-                <th scope="col" className="w-10 px-4 py-2.5">
-                  <input type="checkbox" checked={allOnPage} onChange={togglePage} aria-label={c.selectPage} className="size-4 accent-ink" />
+                <th scope="col" className="w-10 p-0">
+                  {/* the whole cell is the hit area (44px), not just the 16px box */}
+                  <label className="grid min-h-11 cursor-pointer place-items-center px-4">
+                    <input type="checkbox" checked={allOnPage} onChange={togglePage} aria-label={c.selectPage} className="size-4 accent-ink" />
+                  </label>
                 </th>
               )}
               {columns.map((c) => {
@@ -149,7 +152,11 @@ export function DataTable<T>({
               return (
                 <tr key={id} className={clsx("border-t border-line-soft hover:bg-canvas", selected.has(id) && "bg-surface-warm/60")}>
                   {selectable && (
-                    <td className="px-4 py-3"><input type="checkbox" checked={selected.has(id)} onChange={() => toggle(id)} aria-label={c.selectRow(id)} className="size-4 accent-ink" /></td>
+                    <td className="p-0">
+                      <label className="grid min-h-12 cursor-pointer place-items-center px-4">
+                        <input type="checkbox" checked={selected.has(id)} onChange={() => toggle(id)} aria-label={c.selectRow(id)} className="size-4 accent-ink" />
+                      </label>
+                    </td>
                   )}
                   {columns.map((c) => <td key={c.key} className={clsx("px-4 py-3 align-middle", c.align === "right" && "text-right tabular-nums", c.className)}>{c.cell(row)}</td>)}
                 </tr>

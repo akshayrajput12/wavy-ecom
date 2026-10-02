@@ -8,7 +8,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
   const session = await getSession();
   if (!session) redirect("/login?next=/account");
   return (
-    <div className="grid gap-8 py-8 sm:py-12 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-16 lg:py-16">
+    <div className="grid grid-cols-1 gap-8 py-8 sm:py-12 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-16 lg:py-16">
       <aside className="lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start"><AccountNav isStaff={isStaffRole(session.role)} /></aside>
       <div className="min-w-0">{children}</div>
     </div>

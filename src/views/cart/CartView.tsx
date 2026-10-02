@@ -28,7 +28,7 @@ export function CartView({ freeShippingThreshold }: { freeShippingThreshold?: nu
           <EmptyState icon={<ShoppingBag className="size-7" aria-hidden />} title={c.empty.title} body={c.empty.body} action={<ButtonLink href="/">{c.emptyCta}</ButtonLink>} />
         </div>
       ) : (
-        <div className="grid gap-8 lg:grid-cols-12 lg:gap-12">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
           <div className="space-y-5 lg:col-span-7">
             <CartNudges q={q} freeShippingThreshold={freeShippingThreshold} />
             <CartLines q={q} large />

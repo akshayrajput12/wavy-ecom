@@ -40,7 +40,7 @@ export function SearchView({ q, list, categories, params }: SearchViewProps) {
     <div className="container-x pb-24">
       <section className="border-b border-line pb-10 pt-8 lg:pb-14 lg:pt-12">
         <h1 className="sr-only">{searchCopy.title}</h1>
-        <SearchBox defaultValue={q} autoFocus={!q} large />
+        <SearchBox key={q} defaultValue={q} autoFocus={!q} large recent={false} />
         <RecordSearch q={q} />
         <div className="mt-8">
           {q && list && list.total > 0 ? <p className="t-h1" aria-live="polite">{searchCopy.resultsFor(q, list.total)}</p> : (

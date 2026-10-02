@@ -9,8 +9,19 @@ export const CX = 500;
 export const CY = 318;
 /** The paper halves reach well past any screen. */
 export const FAR = 4000;
-/** Visible frame: cropped to the artwork, with room for the halves to part. */
-export const FRAME = "36 44 928 468";
+/** Visible frame (viewBox units), cropped to the artwork. The word is narrower than it (see TearReveal), so it never meets the edge. */
+export const FRAME_W = 928;
+export const FRAME_H = 468;
+const FRAME_X = CX - FRAME_W / 2;
+const FRAME_Y = 44;
+/** The frame grown about its centre: a layer `grow` times the stage's size with this viewBox maps 1:1 onto the stage. */
+export function viewBox(grow = 1) {
+  const w = FRAME_W * grow;
+  const h = FRAME_H * grow;
+  return [FRAME_X - (w - FRAME_W) / 2, FRAME_Y - (h - FRAME_H) / 2, w, h].map((n) => +n.toFixed(2)).join(" ");
+}
+/** How far the tear's pivot (CX, CY) sits below the frame's centre, in viewBox units. */
+export const PIVOT_DY = CY - (FRAME_Y + FRAME_H / 2);
 export const EYES: Pt[] = [[-138, 6], [138, -4]];
 /** How far the halves travel off-screen in the image variant (viewBox units; clears a 375px portrait screen). */
 const CLEAR = 1400;
@@ -91,6 +102,32 @@ export function fibreWidths(n: number, open: number, seed = 5) {
 
 export const pathD = (pts: Pt[], close = true) =>
   "M" + pts.map(([x, y]) => x.toFixed(1) + " " + y.toFixed(1)).join("L") + (close ? "Z" : "");
+
+// Where the paper curls back over the gap: [x along the tear, half-width, depth].
+const CURLS: Record<"top" | "bottom", [number, number, number][]> = {
+  top: [[300, 44, 30], [575, 30, 20], [790, 52, 34]],
+  bottom: [[205, 50, 32], [470, 34, 22], [690, 40, 28]],
+};
+/** Past this much `open` a torn edge (core, curls, shadow) stops changing, so the halves only move. */
+export const EDGE_DONE = 0.4;
+
+/** A torn edge at `open`: the pale paper core along it, the curls, and the cast shadow's strength. */
+export function edgeShapes(side: "top" | "bottom", line: Pt[], open: number) {
+  const up = side === "top";
+  const o = Math.min(open, EDGE_DONE);
+  const k = o / EDGE_DONE;
+  const widths = fibreWidths(line.length, o, up ? 5 : 8);
+  const core = pathD(line.concat(line.map(([x, y], i): Pt => [x, y + (up ? -widths[i] : widths[i])]).reverse()));
+  const curls = CURLS[side].map(([cx, hw, depth]) => {
+    const pts = line.filter(([x]) => Math.abs(x - cx) <= hw);
+    const back = pts.map(([x, y]): Pt => {
+      const c = Math.cos(((x - cx) / hw) * (Math.PI / 2));
+      return [x + (up ? 6 : -6) * c * k, y + (up ? 1 : -1) * depth * c * c * k];
+    });
+    return pathD(pts.concat(back.reverse()));
+  });
+  return { core, curls, shadow: 0.55 * Math.min(1, o * 3) };
+}
 
 /** A stripe: a quadratic spine with a width that tapers to points at both ends. */
 function stripe(p0: Pt, p1: Pt, p2: Pt, w: number, n = 18) {

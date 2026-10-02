@@ -17,6 +17,8 @@ export const floatingCardCopy = {
   pause: "Pause product spotlight",
   play: "Resume product spotlight",
   close: "Close product spotlight",
+  minimise: "Minimise product spotlight",
+  expand: (name: string) => `Show product spotlight: ${name}`,
 } as const;
 
 export const homeCopy = {
@@ -41,6 +43,12 @@ export const homeCopy = {
   railPlay: "Play carousel",
   categoryPrev: "Previous categories",
   categoryNext: "Next categories",
+  categoryTabs: { all: "All", label: "Departments" },
+  /** subcategory_grid: tab strip + offer line ("Up to 40% off" / "From ₹1,299"). */
+  subcategories: {
+    overline: "Categories", tabs: "Filter categories by department",
+    upTo: (pct: number) => `Up to ${pct}% off`, from: (price: string) => `From ${price}`,
+  },
   testimonialsChip: "Testimonials",
   quotes: "Customer reviews",
   faq: { overline: "FAQs", title: "Questions, answered.", body: "The things shoppers ask us most.", all: "All questions" },
@@ -105,6 +113,7 @@ export const collectionCopy = {
   categories: "Shop by category",
   collections: "Collections",
   subcategories: "Browse",
+  siblings: (parent: string) => `More in ${parent}`,
   allIn: (name: string) => `All ${name}`,
   emptyScope: { title: "Nothing here yet", body: "New products are added regularly. Check back soon." },
   browse: "Browse all collections",
@@ -128,6 +137,14 @@ export const layoutCopy = {
   searching: "Searching…",
   noSuggestions: "No quick matches. Press enter to search everything.",
   suggestionsCollections: "Collections",
+  suggestionsLabel: "Search suggestions",
+  suggestionCount: (n: number) => `${n} ${n === 1 ? "suggestion" : "suggestions"}, use the up and down arrows to browse.`,
+  searchError: "Suggestions are unavailable right now. Press enter to search everything.",
+  retry: "Try again",
+} as const;
+
+export const mobileMenuCopy = {
+  toggle: (name: string) => `${name} sub-categories`,
 } as const;
 
 export const contentCopy = {

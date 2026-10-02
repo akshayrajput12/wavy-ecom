@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
-import { AnimatePresence, motion, useDragControls, useReducedMotion, type PanInfo } from "framer-motion";
+import { AnimatePresence, motion, useDragControls, type PanInfo } from "framer-motion";
+import { useReducedMotion } from "@/components/ui/useMediaQuery";
 import { X } from "lucide-react";
 import { lockScroll } from "@/components/providers/SmoothScroll";
 import { useMediaQuery } from "@/components/ui/useMediaQuery";

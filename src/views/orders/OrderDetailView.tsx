@@ -45,7 +45,7 @@ export function OrderDetailView({ order, canCancel, canReturn, invoiceHref }: { 
         {canCancel && <CancelOrder number={order.number} />}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="grid content-start gap-6">
           <section aria-labelledby="tl-h" className="rounded-xl border border-line bg-surface p-5 sm:p-6">
             <h2 id="tl-h" className="mb-6 t-h3">{ac.progress}</h2>

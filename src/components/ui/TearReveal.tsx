@@ -1,14 +1,16 @@
 "use client";
 
 import { clsx } from "clsx";
-import { useReducedMotion } from "framer-motion";
 import Image from "next/image";
-import { useEffect, useId, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
+import { useId, useRef, type CSSProperties } from "react";
 import { tearRevealCopy } from "@/data/storefront";
 import type { Cta } from "@/types/domain";
 import { ButtonLink } from "./Button";
-import { ArtDefs, Eye, Fur, Half } from "./TearArt";
-import { CX, CY, EYES, FAR, FRAME, VIEW_W, buildFibres, clamp01, easeOutBack, pathD, rng, scrollProgress, stages, tearLine, type Pt } from "./tearGeometry";
+import { useReducedMotion } from "./useMediaQuery";
+import { ArtDefs, Eyes, Fur, Half } from "./TearArt";
+import { TearCopy } from "./TearCopy";
+import { LINE, eyePose, tearPose, useTearMotion } from "./tearMotion";
+import { FAR, FRAME_H, FRAME_W, PIVOT_DY, VIEW_W, buildFibres, clamp01, viewBox } from "./tearGeometry";
 
 export interface TearRevealProps {
   /** The big word that gets torn. */
@@ -33,123 +35,37 @@ export interface TearRevealProps {
   className?: string;
 }
 
-type Frame = { p: number; look: Pt; blink: number; squint: number };
-const OPEN: Frame = { p: 1, look: [0, 0], blink: 0, squint: 0 };
 const FIBRES = buildFibres();
-const LINE = tearLine();
-const noop = () => () => {};
+/** The halves' layers overhang the stage by 12.5% a side, so their edges never show as they part and tilt. */
+const GROW = 1.25;
+const STAGE = { "--u": `min(100cqw / ${FRAME_W}, 100cqh / ${FRAME_H})` } as CSSProperties;
+const PIVOT = `50% calc(50% + ${PIVOT_DY} * var(--u))`;
+const LAYER = "absolute inset-0 block size-full max-w-none";
 
 /**
- * A poster that tears in two as you scroll past (sticky stage over a scroll runway). Lenis scrolls the native document,
- * so sticky + getBoundingClientRect stay exact; one rAF loop reads one rect per frame, only while on screen, and sets
- * state only when something changed. Reduced motion: the fully torn final state, static, no runway.
+ * A poster that tears in two as you scroll past (sticky stage over a scroll runway). The art renders once; scroll moves
+ * it through `useTearMotion` (CSS transforms on composited layers, no React renders). Reduced motion: the fully torn
+ * final state, static, no runway.
  */
 export function TearReveal({
   word, tagline, variant = "tiger", image, imageAlt = "", cta,
-  height = "100svh", scrollDistance = "160svh", mobileScrollDistance = "110svh", progress, hint = true, className,
+  height = "100svh", scrollDistance = "140svh", mobileScrollDistance = "100svh", progress, hint = true, className,
 }: TearRevealProps) {
   const rootRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
-  // false while hydrating (matches the server), then Framer's live preference
-  const hydrated = useSyncExternalStore(noop, () => true, () => false);
-  const reduced = useReducedMotion() === true && hydrated;
+  const reduced = useReducedMotion(); // false while hydrating (matches the server), then live
   const id = "tr" + useId().replace(/[^a-zA-Z0-9]/g, "");
-  const [live, setLive] = useState<Frame>({ p: progress ?? 0, look: [0, 0], blink: 0, squint: 0 });
-  const progressRef = useRef(progress);
-  const pointer = useRef<{ x: number; y: number } | null>(null);
-  const squintAt = useRef(-1e9);
   const photo = variant === "image" && image ? image : undefined;
-  const controlled = progress !== undefined;
-
-  useEffect(() => { progressRef.current = progress; }, [progress]);
-
-  useEffect(() => {
-    const root = rootRef.current;
-    const stage = stageRef.current;
-    if (reduced || !root || !stage) return;
-    let raf = 0;
-    let visible = true;
-    let p = progressRef.current ?? 0;
-    let look: Pt = [0, 0];
-    let idle: Pt = [0, 0];
-    let nextIdle = 0;
-    let nextBlink = performance.now() + 2500;
-    let last: Frame | null = null;
-
-    const tick = (now: number) => {
-      raf = 0;
-      if (!visible) return;
-      let target: number;
-      if (progressRef.current !== undefined) target = clamp01(progressRef.current);
-      else {
-        const r = root.getBoundingClientRect();
-        target = scrollProgress(r.top, r.height, stage.offsetHeight);
-      }
-      p += (target - p) * 0.14;
-      if (Math.abs(target - p) < 0.0005) p = target;
-
-      // where the eyes look: the pointer if there is one, else a wandering gaze
-      let want: Pt = idle;
-      if (pointer.current) {
-        const r = stage.getBoundingClientRect();
-        want = [
-          Math.max(-1, Math.min(1, (pointer.current.x - r.left - r.width / 2) / (r.width * 0.35))),
-          Math.max(-1, Math.min(1, (pointer.current.y - r.top - r.height * 0.58) / (r.height * 0.35))),
-        ];
-      } else if (now > nextIdle) {
-        const g = rng(Math.floor(now));
-        idle = [(g() - 0.5) * 1.4, (g() - 0.5) * 0.8];
-        nextIdle = now + 1400 + g() * 1800;
-      }
-      look = [look[0] + (want[0] - look[0]) * 0.14, look[1] + (want[1] - look[1]) * 0.14];
-
-      // blinks: a quick close and open every few seconds
-      const since = now - nextBlink;
-      const blink = since <= 0 ? 0 : since < 90 ? since / 90 : since < 200 ? 1 - (since - 90) / 110 : 0;
-      if (since > 200) nextBlink = now + 2600 + Math.random() * 3200;
-      const squint = Math.max(0, 1 - (now - squintAt.current) / 900);
-
-      if (!last || Math.abs(p - last.p) > 1e-4 || Math.abs(look[0] - last.look[0]) > 1e-3 || Math.abs(look[1] - last.look[1]) > 1e-3
-        || blink !== last.blink || squint !== last.squint) {
-        last = { p, look, blink, squint };
-        setLive(last);
-      }
-      raf = requestAnimationFrame(tick);
-    };
-
-    const io = new IntersectionObserver(([e]) => {
-      visible = e.isIntersecting;
-      if (visible && !raf) raf = requestAnimationFrame(tick);
-    });
-    io.observe(root);
-    raf = requestAnimationFrame(tick);
-    return () => { cancelAnimationFrame(raf); io.disconnect(); };
-  }, [reduced]);
-
-  const f = reduced ? { ...OPEN, p: clamp01(progress ?? 1) } : live;
-  const s = stages(f.p);
-  const pop = easeOutBack(s.pop);
-  const blink = Math.max(1 - clamp01(pop), f.blink, f.squint * 0.45); // eyes shut until the tiger is up
-  const shake = Math.sin(f.p * 900) * 6 * s.shake;
-  const crack = LINE.filter(([x]) => Math.abs(x - CX) <= s.crack * 620);
-  const tiger = `translate(${CX} ${(CY + (1 - s.rise) * 150).toFixed(2)}) rotate(-7) scale(${(1.34 - 0.06 * s.rise).toFixed(4)})`;
-  const done = photo ? s.clear > 0.95 : s.pop > 0.95;
-  const pinned = !(controlled || reduced);
+  const pinned = !(progress !== undefined || reduced);
+  const handlers = useTearMotion({ root: rootRef, stage: stageRef, progress, photo: !!photo, enabled: !reduced });
+  // the first paint (and the reduced-motion state); afterwards the hook writes straight to the DOM
+  const p0 = clamp01(reduced ? progress ?? 1 : progress ?? 0);
+  const t = tearPose(p0, !!photo);
 
   const sheet = (
     <>
       <rect x={-FAR} y={-FAR} width={FAR * 2 + VIEW_W} height={FAR * 2} style={{ fill: "var(--canvas)" }} />
-      {tagline && (
-        <text x={CX} y={150} textAnchor="middle"
-          style={{ fill: "var(--ink-soft)", fontFamily: "var(--font-ui)", fontSize: 30, fontWeight: 600, letterSpacing: "0.42em" }}>
-          {tagline}
-        </text>
-      )}
-      {/* stretched to a fixed width so any face fits; short words (404) are not ballooned */}
-      <text x={CX} y={404} textAnchor="middle" textLength={Math.min(880, word.length * 150)} lengthAdjust="spacingAndGlyphs"
-        style={{ fill: "var(--ink)", fontFamily: "var(--font-editorial)", fontSize: 250, fontWeight: 600, letterSpacing: 0 }}>
-        {word}
-      </text>
+      <TearCopy word={word} tagline={tagline} />
     </>
   );
 
@@ -159,57 +75,51 @@ export function TearReveal({
       className={clsx("relative w-full overflow-clip bg-canvas", pinned ? "h-[calc(var(--tr-h)+var(--tr-run-sm))] md:h-[calc(var(--tr-h)+var(--tr-run))]" : "h-(--tr-h)", className)}
       style={{ "--tr-h": height, "--tr-run": scrollDistance, "--tr-run-sm": mobileScrollDistance } as CSSProperties}
     >
-      <div
-        ref={stageRef}
-        className={clsx("sticky top-0 h-(--tr-h) w-full overflow-hidden", !photo && s.pop > 0.9 && "cursor-crosshair")}
-        onPointerMove={(e) => { pointer.current = { x: e.clientX, y: e.clientY }; }}
-        onPointerLeave={() => { pointer.current = null; }}
-        onPointerDown={() => { if (s.pop > 0.5) squintAt.current = performance.now(); }}
-      >
+      <div ref={stageRef} className="sticky top-0 h-(--tr-h) w-full overflow-hidden [container-type:size]" style={STAGE} {...handlers}>
         {photo && (
-          <div className="absolute inset-0 overflow-hidden">
-            <Image src={photo} alt={imageAlt} fill sizes="100vw" className="object-cover"
-              style={{ transform: `scale(${(1.12 - 0.12 * (0.35 * s.open + 0.65 * s.clear)).toFixed(4)})` }} />
+          <div data-tr="photo" className="absolute inset-0 overflow-hidden will-change-transform" style={{ transform: t.photo }}>
+            <Image src={photo} alt={imageAlt} fill sizes="100vw" className="object-cover" />
           </div>
         )}
-        <svg viewBox={FRAME} preserveAspectRatio="xMidYMid meet" role="img"
-          aria-label={(photo ? tearRevealCopy.image : tearRevealCopy.tiger)(word, tagline)}
-          className="pointer-events-none absolute inset-0 block size-full max-w-none">
-          <ArtDefs id={id} />
-          <g transform={`translate(${shake.toFixed(2)} ${(shake * 0.4).toFixed(2)})`}>
-            {!photo && s.open > 0 && (
-              <g transform={tiger}>
-                <Fur id={id} />
-                <g filter={s.pop > 0.02 ? `url(#${id}-glow)` : undefined}>
-                  {EYES.map(([x, y], i) => (
-                    <Eye key={i} id={id} x={x} y={y} flip={i === 0} look={f.look} blink={blink} pupil={1.3 - 0.5 * s.pop + 0.35 * f.squint} scale={0.9 + 0.1 * pop} fibres={FIBRES} />
-                  ))}
-                </g>
-              </g>
-            )}
-            {/* whole until it tears (two clipped halves would leave a hairline seam), then two halves parting along the tear */}
-            {s.open > 0 ? (
-              <>
-                <Half id={id} side="top" line={LINE} open={s.open} clear={photo ? s.clear : 0}>{sheet}</Half>
-                <Half id={id} side="bottom" line={LINE} open={s.open} clear={photo ? s.clear : 0}>{sheet}</Half>
-              </>
-            ) : sheet}
-            {s.crack > 0 && s.open < 0.15 && crack.length > 1 && (
-              <path d={pathD(crack, false)} fill="none" style={{ stroke: "var(--ink)" }} strokeWidth={2.4} strokeLinejoin="bevel" opacity={1 - s.open / 0.15} />
-            )}
-          </g>
-        </svg>
+        <div data-tr="shake" role="img" aria-label={(photo ? tearRevealCopy.image : tearRevealCopy.tiger)(word, tagline)}
+          className="pointer-events-none absolute inset-0" style={{ transform: t.shake }}>
+          <svg aria-hidden className="absolute size-0"><ArtDefs id={id} /></svg>
+          {/* back to front: tiger (fur painted once, eyes on their own small layer), the two halves, the whole sheet, the crack */}
+          {!photo && (
+            <div data-tr="tiger" className="absolute inset-0 will-change-transform" style={{ transform: t.tiger, transformOrigin: PIVOT }}>
+              <svg aria-hidden viewBox={viewBox()} className={LAYER}><Fur id={id} /></svg>
+              <svg aria-hidden viewBox={viewBox()} className={clsx(LAYER, "will-change-transform")}>
+                <Eyes id={id} pose={eyePose(p0)} fibres={FIBRES} />
+              </svg>
+            </div>
+          )}
+          {(["top", "bottom"] as const).map((side) => (
+            <div key={side} data-tr={side} className="absolute -inset-[12.5%] will-change-transform" style={{ transform: t[side], transformOrigin: PIVOT }}>
+              {(["shadow", "sheet", "edge"] as const).map((part) => (
+                <svg key={part} aria-hidden viewBox={viewBox(GROW)} className={clsx(LAYER, part !== "sheet" && "will-change-transform")}>
+                  <Half id={id} side={side} line={LINE} open={t.s.open} part={part}>{part === "sheet" && sheet}</Half>
+                </svg>
+              ))}
+            </div>
+          ))}
+          {/* whole until it tears: two clipped halves would leave a hairline seam */}
+          <svg data-tr="whole" aria-hidden viewBox={viewBox()} className={LAYER} style={{ visibility: t.s.open > 0 ? "hidden" : undefined }}>{sheet}</svg>
+          <svg aria-hidden viewBox={viewBox()} className={LAYER}>
+            <path data-tr="crack" d={t.crack || "M0 0"} fill="none" style={{ stroke: "var(--ink)" }} strokeWidth={2.4} strokeLinejoin="bevel"
+              opacity={t.crack ? t.crackOpacity : 0} />
+          </svg>
+        </div>
 
         {hint && pinned && (
-          <div aria-hidden className="t-index pointer-events-none absolute inset-x-0 bottom-6 flex flex-col items-center gap-2 uppercase tracking-[0.35em] text-ink-soft"
-            style={{ opacity: Math.max(0, 0.7 - s.crack * 3) }}>
+          <div data-tr="hint" aria-hidden className="t-index pointer-events-none absolute inset-x-0 bottom-6 flex flex-col items-center gap-2 uppercase tracking-[0.35em] text-ink-soft"
+            style={{ opacity: t.hint }}>
             {tearRevealCopy.hint}
             <span className="block h-6 w-px animate-pulse bg-ink-soft" />
           </div>
         )}
         {cta && (
-          <div inert={!done} className="absolute inset-x-0 bottom-10 flex justify-center px-4 transition-opacity duration-(--dur-slow) ease-out sm:bottom-14"
-            style={{ opacity: done ? 1 : 0 }}>
+          <div data-tr="cta" inert={!t.done} className="absolute inset-x-0 bottom-10 flex justify-center px-4 transition-opacity duration-(--dur-slow) ease-out sm:bottom-14"
+            style={{ opacity: t.done ? 1 : 0 }}>
             <ButtonLink href={cta.href} size="lg" className="shadow-md">{cta.label}</ButtonLink>
           </div>
         )}
@@ -217,3 +127,4 @@ export function TearReveal({
     </section>
   );
 }
+

@@ -7,6 +7,7 @@ import type {
 } from "@/types/admin";
 import type { HomeSectionType } from "@/types/domain";
 import { type Actor, audit, type CacheTag, camel, db, exec, maybe, must, notFound, read, revalidate, snake } from "./_shared";
+import { droppedPaths, pruneContentMedia } from "./contentMedia";
 import * as content from "./schemas/content";
 import * as marketing from "./schemas/marketing";
 import * as settings from "./schemas/settings";
@@ -22,6 +23,8 @@ interface Resource {
   order: string;
   /** Adjust the row about to be written (stamps, derived columns, type-specific validation). */
   prepare?: (row: Row, actor: Actor, existing: Row | null) => Row;
+  /** Part of the row holding content-media URLs: images an edit drops are deleted from storage once unreferenced. */
+  media?: (row: Row) => unknown;
 }
 
 const stampUpdatedBy = (row: Row, actor: Actor) => ({ ...row, updated_by: actor.userId });
@@ -39,6 +42,7 @@ export const RESOURCES = {
   },
   "home-sections": {
     table: "home_sections", read: "content.write", write: "content.write", create: content.HomeSectionSchema, patch: content.HomeSectionPatchSchema, tags: ["home"], order: "sort_order",
+    media: (row) => row.config,
     prepare: (row, actor, existing) => ({
       ...stampUpdatedBy(row, actor),
       ...(existing && row.config !== undefined ? { config: content.parseHomeConfig(existing.type as HomeSectionType, row.config) } : {}),
@@ -94,6 +98,7 @@ export async function updateResource(actor: Actor, name: ResourceName, id: strin
   const saved = must(await table(r).update(row).eq("id", id).select("*").single()) as Row;
   await audit(actor, `${name}.update`, r.table, id, before, saved);
   revalidate(...r.tags);
+  if (r.media) await pruneContentMedia(name, droppedPaths(r.media(before as Row), r.media(saved)));
   return camel(saved);
 }
 

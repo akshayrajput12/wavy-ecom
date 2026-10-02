@@ -22,7 +22,8 @@ export function RatingStars({ rating, count, size = "sm", outOf, className }: {
   const fill = Math.round(((width * Math.min(Math.max(rating, 0), 5)) / 5) * 100) / 100;
   const value = rating.toFixed(1);
   return (
-    <span className={clsx("inline-flex items-center gap-1.5 text-meta text-ink-soft", className)}>
+    // relative: contains the sr-only label, which would otherwise escape scroll rails and widen the page
+    <span className={clsx("relative inline-flex items-center gap-1.5 text-meta text-ink-soft", className)}>
       <svg viewBox={`0 0 ${width} 24`} width={(width * px) / 24} height={px} aria-hidden className="shrink-0">
         <defs>
           <path id={`${id}s`} d={STAR} />

@@ -15,7 +15,7 @@ export function CheckoutView(props: CheckoutProps) {
 
   if (!hydrated) {
     return (
-      <div className="grid gap-4 py-12 lg:grid-cols-[minmax(0,1fr)_420px] lg:gap-x-16" aria-busy="true" aria-label={co.loading}>
+      <div className="grid grid-cols-1 gap-4 py-12 lg:grid-cols-[minmax(0,1fr)_420px] lg:gap-x-16" aria-busy="true" aria-label={co.loading}>
         <div className="grid content-start gap-4"><Skeleton className="h-3 w-24 rounded-pill" /><Skeleton className="h-14 w-1/2 rounded-md" /><Skeleton className="h-8 rounded-pill" /><Skeleton className="h-64 rounded-xl" /></div>
         <Skeleton className="hidden h-96 rounded-xl lg:block" />
       </div>

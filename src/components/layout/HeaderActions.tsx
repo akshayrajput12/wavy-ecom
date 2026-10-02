@@ -10,7 +10,7 @@ import { headerCopy } from "@/data/copy";
 const iconButton =
   "relative grid size-10 shrink-0 place-items-center rounded-pill border border-line transition-colors duration-(--dur-fast) hover:bg-ink/8 after:absolute after:-inset-0.5";
 
-/** Right side of the pill: search, wishlist, admin (staff), account, bag; bag + menu only below lg. */
+/** Right side of the pill: search, wishlist, admin (staff), account, bag; search + bag + menu below lg. */
 export function HeaderActions({ isStaff, onSearch, onMenu, menuOpen }: {
   isStaff?: boolean; onSearch: () => void; onMenu: () => void; menuOpen: boolean;
 }) {
@@ -21,7 +21,7 @@ export function HeaderActions({ isStaff, onSearch, onMenu, menuOpen }: {
 
   return (
     <div className="flex flex-1 items-center justify-end gap-1.5">
-      <button type="button" className={desk} onClick={onSearch} aria-label={headerCopy.search}>
+      <button type="button" className={iconButton} onClick={onSearch} aria-label={headerCopy.search}>
         <Search className="size-4.5" strokeWidth={stroke} aria-hidden />
       </button>
       <Link href="/wishlist" className={desk} aria-label={headerCopy.wishlist}>

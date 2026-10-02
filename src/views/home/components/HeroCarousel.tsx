@@ -2,11 +2,13 @@
 
 import Image from "next/image";
 import { clsx } from "clsx";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
+import { useReducedMotion } from "@/components/ui/useMediaQuery";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { useCallback, useEffect, useState, type KeyboardEvent } from "react";
 import { ButtonLink } from "@/components/ui/Button";
 import { homeCopy, homeStageCopy as copy } from "@/data/storefront";
+import { plainText } from "@/lib/format";
 import type { HomeSectionOf } from "@/types/domain";
 import { EASE_OUT, HeroBackdrop, HeroHeadline, HeroProduct } from "./HeroParts";
 
@@ -98,7 +100,7 @@ export function HeroCarousel({ section }: { section: HomeSectionOf<"hero_carouse
         <div className="relative mt-6 hidden min-h-24 items-end justify-end lg:flex">
           {slide.eyebrow && <p className="t-meta absolute inset-x-0 bottom-2 mx-auto max-w-56 text-center" aria-hidden>{slide.eyebrow}</p>}
           {n > 1 && (
-            <button type="button" onClick={() => go(1)} aria-label={copy.nextUp(upNext.heading)}
+            <button type="button" onClick={() => go(1)} aria-label={copy.nextUp(plainText(upNext.heading))}
               className="group relative size-24 overflow-hidden rounded-lg border border-line">
               <Image src={upNext.image} alt="" fill sizes="96px" className="object-cover transition-[scale] duration-(--dur-slow) ease-soft group-hover:scale-110" />
             </button>

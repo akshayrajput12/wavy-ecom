@@ -3,11 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { clsx } from "clsx";
-import { useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { useReducedMotion } from "@/components/ui/useMediaQuery";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCallback, useId, useRef, useState, type PointerEvent } from "react";
 import { homeCopy, homeStageCopy as copy } from "@/data/storefront";
 import type { HomeSectionOf } from "@/types/domain";
+import { HeadingLines } from "./HeadingLines";
 import { useDragScroll } from "./useDragScroll";
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -54,7 +56,7 @@ export function CollectionRail({ section }: { section: HomeSectionOf<"collection
       <div className="container-x flex items-end justify-between gap-6 pb-8 lg:pb-12">
         <div>
           <p className="t-overline">{section.subtitle ?? copy.lookbookOverline}</p>
-          <h2 id={headingId} className="t-display mt-3">{section.title ?? homeCopy.slideshow}</h2>
+          <HeadingLines id={headingId} line={section.title ?? homeCopy.slideshow} className="mt-4" />
         </div>
         <p className="t-overline shrink-0">{copy.lookbookCount(items.length)}</p>
       </div>
@@ -93,10 +95,14 @@ export function CollectionRail({ section }: { section: HomeSectionOf<"collection
       </div>
 
       <div className="container-x flex items-center justify-between gap-6 pt-6">
-        <div className="min-w-0">
-          <p className="t-h2 truncate">{current.name}</p>
-          {current.productCount ? <p className="t-overline mt-1">{homeCopy.products(current.productCount)}</p> : null}
-        </div>
+        {/* caption cross-fades up as the active panel changes */}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div key={current.id} className="min-w-0" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}>
+            <p className="t-h2 truncate">{current.name}</p>
+            {current.productCount ? <p className="t-overline mt-1">{homeCopy.products(current.productCount)}</p> : null}
+          </motion.div>
+        </AnimatePresence>
         <div className="flex shrink-0 items-center gap-2">
           <p className="t-index mr-2 text-ink-soft" aria-hidden><span className="text-ink">{pad(active + 1)}</span> / {pad(items.length)}</p>
           <button type="button" onClick={() => goTo(active - 1)} disabled={active === 0} aria-label={copy.prevCollection} className={circle}>

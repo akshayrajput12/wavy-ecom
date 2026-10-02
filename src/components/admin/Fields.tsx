@@ -52,12 +52,12 @@ export function Toggle({ checked, onChange, label, description, disabled }: {
         type="button" role="switch" aria-checked={checked} aria-labelledby={id} disabled={disabled}
         onClick={() => onChange(!checked)}
         className={clsx(
-          "relative inline-flex h-7 w-12 shrink-0 items-center rounded-pill transition-colors disabled:opacity-40",
+          // 28px track; the ::after widens the hit area to 44px tall without changing the look
+          "relative inline-flex h-7 w-12 shrink-0 items-center rounded-pill transition-colors disabled:opacity-40 after:absolute after:-inset-y-2 after:inset-x-0",
           checked ? "bg-ink" : "bg-line",
         )}
       >
         <span className={clsx("size-5 rounded-full bg-surface shadow-sm transition-transform", checked ? "translate-x-6" : "translate-x-1")} />
-        <span className="sr-only">{checked ? "On" : "Off"}</span>
       </button>
     </div>
   );

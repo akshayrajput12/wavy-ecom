@@ -76,7 +76,7 @@ export function CheckoutFlow({ user, savedAddresses, paymentOptions, settings }:
   const a = draft.address as Partial<AddressValues>;
 
   return (
-    <div className="grid gap-6 pb-28 pt-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:gap-x-16 lg:pb-16 lg:pt-12">
+    <div className="grid grid-cols-1 gap-6 pb-28 pt-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:gap-x-16 lg:pb-16 lg:pt-12">
       <div className="grid content-start gap-4">
         <header className="grid gap-3">
           <p className="t-overline">{checkoutCopy.stepOf(step + 1, checkoutSteps3.length)}</p>

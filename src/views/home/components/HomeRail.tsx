@@ -1,11 +1,13 @@
 "use client";
 
 import { clsx } from "clsx";
-import { useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
+import { StaggerItem } from "@/components/ui/Reveal";
+import { useReducedMotion } from "@/components/ui/useMediaQuery";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { Children, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { homeCopy } from "@/data/storefront";
-import { useRailAutoplay } from "./useRailAutoplay";
+import { useRailAutoplay, type PlayState } from "./useRailAutoplay";
 
 // active = filled ink, disabled = hairline outline (state is also exposed via the `disabled` attribute)
 const btn = "grid size-11 place-items-center rounded-pill border transition-colors duration-(--dur-fast) enabled:border-ink enabled:bg-ink enabled:text-canvas enabled:hover:bg-ink/85 disabled:border-line disabled:text-ink-muted";
@@ -15,8 +17,10 @@ const btn = "grid size-11 place-items-center rounded-pill border transition-colo
  * place it inside `.container-x` under a full-width `@container` ancestor (the bleed is measured in `cqw`).
  * `autoplay`: advances one card every 4s and loops, only while the rail overflows and motion is allowed (see useRailAutoplay).
  */
-export function HomeRail({ children, label, autoplay, itemClassName, labels }: {
+export function HomeRail({ children, label, autoplay, playState, itemClassName, labels }: {
   children: ReactNode; label: string; autoplay?: boolean;
+  /** Parent-owned play/pause, so a shopper's pause survives this rail remounting. */
+  playState?: PlayState;
   /** li width override (flex-basis), default ~4-5 product cards on desktop */
   itemClassName?: string; labels?: { prev: string; next: string };
 }) {
@@ -55,27 +59,32 @@ export function HomeRail({ children, label, autoplay, itemClassName, labels }: {
     const el = ref.current;
     if (el && el.scrollLeft + el.clientWidth >= el.scrollWidth - 2) el.scrollTo({ left: 0, behavior: "smooth" }); // loop
     else go(1, true);
-  }, showToggle);
+  }, showToggle, playState);
   const arrow = (dir: 1 | -1) => { auto.nudge(); go(dir); };
 
   return (
     <div>
-      <ul
+      <motion.ul
         ref={ref}
+        // cards stagger in once on scroll into view (and again when a CategoryTabs panel remounts the rail)
+        initial={reduce ? false : "hidden"}
+        whileInView="show"
+        viewport={{ once: true, margin: "0px 0px -10% 0px" }}
+        variants={{ hidden: {}, show: { transition: { staggerChildren: 0.06 } } }}
         tabIndex={0}
         aria-label={label}
         onScroll={measure}
         {...auto.handlers}
         className={clsx(
-          "flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-2 sm:gap-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+          "relative flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-2 sm:gap-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
           "[--bleed:calc(max(0px,(100cqw_-_var(--container))/2)_+_var(--gutter))] -mx-(--bleed) px-(--bleed) scroll-px-(--bleed)",
           "rounded-md focus-visible:outline-offset-4",
         )}
       >
         {Children.toArray(children).map((child, i) => (
-          <li key={i} className={clsx("shrink-0 snap-start", itemClassName ?? "basis-[64%] sm:basis-[38%] lg:basis-[24%] xl:basis-[19%]")}>{child}</li>
+          <StaggerItem as="li" key={i} className={clsx("min-w-0 shrink-0 snap-start", itemClassName ?? "basis-[64%] sm:basis-[38%] lg:basis-[24%] xl:basis-[19%]")}>{child}</StaggerItem>
         ))}
-      </ul>
+      </motion.ul>
       {overflows && (
         <div className="mt-6 flex justify-end gap-2">
           {showToggle && (

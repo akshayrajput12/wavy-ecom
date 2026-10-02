@@ -10,6 +10,7 @@ export default async function Page() {
       sections={sections}
       lookups={{
         categories: categories.map((c) => ({ id: c.id, label: c.name })),
+        parents: categories.filter((c) => c.depth === 0).map((c) => ({ id: c.id, label: c.name })),
         collections: collections.map((c) => ({ id: c.id, label: c.name })),
         products: products.map((p) => ({ id: p.id, label: p.name })),
       }}

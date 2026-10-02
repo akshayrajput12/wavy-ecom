@@ -28,6 +28,13 @@ export function lockScroll(): () => void {
   };
 }
 
+/** "Back to top": Lenis glide when it runs, native otherwise; then focuses the skip link so keyboard users restart at the top. */
+export function scrollToTop() {
+  if (lenis) lenis.scrollTo(0);
+  else window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  document.querySelector<HTMLElement>('a[href="#main"]')?.focus({ preventScroll: true });
+}
+
 /**
  * Global Lenis smooth scrolling (wheel only; touch stays native). Follows client navigation: destroyed inside /admin,
  * recreated outside it. Skipped for reduced-motion users. New pages start at the top; back/forward and #hash
@@ -43,7 +50,8 @@ export function SmoothScroll() {
     if (admin || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--header-h")) || 0;
     const instance = new Lenis({
-      autoRaf: true, lerp: 0.085, wheelMultiplier: 0.9, smoothWheel: true, syncTouch: false,
+      // lerp 0.1: eased but settles in ~0.4s (0.085 felt floaty); scroll-linked sections read native scroll, so stay in sync
+      autoRaf: true, lerp: 0.1, wheelMultiplier: 1, smoothWheel: true, syncTouch: false,
       anchors: { offset: -header }, stopInertiaOnNavigate: true,
     });
     lenis = instance;

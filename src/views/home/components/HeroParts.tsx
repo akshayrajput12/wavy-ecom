@@ -1,9 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
+import { useReducedMotion } from "@/components/ui/useMediaQuery";
 import { Float } from "@/components/ui/Reveal";
+import { accentWords } from "@/lib/format";
 import type { HeroSlide } from "@/types/domain";
+import { Word } from "./HeadingLines";
 
 export const EASE_OUT = [0.22, 1, 0.36, 1] as const; // mirrors --ease-out
 
@@ -51,19 +54,22 @@ export function HeroProduct({ slide, index, dir }: { slide: HeroSlide; index: nu
   );
 }
 
-/** Heading split into two balanced lines that rise in with a stagger. `animate=false` renders it static (first paint). */
+/**
+ * Heading split into two balanced lines that rise in with a stagger; `*word*` renders as the italic accent.
+ * `animate=false` renders it static (first paint).
+ */
 export function HeroHeadline({ text, animate }: { text: string; animate: boolean }) {
-  const words = text.trim().split(/\s+/);
+  const words = accentWords(text);
   const cut = Math.ceil(words.length / 2);
-  const lines = words.length > 1 ? [words.slice(0, cut).join(" "), words.slice(cut).join(" ")] : [text];
+  const lines = words.length > 1 ? [words.slice(0, cut), words.slice(cut)] : [words];
   return (
     <h1 className="t-hero">
       {lines.map((line, i) => (
-        <span key={i} className="block overflow-hidden pb-[0.08em]">
+        <span key={i} className="-mx-[0.06em] -mb-[0.06em] block overflow-hidden px-[0.06em] pb-[0.1em]">
           {i > 0 && " "}
           <motion.span className="block" initial={animate ? { y: "105%" } : false} animate={{ y: 0 }}
             transition={{ duration: 0.8, delay: 0.1 + i * 0.08, ease: EASE_OUT }}>
-            {line}
+            {line.map((w, j) => <span key={j}>{j > 0 && " "}<Word word={w} /></span>)}
           </motion.span>
         </span>
       ))}

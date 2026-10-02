@@ -14,3 +14,10 @@ export function useMediaQuery(query: string): boolean {
     () => false,
   );
 }
+
+/**
+ * prefers-reduced-motion, hydration-safe: false on the server and while hydrating (so the markup matches the SSR HTML),
+ * then live. Use this, not framer-motion's hook, which reads matchMedia on the first client render and breaks hydration.
+ * Framer's own animations also honour the setting through <MotionConfig reducedMotion="user"> in the root layout.
+ */
+export const useReducedMotion = () => useMediaQuery("(prefers-reduced-motion: reduce)");

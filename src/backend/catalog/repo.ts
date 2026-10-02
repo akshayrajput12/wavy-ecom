@@ -10,13 +10,14 @@ import {
 import { ProductQuerySchema, searchTerm, type ProductQuery } from "./schema";
 
 export type ProductList = Paginated<Product> & { facets: Facets };
-export type CategoryWithPath = Category & { ancestors: CategoryRef[] };
+/** `siblings`: the parent's children (incl. self, with images), empty for roots. */
+export type CategoryWithPath = Category & { ancestors: CategoryRef[]; siblings: Category[] };
 export type CatalogPage =
   | { kind: "category"; category: CategoryWithPath }
   | { kind: "collection"; collection: Collection }
   | { kind: "redirect"; to: string };
 export interface SearchSuggestions {
-  products: { id: string; slug: string; name: string; brand?: string; priceFrom: number; image?: Media }[];
+  products: { id: string; slug: string; name: string; brand?: string; category?: string; priceFrom: number; image?: Media }[];
   categories: CategoryRef[];
   collections: { id: string; name: string; slug: string }[];
 }
@@ -39,8 +40,10 @@ export async function getCategoryBySlug(slug: string): Promise<CategoryWithPath 
   const flat = await listCategoriesFlat();
   const hit = flat.find((c) => c.slug === slug);
   if (!hit) return null;
-  const node = findInTree(buildTree(flat), hit.id)!;
-  return { ...node, ancestors: ancestors(flat, hit.id).map(({ id, name, slug: s }) => ({ id, name, slug: s })) };
+  const tree = buildTree(flat);
+  const node = findInTree(tree, hit.id)!;
+  const siblings = hit.parentId ? (findInTree(tree, hit.parentId)?.children ?? []) : [];
+  return { ...node, siblings, ancestors: ancestors(flat, hit.id).map(({ id, name, slug: s }) => ({ id, name, slug: s })) };
 }
 
 function findInTree(nodes: Category[], id: string): Category | undefined {
@@ -222,28 +225,43 @@ const SORTS: Record<ProductQuery["sort"], [string, boolean][]> = {
   rating: [["rating_display", false], ["review_count_display", false]],
 };
 
-/** Typeahead: up to 6 products + matching categories/collections. */
-export const searchSuggestions = cached("catalog.suggest", [TAGS.catalog], async (q: string): Promise<SearchSuggestions> => {
-  const term = searchTerm(q);
+/**
+ * Typeahead: up to 6 products + matching categories/collections. The term is sanitised (searchTerm strips
+ * PostgREST syntax, caps 60 chars) and lowercased before it becomes the cache key, so "Tee " and "tee" share
+ * one entry. Products: name/brand ilike, served by the pg_trgm GIN indexes (0003_catalog.sql; trigrams need
+ * 3+ chars, a 2-char term scans the small published set), OR'd with the search_vector FTS index for multi-word.
+ */
+export async function searchSuggestions(q: string): Promise<SearchSuggestions> {
+  const term = searchTerm(q).toLowerCase();
+  return term.length < 2 ? { products: [], categories: [], collections: [] } : suggest(term);
+}
+
+const suggest = cached("catalog.suggest", [TAGS.catalog], async (term: string): Promise<SearchSuggestions> => {
   const empty: SearchSuggestions = { products: [], categories: [], collections: [] };
   const db = publicDb();
-  if (!db || term.length < 2) return empty;
-  const needle = term.toLowerCase();
+  if (!db) return empty;
   const [res, flat, cols] = await Promise.all([
-    db.from("products").select("id, slug, name, brand, price_min, media:product_media!product_media_product_id_fkey(url, alt, is_primary, position)")
-      .eq("status", "published").or(`name.ilike."*${term}*",brand.ilike."*${term}*"`)
+    db.from("products")
+      .select("id, slug, name, brand, price_min, category:categories!products_category_id_fkey(name), media:product_media!product_media_product_id_fkey(url, alt, is_primary, position)")
+      .eq("status", "published").or(`name.ilike."*${term}*",brand.ilike."*${term}*",search_vector.wfts(english)."${term}"`)
       .order("review_count_display", { ascending: false }).limit(6),
     listCategoriesFlat(),
     listCollections(),
   ]);
-  type Row = { id: string; slug: string; name: string; brand: string | null; price_min: number | null; media: { url: string; alt: string; is_primary: boolean; position: number }[] | null };
+  type Row = {
+    id: string; slug: string; name: string; brand: string | null; price_min: number | null; category: { name: string } | null;
+    media: { url: string; alt: string; is_primary: boolean; position: number }[] | null;
+  };
   const rows: Row[] = safe(res, "search suggestions", []);
   return {
     products: rows.map((r) => {
       const m = [...(r.media ?? [])].sort((a, b) => Number(b.is_primary) - Number(a.is_primary) || a.position - b.position)[0];
-      return { id: r.id, slug: r.slug, name: r.name, brand: r.brand ?? undefined, priceFrom: r.price_min ?? 0, image: toMedia(m?.url, m?.alt) };
+      return {
+        id: r.id, slug: r.slug, name: r.name, brand: r.brand ?? undefined, category: r.category?.name,
+        priceFrom: r.price_min ?? 0, image: toMedia(m?.url, m?.alt),
+      };
     }),
-    categories: flat.filter((c) => c.name.toLowerCase().includes(needle)).slice(0, 4).map(({ id, name, slug }) => ({ id, name, slug })),
-    collections: cols.filter((c) => c.name.toLowerCase().includes(needle)).slice(0, 3).map(({ id, name, slug }) => ({ id, name, slug })),
+    categories: flat.filter((c) => c.name.toLowerCase().includes(term)).slice(0, 4).map(({ id, name, slug }) => ({ id, name, slug })),
+    collections: cols.filter((c) => c.name.toLowerCase().includes(term)).slice(0, 3).map(({ id, name, slug }) => ({ id, name, slug })),
   };
 });

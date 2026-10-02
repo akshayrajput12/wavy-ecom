@@ -2,7 +2,16 @@ import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { listProducts, resolveCollectionOrCategory } from "@/backend/catalog/repo";
 import { productQueryFrom } from "@/backend/catalog/schema";
+import type { CategoryWithPath } from "@/backend/catalog/repo";
 import { CollectionView } from "@/views/collection/CollectionView";
+import type { SubcategoryStripProps } from "@/views/collection/components/SubcategoryStrip";
+
+/** Parent page: its children. Child page: the parent's children (siblings). Leaf root: none. */
+function stripFor(c: CategoryWithPath): SubcategoryStripProps | undefined {
+  if (c.children?.length) return { parent: c, items: c.children, currentId: c.id };
+  const parent = c.ancestors.at(-1);
+  return parent && c.siblings.length ? { parent, items: c.siblings, currentId: c.id } : undefined;
+}
 
 export async function generateMetadata({ params }: PageProps<"/collections/[slug]">): Promise<Metadata> {
   const page = await resolveCollectionOrCategory((await params).slug);
@@ -30,7 +39,7 @@ export default async function CollectionRoute({ params, searchParams }: PageProp
     <CollectionView
       title={x.name} description={x.description} banner={x.banner} isCategory={isCategory} list={list}
       trail={isCategory ? page.category.ancestors : []}
-      subcategories={isCategory ? (page.category.children ?? []) : []}
+      strip={isCategory ? stripFor(page.category) : undefined}
       path={`/collections/${slug}`} params={sp}
     />
   );

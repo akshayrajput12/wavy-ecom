@@ -18,18 +18,21 @@ export function HomeSectionsView({ sections, lookups }: { sections: AdminHomeSec
   const [seen, setSeen] = useState(sections);
   const [drafts, setDrafts] = useState<{ key: string; type: HomeSectionType }[]>([]);
   const [adding, setAdding] = useState<HomeSectionType>("hero_carousel");
+  const [moving, setMoving] = useState(false);
   const sel = useSelection();
   const canDelete = useCanRemove("home-sections");
   if (sections !== seen) { setSeen(sections); setList(sections); } // server data refreshed after a save
 
   const onMove = async (i: number, dir: -1 | 1) => {
     const j = i + dir;
-    if (j < 0 || j >= list.length) return;
+    if (moving || j < 0 || j >= list.length) return; // one reorder at a time: each one sends the whole order
     const before = list;
     const next = [...list];
     [next[i], next[j]] = [next[j], next[i]];
     setList(next);
+    setMoving(true);
     const res = await mutate("POST", "home-sections/reorder", { ids: next.map((s) => s.id) }, { success: "Order saved", rollback: () => setList(before) });
+    setMoving(false);
     if (res.ok) router.refresh();
   };
 
@@ -46,7 +49,7 @@ export function HomeSectionsView({ sections, lookups }: { sections: AdminHomeSec
       {canDelete && <BulkBar count={sel.ids.length} onClear={sel.clear}><RemoveButton noun="home-sections" ids={sel.ids} onDone={sel.clear} /></BulkBar>}
       <div className="grid gap-6">
         {list.map((s, i) => (
-          <SectionCard key={s.id} section={s} type={s.type} lookups={lookups} onMove={(d) => onMove(i, d)} onDone={() => router.refresh()}
+          <SectionCard key={s.id} section={s} type={s.type} lookups={lookups} onMove={(d) => onMove(i, d)} first={i === 0} last={i === list.length - 1} moving={moving} onDone={() => router.refresh()}
             select={canDelete && <SelectBox checked={sel.has(s.id)} onChange={() => sel.toggle(s.id)} label={s.title || SECTION_LABEL[s.type]} />} />
         ))}
         {drafts.map((d) => (

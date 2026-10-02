@@ -11,7 +11,7 @@ the lookbook gallery and the closing CTA band (`.on-dark` helper flips ink/canva
 weight and black/white pills. Product imagery provides the colour.
 
 ## Type
-- Headings: **Urbanist 600**, very tight tracking (`--tracking-display`), line-height ~1, 2-line balanced headings
+- Headings: **Bricolage Grotesque 650–700**, condensed (`--stretch-display`), tight tracking (`--tracking-display`), line-height ~0.95, 2-line balanced headings
   ("Built for / every squad"). Classes `.t-hero .t-display .t-h1 .t-h2` already use it.
 - Body/UI: Plus Jakarta Sans, small (13–15 px), `text-ink-soft` for descriptions.
 - Overline above every section heading: tiny uppercase tracked grey (`.t-overline`), e.g. "BEST SELLERS".
@@ -86,7 +86,7 @@ of product images fanned along the bottom edge with a subtle coloured glow behin
 ## Footer
 Paper background. Left: logo + 3-line blurb + social icon circles. Right: 3 link columns with tiny uppercase grey
 headings (SHOP, HELP, COMPANY). Hairline, then © line left and contact line right. Finally a **giant full-width
-wordmark** of the store name (Urbanist 600, ~16vw, tight tracking) bleeding to the container edges.
+wordmark** of the store name (`.t-wordmark`: Bricolage 700, condensed, tight tracking) sized to the container; it reveals letter by letter as the footer scrolls in.
 
 ## Motion rules
 Framer Motion; respect `useReducedMotion` (no transforms, keep fades or nothing). Entrances: 16–24 px rise + fade,

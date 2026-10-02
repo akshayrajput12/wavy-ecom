@@ -1,52 +1,23 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent, type MouseEvent } from "react";
 import { usePathname } from "next/navigation";
-import { AnimatePresence, motion, useAnimationFrame, useDragControls, useMotionValue, useReducedMotion, type MotionValue } from "framer-motion";
+import { AnimatePresence, motion, useAnimationFrame, useMotionValue } from "framer-motion";
+import { useReducedMotion } from "@/components/ui/useMediaQuery";
 import { clsx } from "clsx";
-import { GripVertical, Pause, Play, ShoppingBag, X } from "lucide-react";
-import { Badge } from "@/components/ui/Badge";
+import { Eye, GripVertical, Minus, Pause, Play, X } from "lucide-react";
 import { floatingCardCopy as copy, quickViewCopy } from "@/data/storefront";
 import type { SpotlightItem } from "@/types/domain";
 import { ImageWell } from "./ImageWell";
 import { PriceTag } from "./PriceTag";
 import { openQuickView } from "./QuickView";
+import { dismiss, isDismissed, onDismiss, onVisibility, place, readMinimised, readPos, saveMinimised, savePos } from "./spotlightState";
+import { EASE_OUT, FloatingShot, Glow, KindBadge, ProgressRing, useTilt } from "./SpotlightParts";
 
 const ROTATE_MS = 10_000;
 const STEP = 16;
-const POS_KEY = "wavy-spotlight-pos";
-const DISMISS_KEY = "wavy-spotlight-dismissed";
-const DISMISS_EVENT = "wavy:spotlight-dismissed";
-const EASE_OUT = [0.22, 1, 0.36, 1] as const; // mirrors --ease-out
 const KEYS: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
-const icon = "grid size-11 shrink-0 place-items-center rounded-pill text-ink-soft transition-colors duration-(--dur-fast) hover:text-ink";
-
-let closed = false; // in-memory fallback when sessionStorage is blocked
-const isDismissed = () => { if (closed) return true; try { return sessionStorage.getItem(DISMISS_KEY) === "1"; } catch { return false; } };
-const dismiss = () => {
-  closed = true;
-  try { sessionStorage.setItem(DISMISS_KEY, "1"); } catch { /* storage blocked: closed until reload */ }
-  window.dispatchEvent(new Event(DISMISS_EVENT));
-};
-const onDismiss = (cb: () => void) => { window.addEventListener(DISMISS_EVENT, cb); return () => window.removeEventListener(DISMISS_EVENT, cb); };
-const onVisibility = (cb: () => void) => { document.addEventListener("visibilitychange", cb); return () => document.removeEventListener("visibilitychange", cb); };
-
-const readPos = (): { x: number; y: number } | null => {
-  try {
-    const p: unknown = JSON.parse(localStorage.getItem(POS_KEY) ?? "null");
-    return p && typeof p === "object" && "x" in p && "y" in p && typeof p.x === "number" && typeof p.y === "number" ? { x: p.x, y: p.y } : null;
-  } catch { return null; }
-};
-const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(v, hi));
-
-/** Moves the card to offset (nx, ny), kept fully inside the viewport. Assumes the current offset is already painted. */
-function place(el: HTMLElement | null, x: MotionValue<number>, y: MotionValue<number>, nx = x.get(), ny = y.get()) {
-  const r = el?.getBoundingClientRect();
-  if (!r?.width) { x.set(nx); y.set(ny); return; } // hidden (display: none): nothing to measure yet
-  const left = r.left - x.get(), top = r.top - y.get();
-  x.set(clamp(nx, -left, window.innerWidth - left - r.width));
-  y.set(clamp(ny, -top, window.innerHeight - top - r.height));
-}
+const icon = "grid size-11 shrink-0 place-items-center rounded-pill text-ink-soft transition-colors duration-(--dur-fast) hover:bg-ink/10 hover:text-ink";
 
 /** Site-wide floating spotlight (store layout). Hidden below lg on the PDP and bag, whose sticky CTAs own the bottom edge. */
 export function FloatingProductCard({ items }: { items: SpotlightItem[] }) {
@@ -57,6 +28,10 @@ export function FloatingProductCard({ items }: { items: SpotlightItem[] }) {
   return <Spotlight items={items} className={clsx(crowded && "max-lg:hidden")} />;
 }
 
+/**
+ * Dark mini stage: the product's own colours glow behind a tilting packshot; name, price and a Quick view pill
+ * slide in per product. Drags from anywhere (a drag never fires the click under it), minimises to a bubble.
+ */
 function Spotlight({ items, className }: { items: SpotlightItem[]; className?: string }) {
   const reduce = useReducedMotion();
   const tabHidden = useSyncExternalStore(onVisibility, () => document.visibilityState === "hidden", () => false);
@@ -64,12 +39,14 @@ function Spotlight({ items, className }: { items: SpotlightItem[]; className?: s
   const [hover, setHover] = useState(false);
   const [focus, setFocus] = useState(false);
   const [stopped, setStopped] = useState(false);
+  const [min, setMin] = useState(readMinimised); // client-only: the parent renders null until hydrated
   const progress = useMotionValue(0);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const ref = useRef<HTMLElement>(null);
   const viewport = useRef<HTMLDivElement>(null);
-  const drag = useDragControls();
+  const dragged = useRef(false);
+  const tilt = useTilt(!reduce);
   const paused = hover || focus || stopped || tabHidden || items.length < 2;
 
   useAnimationFrame((_, delta) => {
@@ -80,16 +57,18 @@ function Spotlight({ items, className }: { items: SpotlightItem[]; className?: s
     setIndex((i) => (i + 1) % items.length);
   });
 
-  // Restore the saved spot, and pull the card back on screen when the viewport shrinks.
+  // Restore the saved spot; pull the card back on screen when the viewport shrinks or the card changes size.
   useEffect(() => {
     const saved = readPos();
     place(ref.current, x, y, saved?.x, saved?.y);
-    const onResize = () => place(ref.current, x, y);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    const reclamp = () => place(ref.current, x, y);
+    const ro = new ResizeObserver(reclamp);
+    if (ref.current) ro.observe(ref.current);
+    window.addEventListener("resize", reclamp);
+    return () => { ro.disconnect(); window.removeEventListener("resize", reclamp); };
   }, [x, y]);
 
-  const save = () => { try { localStorage.setItem(POS_KEY, JSON.stringify({ x: x.get(), y: y.get() })); } catch { /* storage blocked */ } };
+  const save = () => savePos(x.get(), y.get());
   const onKey = (e: KeyboardEvent) => {
     const d = KEYS[e.key];
     if (!d) return;
@@ -97,72 +76,110 @@ function Spotlight({ items, className }: { items: SpotlightItem[]; className?: s
     place(ref.current, x, y, x.get() + d[0] * STEP, y.get() + d[1] * STEP);
     save();
   };
+  const toggleMin = (v: boolean) => { setMin(v); saveMinimised(v); };
+  // A drag ends with a click on whatever is under the pointer: swallow that one.
+  const onClickCapture = (e: MouseEvent) => { if (dragged.current) { e.preventDefault(); e.stopPropagation(); dragged.current = false; } };
 
   const { product, kind } = items[index % items.length];
-  const transition = reduce ? { duration: 0 } : { duration: 0.32, ease: EASE_OUT };
+  const media = product.images[0];
+  const t = (delay = 0) => (reduce ? { duration: 0 } : { duration: 0.45, ease: EASE_OUT, delay });
+  const rise = (delay: number) => ({ initial: { opacity: 0, y: reduce ? 0 : 10 }, animate: { opacity: 1, y: 0 }, transition: t(delay) });
+  const pop = { initial: { opacity: 0, scale: reduce ? 1 : 0.6 }, animate: { opacity: 1, scale: 1 }, exit: { opacity: 0, scale: reduce ? 1 : 0.6 }, transition: t() };
+  const counter = `${String(index + 1).padStart(2, "0")} / ${String(items.length).padStart(2, "0")}`;
+  const playPause = items.length > 1 && (
+    <ProgressRing progress={progress} className="size-11">
+      <button type="button" aria-label={stopped ? copy.play : copy.pause} onClick={() => setStopped((s) => !s)} className={icon}>
+        {stopped ? <Play className="size-3.5 fill-current" aria-hidden /> : <Pause className="size-3.5 fill-current" aria-hidden />}
+      </button>
+    </ProgressRing>
+  );
 
   return (
     <>
-      <div ref={viewport} className="pointer-events-none fixed inset-0" aria-hidden />
+      {/* drag bounds: the viewport below the fixed header (see place()) */}
+      <div ref={viewport} className="pointer-events-none fixed inset-x-0 bottom-0 top-(--header-h)" aria-hidden />
       <motion.aside
         ref={ref}
         aria-label={copy.region}
         drag
-        dragListener={false}
-        dragControls={drag}
         dragConstraints={viewport}
         dragElastic={0}
         dragMomentum={false}
-        onDragEnd={save}
+        onDragStart={() => { dragged.current = true; }}
+        onDragEnd={() => { save(); window.setTimeout(() => { dragged.current = false; }, 0); }}
+        onClickCapture={onClickCapture}
         style={{ x, y }}
         onPointerEnter={() => setHover(true)}
         onPointerLeave={() => setHover(false)}
         onFocus={() => setFocus(true)}
         onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setFocus(false); }}
-        className={clsx(
-          "fixed bottom-4 left-4 z-30 w-64 overflow-hidden rounded-xl border border-line bg-surface/90 shadow-lg backdrop-blur-md sm:w-76",
-          className,
-        )}
+        className={clsx("on-dark fixed bottom-4 left-4 z-30 touch-none select-none bg-transparent!", className)}
       >
-        <div className="flex items-center gap-1 pr-1">
-          <button type="button" aria-label={copy.move} onPointerDown={(e) => drag.start(e)} onKeyDown={onKey}
-            className={clsx(icon, "cursor-grab touch-none active:cursor-grabbing")}>
-            <GripVertical className="size-4" aria-hidden />
-          </button>
-          <Badge tone={kind === "new" ? "dark" : "outline"}>{copy.kind[kind]}</Badge>
-          <span className="flex-1" />
-          {items.length > 1 && (
-            <button type="button" aria-label={stopped ? copy.play : copy.pause} onClick={() => setStopped((s) => !s)} className={icon}>
-              {stopped ? <Play className="size-4" aria-hidden /> : <Pause className="size-4" aria-hidden />}
-            </button>
-          )}
-          <button type="button" aria-label={copy.close} onClick={dismiss} className={icon}>
-            <X className="size-4" aria-hidden />
-          </button>
-        </div>
         <AnimatePresence mode="wait" initial={false}>
-          <motion.div key={product.id} className="group relative flex items-center gap-3 px-3 pb-4"
-            initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={transition}>
-            <ImageWell media={product.images[0]} alt="" sizes="64px" className="aspect-[4/5] w-12 shrink-0 rounded-md sm:w-14"
-              imgClassName="transition-[scale] duration-500 ease-soft group-hover:scale-[1.04]" />
-            <div className="min-w-0 flex-1">
-              {/* Stretched button: the whole row opens Quick View (a <p> price can't live inside a <button>). */}
-              <button type="button" onClick={() => openQuickView(product)} aria-label={quickViewCopy.open(product.name)}
-                className="text-left text-meta font-medium text-ink after:absolute after:inset-0 after:content-['']">
-                <span className="line-clamp-2">{product.name}</span>
+          {min ? (
+            <motion.div key="bubble" {...pop} className="origin-bottom-left">
+              <button type="button" onClick={() => toggleMin(false)} onKeyDown={onKey} aria-label={copy.expand(product.name)} aria-expanded={false}
+                className="block size-12 rounded-pill shadow-lg transition-transform duration-(--dur-base) ease-soft hover:scale-105 md:size-16">
+                <ProgressRing progress={progress} className="size-full rounded-pill bg-black">
+                  <span className="relative size-10 overflow-hidden rounded-pill md:size-13">
+                    <AnimatePresence initial={false}>
+                      <motion.span key={product.id} className="absolute inset-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={t()}>
+                        <ImageWell media={media} alt="" sizes="52px" className="size-full" />
+                      </motion.span>
+                    </AnimatePresence>
+                  </span>
+                </ProgressRing>
               </button>
-              <PriceTag price={product.priceFrom} compareAt={product.compareAtFrom} className="mt-0.5" />
-            </div>
-            <span className="grid size-9 shrink-0 place-items-center rounded-pill bg-ink text-canvas transition-transform duration-(--dur-base) ease-soft group-hover:scale-110" aria-hidden>
-              <ShoppingBag className="size-4" strokeWidth={1.8} />
-            </span>
-          </motion.div>
+            </motion.div>
+          ) : (
+            <motion.div key="card" {...pop}
+              className="relative isolate w-80 max-w-[calc(100vw-2rem)] origin-bottom-left overflow-hidden rounded-xl border border-line bg-black shadow-lg">
+              <AnimatePresence initial={false}>
+                <motion.div key={product.id} className="absolute inset-0 -z-10" aria-hidden
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={reduce ? { duration: 0 } : { duration: 0.8 }}>
+                  <Glow media={media} />
+                </motion.div>
+              </AnimatePresence>
+              <div className="absolute inset-0 -z-10 bg-linear-to-t from-black/90 via-black/60 to-black/25" aria-hidden />
+
+              <div className="flex items-center gap-0.5 pr-1">
+                <button type="button" aria-label={copy.move} onKeyDown={onKey}
+                  className={clsx(icon, "cursor-grab active:cursor-grabbing")}>
+                  <GripVertical className="size-4" aria-hidden />
+                </button>
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.span key={`${product.id}-k`} {...rise(0)} exit={{ opacity: 0 }}><KindBadge kind={kind} /></motion.span>
+                </AnimatePresence>
+                <span className="t-index ml-auto whitespace-nowrap pr-1 text-ink-soft max-sm:invisible" aria-hidden>{counter}</span>
+                <button type="button" aria-label={copy.minimise} aria-expanded onClick={() => toggleMin(true)} className={icon}><Minus className="size-4" aria-hidden /></button>
+                <button type="button" aria-label={copy.close} onClick={dismiss} className={icon}><X className="size-4" aria-hidden /></button>
+              </div>
+
+              <div className="group relative flex items-center gap-4 px-4 pb-4 pt-1" {...tilt.handlers}>
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div key={product.id} className="flex min-w-0 flex-1 items-center gap-4"
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: reduce ? 0 : -12 }} transition={t()}>
+                    <motion.div {...rise(0)}><FloatingShot media={media} tilt={tilt.style} /></motion.div>
+                    <div className="min-w-0 flex-1">
+                      {/* Stretched button: the whole stage opens Quick View (a <p> price can't live inside a <button>).
+                          No transformed ancestor up to the stage, or the overlay would shrink to that box. */}
+                      <button type="button" onClick={() => openQuickView(product)} aria-label={quickViewCopy.open(product.name)}
+                        className="text-left font-display text-body-lg font-semibold leading-tight text-ink after:absolute after:inset-0 after:content-['']">
+                        <motion.span {...rise(0.06)} className="line-clamp-2">{product.name}</motion.span>
+                      </button>
+                      <motion.div {...rise(0.12)}><PriceTag price={product.priceFrom} compareAt={product.compareAtFrom} className="mt-1" /></motion.div>
+                      <motion.span {...rise(0.18)} aria-hidden
+                        className="mt-2.5 inline-flex items-center gap-1.5 whitespace-nowrap rounded-pill bg-on-dark px-3 py-1 text-micro font-medium text-black transition-transform duration-(--dur-base) ease-soft group-hover:scale-105">
+                        <Eye className="size-3.5" aria-hidden />{quickViewCopy.label}
+                      </motion.span>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+                {playPause && <div className="relative self-end">{playPause}</div>}
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
-        {items.length > 1 && (
-          <div className="absolute inset-x-0 bottom-0 h-0.5 bg-line" aria-hidden>
-            <motion.div style={{ scaleX: progress }} className="h-full origin-left bg-ink" />
-          </div>
-        )}
       </motion.aside>
     </>
   );

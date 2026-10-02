@@ -5,6 +5,13 @@
  */
 import type { OrderStatus, PaymentStatus, ReturnReason, ShipmentStatus } from "@/types/domain";
 
+/** Shared UI primitives (components/ui): Drawer, Carousel, QuantityStepper. */
+export const uiCopy = {
+  close: "Close", prevSlide: "Previous slide", nextSlide: "Next slide", play: "Play slideshow", pause: "Pause slideshow",
+  slideOf: (i: number, n: number) => `${i} of ${n}`, goToSlide: (i: number) => `Go to slide ${i}`,
+  decrease: "Decrease quantity", increase: "Increase quantity",
+} as const;
+
 export const headerCopy = {
   search: "Search", wishlist: "Wishlist", account: "Account", bag: "Bag",
   menu: "Open menu", closeMenu: "Close menu", allCategories: "All categories", collections: "Collections",
@@ -16,6 +23,7 @@ export const footerCopy = {
   faq: "FAQ", blog: "Blog", track: "Track an order", account: "Account",
   newsletterLabel: "Email address", newsletterCta: "Subscribe", newsletterThanks: "You're on the list.",
   newsletterTitle: "New drops, restocks and the occasional note. No spam.", nav: "Footer",
+  backToTop: "Back to top",
 } as const;
 
 export const sortOptions = [
@@ -259,6 +267,33 @@ export const adminCopy = {
   },
   editor: {
     save: "Save", cancel: "Cancel", delete: "Delete", confirmDelete: "Confirm delete", irreversible: "This cannot be undone.",
+  },
+  dropzone: {
+    browse: "Drag images here or click to browse", browseOne: "Drag an image here or click to browse",
+    replaceOne: "Drop or pick a new image to replace this one",
+    hint: (formats: string, mb: number) => `${formats}, up to ${mb} MB`, or: "or",
+    skipped: (n: number, list: string) => `${n} file${n === 1 ? "" : "s"} skipped: ${list}.`,
+    reason: {
+      notImage: "not an image", heic: "HEIC isn't supported, export it as JPEG or PNG",
+      format: (formats: string) => `use ${formats}`, size: (mb: number) => `over ${mb} MB`, count: (n: number) => `only ${n} allowed`,
+    },
+    selected: "Selected images", cover: "Cover", alt: (i: number) => `Alt text, image ${i}`, altPlaceholder: "Describe the image",
+    up: (i: number) => `Move image ${i} up`, down: (i: number) => `Move image ${i} down`, remove: (i: number) => `Remove image ${i}`,
+    noImage: "No image yet",
+  },
+  homeSections: {
+    preview: "Preview", previewNote: "Live mock, updates as you type. Not to scale.", noPreview: "Nothing to preview yet",
+    slide: (i: number) => `Show slide ${i}`, slides: "Slides", heading: "Heading", word: "WORD",
+    upTo: (n: number) => `Up to ${n}`, all: (what: string) => `All ${what}`, pickSource: "Pick where products come from",
+    fromSource: (s: string) => `From: ${s}`, testimonialsNote: "Latest approved testimonials", postsNote: "Latest published posts",
+    emailPlaceholder: "Email address", subscribe: "Subscribe", tigerAlt: "Tiger illustration",
+    unsaved: "Unsaved changes", isNew: "New, not saved", active: "Active", inactive: "Inactive",
+    moveUp: (s: string) => `Move ${s} up`, moveDown: (s: string) => `Move ${s} down`,
+    fixFields: (n: number) => `${n} field${n === 1 ? "" : "s"} need${n === 1 ? "s" : ""} attention. Check the messages above.`,
+    endsBeforeStart: "End must be after the start",
+    required: "Required", imageRequired: "Add an image", altRequired: "Add alt text: a few words describing the image",
+    addOne: "Add at least one", min: (n: number | bigint) => `Must be at least ${n}`,
+    max: (n: number | bigint) => `Must be at most ${n}`, maxChars: (n: number | bigint) => `Keep it under ${n} characters`,
   },
   remove: {
     delete: "Delete", cancel: "Keep it", deleteLabel: (what: string) => `Delete ${what}`,

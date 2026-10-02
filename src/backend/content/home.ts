@@ -1,12 +1,14 @@
 import "server-only";
 import { cached, TAGS } from "@/backend/_core/cache";
 import { publicDb, safe } from "@/backend/_core/db";
+import { buildTree } from "@/backend/catalog/mapper";
 import { getProductsByIds, listCategoriesFlat, listCollections, listProducts } from "@/backend/catalog/repo";
 import { ProductQuerySchema, type ProductSort } from "@/backend/catalog/schema";
 import { logger } from "@/lib/logger";
-import type { HomeSection, HomeSectionType, Product } from "@/types/domain";
+import type { Category, HomeSection, HomeSectionType, Product } from "@/types/domain";
 import { listBlogPosts, listTestimonials } from "./repo";
 import { HomeSectionConfig, type HomeSectionConfigs } from "./schema";
+import { resolveSubcategoryGrid } from "./subcategories";
 
 interface Row { id: string; type: HomeSectionType; title: string | null; subtitle: string | null; config: unknown; sort_order: number }
 type Parsed = { [K in HomeSectionType]: { row: Row; type: K; config: HomeSectionConfigs[K] } }[HomeSectionType];
@@ -58,11 +60,19 @@ export const getHomeSections = cached("home.sections", [TAGS.home, TAGS.catalog,
       case "newsletter": return { ...base, type: p.type, config: p.config };
       case "tear_reveal": return { ...base, type: p.type, config: p.config };
       case "category_grid": {
+        // tree nodes, so each picked category carries its (active, RLS-filtered) children from the same cached query
+        const nodes = new Map<string, Category>();
+        const walk = (list: Category[]) => list.forEach((c) => { nodes.set(c.id, c); walk(c.children ?? []); });
+        walk(buildTree(flat));
         const list = p.config.categoryIds?.length
-          ? p.config.categoryIds.flatMap((id) => flat.find((c) => c.id === id) ?? [])
-          : flat.filter((c) => c.showOnHome);
+          ? p.config.categoryIds.flatMap((id) => nodes.get(id) ?? [])
+          : flat.flatMap((c) => (c.showOnHome ? (nodes.get(c.id) ?? []) : []));
         const categories = list.slice(0, p.config.limit ?? 12);
         return categories.length ? { ...base, type: p.type, config: p.config, categories } : null;
+      }
+      case "subcategory_grid": {
+        const grid = await resolveSubcategoryGrid(p.config, flat);
+        return grid.tiles.length ? { ...base, type: p.type, config: p.config, ...grid } : null;
       }
       case "collection_rail": {
         const list = p.config.collectionIds?.length

@@ -3,6 +3,7 @@
 import { clsx } from "clsx";
 import { ChevronDown, Minus, Plus, X } from "lucide-react";
 import { useId, type ComponentProps, type ReactNode } from "react";
+import { uiCopy } from "@/data/copy";
 
 /** Filter / suggestion chip. `onRemove` renders the dismissible "active filter" variant. */
 export function Chip({ active, onRemove, children, className, ...rest }: ComponentProps<"button"> & { active?: boolean; onRemove?: () => void }) {
@@ -28,11 +29,11 @@ export function QuantityStepper({ value, onChange, max, min = 1, label }: { valu
   const btn = "grid size-11 place-items-center rounded-pill text-ink transition-colors hover:bg-surface-warm disabled:opacity-30";
   return (
     <div role="group" aria-label={label} className="inline-flex items-center rounded-pill border border-line">
-      <button type="button" className={btn} onClick={() => onChange(value - 1)} disabled={value <= min} aria-label="Decrease quantity">
+      <button type="button" className={btn} onClick={() => onChange(value - 1)} disabled={value <= min} aria-label={uiCopy.decrease}>
         <Minus className="size-3.5" aria-hidden />
       </button>
       <output aria-live="polite" className="w-6 text-center text-body font-medium tabular-nums">{value}</output>
-      <button type="button" className={btn} onClick={() => onChange(value + 1)} disabled={value >= max} aria-label="Increase quantity">
+      <button type="button" className={btn} onClick={() => onChange(value + 1)} disabled={value >= max} aria-label={uiCopy.increase}>
         <Plus className="size-3.5" aria-hidden />
       </button>
     </div>

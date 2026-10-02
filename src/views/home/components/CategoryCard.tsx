@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useReducedMotion } from "@/components/ui/useMediaQuery";
 import { ArrowUpRight } from "lucide-react";
 import { useRef } from "react";
 import type { Category } from "@/types/domain";
@@ -20,9 +21,17 @@ export function CategoryCard({ category: c, index }: { category: Category; index
     <Link ref={ref} href={`/collections/${c.slug}`} className="group relative block aspect-[4/5] overflow-hidden rounded-lg bg-surface-2 text-on-dark focus-visible:outline-offset-4">
       {/* taller than the card so the parallax shift never shows an edge */}
       <motion.div className="absolute inset-x-0 -inset-y-[7%]" style={reduce ? undefined : { y }}>
-        {c.image?.url && (
+        {c.image?.url ? (
           <Image src={c.image.url} alt="" fill sizes="(min-width: 1024px) 31vw, (min-width: 640px) 48vw, 82vw"
             className="object-cover transition-[scale] duration-(--dur-slow) ease-out group-hover:scale-[1.06] group-focus-visible:scale-[1.06]" />
+        ) : (
+          // no photo yet: graphite stage with an oversized outlined monogram, so the tile reads as designed, not missing
+          <span aria-hidden className="absolute inset-0 grid place-items-center overflow-hidden bg-linear-160 from-black-2 via-black to-black transition-[scale] duration-(--dur-slow) ease-out group-hover:scale-[1.06] group-focus-visible:scale-[1.06]">
+            <span className="absolute -right-1/4 -top-1/4 size-3/4 rounded-pill bg-on-dark/6 blur-3xl" />
+            <span className="font-display text-[10rem] lg:text-[13rem] font-semibold leading-none text-transparent [-webkit-text-stroke:1px_color-mix(in_srgb,var(--on-dark)_28%,transparent)]">
+              {c.name.charAt(0)}
+            </span>
+          </span>
         )}
       </motion.div>
       <span aria-hidden className="absolute inset-0 bg-linear-to-t from-black/75 via-black/15 to-transparent" />

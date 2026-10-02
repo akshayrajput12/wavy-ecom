@@ -4,6 +4,7 @@ import { ApiError, ok, parse, route } from "@/backend/_core/http";
 import type { Permission } from "@/backend/_core/permissions";
 import { logger } from "@/lib/logger";
 import { type Actor, assertCan, audit, type CacheTag, db, exec, guard, must, notFound, revalidate } from "./_shared";
+import { mediaPaths, pruneContentMedia } from "./contentMedia";
 import { RESOURCES, type ResourceName } from "./crud";
 import { BulkDeleteSchema } from "./schemas/content";
 
@@ -27,6 +28,8 @@ interface RemoveSpec {
   before?: (ids: string[]) => Promise<void>;
   /** Storage objects owned by the rows; read before the delete because the media rows cascade. */
   files?: (rows: Row[]) => Promise<Files[]>;
+  /** Shared content-media URLs in the deleted rows: removed only once nothing else references them. */
+  media?: (row: Row) => unknown;
 }
 
 const log = logger.child({ svc: "admin.remove" });
@@ -136,7 +139,7 @@ export const REMOVABLE = {
   faqs: crud("faqs", "faq"),
   testimonials: crud("testimonials", "testimonial"),
   pages: crud("pages", "content_page"),
-  "home-sections": crud("home-sections", "home_section"),
+  "home-sections": crud("home-sections", "home_section", { media: (r) => r.config }),
   "seo-overrides": crud("seo-overrides", "seo_override"),
   redirects: crud("redirects", "redirect"),
   campaigns: crud("campaigns", "campaign"),
@@ -179,6 +182,7 @@ export async function removeMany(actor: Actor, name: Removable, ids: string[]) {
   }
   if (kept.length) exec(await from(s.table).update(s.soft ?? {}).in("id", kept));
   await removeFiles(s.entity, files);
+  if (s.media && gone.length) await pruneContentMedia(s.entity, gone.flatMap((r) => [...mediaPaths(s.media!(r))]));
   await audit(actor, `${s.entity}.delete`, s.table, rows.length === 1 ? String(rows[0].id) : null,
     rows.length === 1 ? rows[0] : { rows }, { deleted: goneIds, archived: kept, soft: kept.length ? s.soft : undefined });
   revalidate(...s.tags);

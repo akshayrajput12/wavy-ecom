@@ -42,6 +42,10 @@ export const HOME_CONFIG = {
     word: text(24).min(1), tagline: text(60).optional(), variant: z.enum(["tiger", "image"]).optional(),
     image: url.optional(), imageAlt: text(200).optional(), cta: cta.optional(),
   }).refine((c) => c.variant !== "image" || !!c.image, { path: ["image"], message: "Add an image for the photo reveal" }),
+  subcategory_grid: z.object({
+    parentIds: ids.optional(), categoryIds: ids.optional(), limit,
+    columns: z.union([z.literal(4), z.literal(6)]).optional(), showOffer: z.boolean().optional(),
+  }),
 } satisfies Record<HomeSectionType, z.ZodType>;
 
 /** Validate + strip a config for its section type; throws ZodError (→ 422) with config.* paths. */

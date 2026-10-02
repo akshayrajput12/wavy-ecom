@@ -28,7 +28,7 @@ export const USER_ROLE = [
 export const PAYMENT_PROVIDER = ["razorpay", "payu", "cod"] as const;
 export const HOME_SECTION_TYPE = [
   "hero_carousel", "category_grid", "collection_rail", "product_carousel", "floating_showcase",
-  "promo_banner", "testimonials", "blog_rail", "newsletter", "tear_reveal",
+  "promo_banner", "testimonials", "blog_rail", "newsletter", "tear_reveal", "subcategory_grid",
 ] as const;
 
 export type ProductStatus = (typeof PRODUCT_STATUS)[number];
@@ -232,6 +232,9 @@ export interface HeroSlide {
   image: string; imageAlt: string; mobileImage?: string; eyebrow?: string; heading: string; body?: string;
   cta?: Cta; secondaryCta?: Cta; theme?: "light" | "dark";
 }
+/** A sub-category tile's offer line, computed on the server from its published variants. */
+export type CategoryOffer = { kind: "discount"; pct: number } | { kind: "from"; price: number };
+export interface SubcategoryTile extends CategoryRef { parentId: string | null; image?: Media; offer?: CategoryOffer }
 export type ProductCarouselSource = "collection" | "category" | "featured" | "new" | "best_rated" | "manual";
 export type HomeSection = HomeSectionBase & (
   | { type: "hero_carousel"; config: { autoplayMs?: number; slides: HeroSlide[] } }
@@ -248,5 +251,11 @@ export type HomeSection = HomeSectionBase & (
   | { type: "blog_rail"; config: { limit?: number; categorySlug?: string }; posts: BlogPost[] }
   | { type: "newsletter"; config: { heading: string; body?: string; placeholder?: string; buttonLabel?: string; consentText?: string } }
   | { type: "tear_reveal"; config: { word: string; tagline?: string; variant?: "tiger" | "image"; image?: string; imageAlt?: string; cta?: Cta } }
+  | {
+      type: "subcategory_grid";
+      config: { parentIds?: string[]; categoryIds?: string[]; limit?: number; columns?: 4 | 6; showOffer?: boolean };
+      /** Parents that own at least one tile, in tile order (the filter tabs). */
+      parents: CategoryRef[]; tiles: SubcategoryTile[];
+    }
 );
 export type HomeSectionOf<T extends HomeSectionType> = Extract<HomeSection, { type: T }>;

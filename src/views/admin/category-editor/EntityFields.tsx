@@ -30,8 +30,8 @@ export function EntityFields({ form, set, errors, isNew, basePath }: {
         </div>
       </FormSection>
       <FormSection title="Images" description="Uploaded when you save.">
-        <div className="sm:col-span-2"><ImageDropzone label="Image (card)" max={1} value={form.image} onChange={(image) => set({ image })} error={errors.imageUrl} /></div>
-        <div className="sm:col-span-2"><ImageDropzone label="Banner (wide header)" max={1} value={form.banner} onChange={(banner) => set({ banner })} error={errors.bannerUrl} /></div>
+        <div className="sm:col-span-2"><ImageDropzone label="Image (card)" max={1} maxSizeMb={5} value={form.image} onChange={(image) => set({ image })} error={errors.imageUrl} /></div>
+        <div className="sm:col-span-2"><ImageDropzone label="Banner (wide header)" max={1} maxSizeMb={5} value={form.banner} onChange={(banner) => set({ banner })} error={errors.bannerUrl} /></div>
       </FormSection>
       <FormSection title="SEO">
         <SeoFields

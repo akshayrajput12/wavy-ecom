@@ -4,6 +4,7 @@ import { clsx } from "clsx";
 import { X } from "lucide-react";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { lockScroll } from "@/components/providers/SmoothScroll";
+import { uiCopy } from "@/data/copy";
 
 /**
  * Native <dialog>: focus containment (rest of the page is inert), Escape, top layer and focus
@@ -71,7 +72,7 @@ export function Drawer({ open, onClose, title, children, footer, side = "right",
         {side === "bottom" && <span className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-pill bg-line" aria-hidden />}
         <header className={clsx("flex items-center justify-between gap-4 px-5 py-3", !hideTitle && "border-b border-line-soft")}>
           <h2 id={titleId} className={clsx("t-h3", hideTitle && "sr-only")}>{title}</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="-mr-1.5 ml-auto grid size-11 place-items-center rounded-pill border border-line transition-colors hover:border-ink hover:bg-ink hover:text-canvas">
+          <button type="button" onClick={onClose} aria-label={uiCopy.close} className="-mr-1.5 ml-auto grid size-11 place-items-center rounded-pill border border-line transition-colors hover:border-ink hover:bg-ink hover:text-canvas">
             <X className="size-4.5" aria-hidden />
           </button>
         </header>

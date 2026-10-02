@@ -140,6 +140,7 @@ Columns: `id, type home_section_type, title, subtitle, config jsonb, sort_order,
 | `blog_rail` | `{limit?, categorySlug?}` |
 | `newsletter` | `{heading, body?, placeholder?, buttonLabel?, consentText?}` |
 | `tear_reveal` | `{word, tagline?, variant?: 'tiger' or 'image', image?, imageAlt?, cta?}` (scroll-driven torn poster; `image` required when variant is `image`; migration 0020) |
+| `subcategory_grid` | `{parentIds?: uuid[], categoryIds?: uuid[], limit?, columns?: 4 or 6, showOffer?}` (sub-category tiles; empty → children of `show_on_home` roots; offer line from the `category_offer_stats` view, security invoker; migration 0025) |
 
 ## Storage buckets
 

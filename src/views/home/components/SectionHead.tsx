@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { plainText } from "@/lib/format";
 import type { Cta } from "@/types/domain";
 import { HeadingLines } from "./HeadingLines";
 
@@ -18,12 +19,12 @@ export function MoreLink({ cta, context }: { cta: Cta; context?: string }) {
 export function SectionHead({ overline, title, subtitle, cta }: { overline?: string; title?: string; subtitle?: string; cta?: Cta }) {
   if (!title && !cta) return null;
   return (
-    <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-8 lg:mb-12">
+    <div className="mb-(--head-gap) flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
       <div className="max-w-3xl">
-        {overline && <p className="t-overline mb-3">{overline}</p>}
+        {overline && <p className="t-overline mb-4">{overline}</p>}
         {title && <HeadingLines line={title} soft={subtitle} />}
       </div>
-      {cta && <MoreLink cta={cta} context={title} />}
+      {cta && <MoreLink cta={cta} context={title && plainText(title)} />}
     </div>
   );
 }

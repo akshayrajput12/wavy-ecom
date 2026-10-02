@@ -1,5 +1,6 @@
 import { Store } from "lucide-react";
 import { ButtonLink } from "@/components/ui/Button";
+import { ScrollProgress } from "@/components/ui/Reveal";
 import { EmptyState } from "@/components/ui/States";
 import { TearReveal } from "@/components/ui/TearReveal";
 import { homeCopy } from "@/data/storefront";
@@ -13,12 +14,14 @@ import { HeroCarousel } from "./components/HeroCarousel";
 import { NewsletterSection } from "./components/NewsletterSection";
 import { ProductCarouselSection } from "./components/ProductCarouselSection";
 import { PromoBanner } from "./components/PromoBanner";
+import { SubcategoryGrid } from "./components/SubcategoryGrid";
 import { Testimonials } from "./components/Testimonials";
 
 function Section({ section: s, images }: { section: HomeSection; images: Media[] }) {
   switch (s.type) {
     case "hero_carousel": return <HeroCarousel section={s} />;
     case "category_grid": return <CategoryGrid section={s} />;
+    case "subcategory_grid": return <SubcategoryGrid section={s} />;
     case "collection_rail": return <CollectionRail section={s} />;
     case "product_carousel": return <ProductCarouselSection section={s} />;
     case "floating_showcase": return <FloatingShowcase section={s} />;
@@ -58,6 +61,7 @@ export function HomeView({ sections, faqs = [] }: { sections: HomeSection[]; faq
   const body = closing ? sections.slice(0, -1) : sections;
   return (
     <>
+      <ScrollProgress />
       {body.map((s) => <Section key={s.id} section={s} images={images} />)}
       <FaqPreview faqs={faqs} />
       {closing && <Section section={closing} images={images} />}

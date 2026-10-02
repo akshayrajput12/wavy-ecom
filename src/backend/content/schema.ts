@@ -35,6 +35,10 @@ export const HomeSectionConfig = {
     word: z.string().min(1), tagline: z.string().optional(), variant: z.enum(["tiger", "image"]).optional(),
     image: z.string().optional(), imageAlt: z.string().optional(), cta: Cta.optional(),
   }),
+  subcategory_grid: z.object({
+    parentIds: z.array(uuid).optional(), categoryIds: z.array(uuid).optional(), limit,
+    columns: z.union([z.literal(4), z.literal(6)]).optional(), showOffer: z.boolean().optional(),
+  }),
 } as const;
 export type HomeSectionConfigs = { [K in keyof typeof HomeSectionConfig]: z.infer<(typeof HomeSectionConfig)[K]> };
 

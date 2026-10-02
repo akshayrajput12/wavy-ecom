@@ -8,9 +8,10 @@ import { filterCopy, productCopy } from "@/data/copy";
 import { collectionCopy } from "@/data/storefront";
 import type { ProductList } from "@/backend/catalog/repo";
 import type { CategoryRef, Media } from "@/types/domain";
+import { SubcategoryStrip, type SubcategoryStripProps } from "./components/SubcategoryStrip";
 
 export interface CollectionViewProps {
-  title: string; description?: string; banner?: Media; trail: CategoryRef[]; subcategories: CategoryRef[];
+  title: string; description?: string; banner?: Media; trail: CategoryRef[]; strip?: SubcategoryStripProps;
   isCategory: boolean; list: ProductList; path: string; params: Record<string, string | string[] | undefined>;
 }
 
@@ -27,8 +28,8 @@ function Crumbs({ trail, title }: { trail: CategoryRef[]; title: string }) {
   );
 }
 
-/** Category or collection listing: dark banner (or plain heading), subcategory pills, filter/sort toolbar, 2/3/4 grid, pagination. */
-export function CollectionView({ title, description, banner, trail, subcategories, isCategory, list, path, params }: CollectionViewProps) {
+/** Category or collection listing: dark banner (or plain heading), sub-category / sibling strip, filter/sort toolbar, 2/3/4 grid, pagination. */
+export function CollectionView({ title, description, banner, trail, strip, isCategory, list, path, params }: CollectionViewProps) {
   const refined = Object.keys(params).some((k) => ["opt", "brand", "min", "max", "inStock", "category"].includes(k));
   const filterProps = { facets: list.facets, hideCategories: isCategory };
   const count = <p className="t-index text-ink-soft">{filterCopy.results(list.total)}</p>;
@@ -64,17 +65,7 @@ export function CollectionView({ title, description, banner, trail, subcategorie
       </header>
 
       <div className="container-x">
-        {subcategories.length > 0 && (
-          <nav aria-label={collectionCopy.subcategories} className="-mx-(--gutter) overflow-x-auto px-(--gutter) pt-8 [scrollbar-width:none]">
-            <ul className="flex gap-2">
-              {subcategories.map((s) => (
-                <li key={s.id} className="shrink-0">
-                  <Link href={`/collections/${s.slug}`} className="inline-flex min-h-11 items-center rounded-pill border border-line px-5 text-meta font-medium transition-colors duration-(--dur-fast) hover:border-ink hover:bg-ink hover:text-canvas">{s.name}</Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        )}
+        {strip && <SubcategoryStrip {...strip} />}
 
         <div className="mt-8">
           <FilterToolbar total={list.total} {...filterProps} />

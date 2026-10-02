@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { clsx } from "clsx";
-import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
+import { useReducedMotion } from "@/components/ui/useMediaQuery";
 import type { Media } from "@/types/domain";
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;

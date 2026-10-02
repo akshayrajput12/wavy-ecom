@@ -1,7 +1,8 @@
 "use client";
 
 import { clsx } from "clsx";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { useReducedMotion } from "@/components/ui/useMediaQuery";
 import { Minus, Plus } from "lucide-react";
 import { useId, useState } from "react";
 import type { Faq } from "@/types/domain";

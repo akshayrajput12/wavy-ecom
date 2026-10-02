@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useEffectEvent, useRef, useState, useSyncExternalStore, type FocusEvent, type PointerEvent, type RefObject, type WheelEvent } from "react";
+import { useEffect, useEffectEvent, useRef, useState, useSyncExternalStore, type Dispatch, type FocusEvent, type PointerEvent, type RefObject, type SetStateAction, type WheelEvent } from "react";
+
+/** A play/pause state owned by a parent, so it survives the rail remounting (CategoryTabs swaps rails per tab). */
+export type PlayState = [boolean, Dispatch<SetStateAction<boolean>>];
 
 const INTERVAL_MS = 4000;
 const IDLE_MS = 8000; // pause after the shopper drags, wheels, presses a key or uses the arrows
@@ -11,8 +14,9 @@ const onVisibility = (cb: () => void) => { document.addEventListener("visibility
  * Auto-advance for HomeRail: calls `advance` every 4s while `enabled`, playing (user toggle), on screen, the tab is
  * visible and the rail is neither hovered nor focused. `nudge()` (and the returned handlers) hold it for 8s.
  */
-export function useRailAutoplay(ref: RefObject<HTMLElement | null>, advance: () => void, enabled: boolean) {
-  const [playing, setPlaying] = useState(true);
+export function useRailAutoplay(ref: RefObject<HTMLElement | null>, advance: () => void, enabled: boolean, playState?: PlayState) {
+  const own = useState(true);
+  const [playing, setPlaying] = playState ?? own;
   const [hover, setHover] = useState(false);
   const [focus, setFocus] = useState(false);
   const [onScreen, setOnScreen] = useState(false);

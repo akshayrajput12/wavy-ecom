@@ -3,7 +3,8 @@
 import { useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
+import { useReducedMotion } from "@/components/ui/useMediaQuery";
 import { Modal } from "@/components/ui/Modal";
 import { layoutCopy } from "@/data/storefront";
 import type { NavLink } from "@/types/domain";
@@ -59,7 +60,8 @@ export function HeaderBar({ storeName, logoUrl, logoDarkUrl, categories, collect
       </motion.header>
 
       <MobileMenu open={menu} onClose={() => setMenu(false)} storeName={storeName} categories={categories} collections={collections} pathname={pathname} />
-      <Modal open={search} onClose={() => setSearch(false)} title={layoutCopy.searchTitle} size="lg">
+      <Modal open={search} onClose={() => setSearch(false)} title={layoutCopy.searchTitle} size="lg"
+        className="max-sm:h-dvh! max-sm:max-h-none! max-sm:w-full! max-sm:max-w-none! max-sm:rounded-none! sm:mt-[12dvh]!">
         {search && <SearchBox autoFocus large onNavigate={() => setSearch(false)} />}
       </Modal>
     </>

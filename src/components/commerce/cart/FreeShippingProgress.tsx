@@ -1,6 +1,7 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { useReducedMotion } from "@/components/ui/useMediaQuery";
 import { PartyPopper, Truck } from "lucide-react";
 import { formatPrice } from "@/lib/format";
 import { cartExtraCopy as x } from "./copy";

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
 import { clsx } from "clsx";
-import { useReducedMotion } from "framer-motion";
+import { useReducedMotion } from "@/components/ui/useMediaQuery";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { pdpCopy } from "@/data/storefront";
 import type { Media } from "@/types/domain";

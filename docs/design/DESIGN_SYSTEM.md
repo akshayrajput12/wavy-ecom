@@ -4,8 +4,9 @@ What is **implemented** in `src/app/globals.css`, `src/app/layout.tsx` and `src/
 Where this differs from older specs, the code wins.
 
 **Direction (2026-10-01):** premium warm monochrome, modelled on the reference in `REFERENCE_GENESIS.md`:
-paper canvas, near-black ink, no colour accent, dark "stages" for the hero / lookbook / CTA band, tight
-geometric display headings, pill controls, gentle motion. Product imagery supplies the colour.
+paper canvas, near-black ink, no colour accent, dark "stages" for the hero / lookbook / CTA band, condensed
+expressive grotesk headings with an optional italic-serif accent word, pill controls, gentle motion. Product imagery
+supplies the colour.
 
 **The one rule:** components never contain hex, rgb or raw px sizes. Every value is a token in `:root`,
 exposed to Tailwind v4 through `@theme inline`. Change the token and the whole site follows.
@@ -44,20 +45,30 @@ Rules: no dark *mode*; dark sections are part of the design. Status is never col
 | Role | Font | CSS var (next/font) | Token | Tailwind |
 |---|---|---|---|---|
 | UI and body | **Plus Jakarta Sans** | `--font-jakarta` | `--font-ui` | `font-sans` (body default) |
-| Display (all headings) | **Urbanist** 600 | `--font-urbanist` | `--font-editorial` | `font-display` (`font-serif` is a legacy alias) |
+| Display (all headings) | **Bricolage Grotesque** 600–700, variable `wght` + `opsz` + `wdth` | `--font-bricolage` | `--font-editorial` | `font-display` (`font-serif` is a legacy alias) |
+| Accent word | **Instrument Serif** italic 400 (not preloaded) | `--font-instrument` | `--font-accent` | `font-accent`, `.t-accent`, `<em>` in a heading |
 | Indices / counters | **Geist Mono** | `--font-geist-mono` | `--font-mono` | `font-mono`, `.t-index` |
 
-Why: the reference uses a tight geometric grotesk for headings; Urbanist is the closest Google font.
-Jakarta keeps small UI text open and legible. Mono is only for "(01)", "02 / 04" style labels.
+Why: Bricolage has real character (ink traps, a quirky `a`/`g`, optical sizes that sharpen as it grows) and a width
+axis, so hero/display headings run condensed (`--stretch-display` 88%) like a fashion poster while H1/H2 stay calmer.
+Instrument Serif italic, for a single highlighted word, adds the editorial contrast. Jakarta keeps small UI text open
+and legible. Mono is only for "(01)", "02 / 04" style labels. All are SIL OFL 1.1 (free for web use), served by
+`next/font/google` and self-hosted at build time. Invoice PDFs still embed Urbanist (`src/backend/invoices/fonts/`).
+
+**Accent convention:** admin heading text marks the word(s) with asterisks, `Wear your *heritage*`.
+`accentWords()` / `plainText()` (`src/lib/format.ts`) parse it; `HeadingLines` and the hero headline render the marked
+words as `<em>`, which `:is(.t-hero,.t-display,.t-h1,.t-h2) em` styles. Use `plainText()` for aria-labels. Unmatched
+asterisks stay literal. Other surfaces (overlines, admin preview, meta tags) show the raw text.
 
 ### Fluid scale (390 → 1440 px viewports)
 
 | Token | Size | Class | Font / weight / leading / tracking |
 |---|---|---|---|
-| `--text-hero` | 44 → 80 px | `.t-hero` / `text-hero` | Display 600, 0.98, −0.035em, balanced |
-| `--text-display` | 36 → 60 px | `.t-display` | Display 600, 1, −0.035em |
-| `--text-h1` | 30 → 42 px | `.t-h1` | Display 600, 1.3, −0.012em |
-| `--text-h2` | 22 → 26 px | `.t-h2` | Display 600, 1.3 |
+| `--text-hero` | 46 → 88 px | `.t-hero` / `text-hero` | Display 700, 88% width, 0.92, −0.03em, balanced |
+| `--text-display` | 36 → 60 px | `.t-display` | Display 650, 88% width, 0.96, −0.03em |
+| `--text-h1` | 30 → 42 px | `.t-h1` | Display 600, 94% width, 1.1, −0.02em |
+| `--text-h2` | 22 → 26 px | `.t-h2` | Display 600, 1.2, −0.012em |
+| — | fits its container | `.t-wordmark` | Display 700, 82% width, opsz 96, 0.9, −0.04em (footer wordmark, preloader word) |
 | `--text-h3` | 19 px | `.t-h3` | Sans 500, 1.3 |
 | `--text-body-lg` | 16 px | `text-body-lg` | inputs on mobile (no iOS zoom) |
 | `--text-body` | 15 px | `.t-body` / body default | Sans 400, 1.6 |
@@ -66,14 +77,17 @@ Jakarta keeps small UI text open and legible. Mono is only for "(01)", "02 / 04"
 | `--text-overline` | 11 px | `.t-overline` | 500, uppercase, +0.14em, `ink-soft` |
 
 To swap a font: change the `next/font/google` import in `layout.tsx`, keep the `variable` name (or
-update `--font-ui` / `--font-editorial`). To restyle every H1: edit `.t-h1` once.
+update `--font-ui` / `--font-editorial`). To restyle every H1: edit `.t-h1` once. If you change the wordmark face,
+re-measure the width table in `FooterWordmark.tsx`.
 
 ## 3. Spacing, shape, elevation
 
 | Token | Value | Notes |
 |---|---|---|
 | `--space-1…24` | 4 … 96 px | 8 px rhythm, matches Tailwind spacing |
-| `--section-y` / `--gutter` / `--container` / `--header-h` | 48→96 / 16→48 / 1440 / 64 px | `.section-y`, `.container-x` |
+| `--section-y` / `--gutter` / `--container` / `--header-h` | 56→112 / 16→48 / 1440 / 72 px | `.section-y`, `.container-x` |
+| `--section-join` | 0.4 × section-y | top padding of a paper `.section-y` that follows another paper one inside `#main` (shared gap, not doubled); `.on-dark` stages keep full padding |
+| `--head-gap` | 32→56 px | section heading → content (`SectionHead`) |
 | `--radius-sm/md/lg/xl/pill` | 10 / 14 / 22 / 28 / 999 px | inputs / cards / modals, panels / bottom sheets, hero cards / buttons, chips (`xl` is new) |
 | `--shadow-sm/md/lg` | ink at 4 / 12 / 20%, long soft blur | cards rest on borders; `md` for hover lift and floating controls; `lg` for drawers and modals |
 
@@ -96,9 +110,19 @@ checks `useReducedMotion()`, and the global reduced-motion rule zeroes CSS trans
 **Lenis** (`SmoothScroll.tsx`, `lerp 0.085`, wheel only, touch native) is off for reduced motion and `/admin` (follows client navigation); overlays call
 `lockScroll()` from the same file, which pauses Lenis and locks `<html>` (nest-safe).
 
+Home motion: headings rise word by word out of a mask (`HeadingLines`, 45 ms stagger); rail cards stagger in
+(`HomeRail`); the category tab panel cross-fades and slides in the direction of the tab change; the lookbook caption
+cross-fades; large images drift ±6% (`Parallax`); a hairline `ScrollProgress` bar tracks the page. Footer: columns
+fade up, links get a hairline underline sweep (`.link-sweep`), a "Back to top" pill uses Lenis (`scrollToTop()`), and
+the wordmark reveals letter by letter, scroll-linked (`FooterWordmark`: MotionValues only, SSR'd finished, armed only
+when it starts below the fold, static for reduced motion). Without JS, `@media (scripting: none)` shows every
+`[data-reveal]` element in its final state.
+
 | Need | Use |
 |---|---|
 | Section / card fades in on scroll | `Reveal`, or `Stagger` + `StaggerItem` for lists |
+| Display heading with word reveal / accent | `HeadingLines` (`views/home/components`, `hero` for the t-hero scale) |
+| Image drift on scroll | `Parallax` (frame sized by `className`, child usually a `fill` image) |
 | Gentle idle float (home product showcase) | `Float` |
 | Card hover lift | `lift` utility class (CSS only) |
 | Slides, product rails | `Carousel` |

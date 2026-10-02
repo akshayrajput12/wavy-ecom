@@ -1,7 +1,8 @@
 "use client";
 
 import { clsx } from "clsx";
-import { ChevronDown, Minus, Plus, X } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { MinusIcon, PlusIcon, XIcon } from "@/components/ui/icons";
 import { useId, type ComponentProps, type ReactNode } from "react";
 import { uiCopy } from "@/data/copy";
 
@@ -20,7 +21,7 @@ export function Chip({ active, onRemove, children, className, ...rest }: Compone
       {...rest}
     >
       {children}
-      {onRemove && <X className="size-3.5" aria-hidden />}
+      {onRemove && <XIcon className="size-3.5" />}
     </button>
   );
 }
@@ -30,24 +31,27 @@ export function QuantityStepper({ value, onChange, max, min = 1, label }: { valu
   return (
     <div role="group" aria-label={label} className="inline-flex items-center rounded-pill border border-line">
       <button type="button" className={btn} onClick={() => onChange(value - 1)} disabled={value <= min} aria-label={uiCopy.decrease}>
-        <Minus className="size-3.5" aria-hidden />
+        <MinusIcon className="size-3.5" />
       </button>
       <output aria-live="polite" className="w-6 text-center text-body font-medium tabular-nums">{value}</output>
       <button type="button" className={btn} onClick={() => onChange(value + 1)} disabled={value >= max} aria-label={uiCopy.increase}>
-        <Plus className="size-3.5" aria-hidden />
+        <PlusIcon className="size-3.5" />
       </button>
     </div>
   );
 }
 
-/** Native select with a visible (or visually hidden) label. */
+/**
+ * Native select with a visible (or visually hidden) label. Where customizable select is supported the open list is
+ * themed (globals.css `::picker(select)`); for a searchable list use `Combobox`.
+ */
 export function Select({ label, hideLabel, className, children, ...rest }: ComponentProps<"select"> & { label: string; hideLabel?: boolean }) {
   const id = useId();
   return (
     <div className={clsx("flex items-center gap-2", className)}>
       <label htmlFor={id} className={clsx("text-meta text-ink-soft", hideLabel && "sr-only")}>{label}</label>
       <div className="relative">
-        <select id={id} className="h-11 appearance-none rounded-pill border border-line bg-transparent pl-4 pr-9 text-meta font-medium text-ink transition-colors hover:border-ink focus:border-ink focus:outline-none" {...rest}>
+        <select id={id} className="h-11 appearance-none rounded-pill border border-line bg-transparent pl-4 pr-9 text-meta font-medium text-ink transition-colors hover:border-ink focus:border-ink focus:outline-none supports-[appearance:base-select]:[appearance:base-select] [&::picker-icon]:hidden" {...rest}>
           {children}
         </select>
         <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-ink-soft" aria-hidden />
@@ -64,7 +68,7 @@ export function Accordion({ title, children, defaultOpen, name, id }: { title: R
         {title}
         {/* circular toggle, filled ink when open (reference FAQ) */}
         <span className="grid size-8 shrink-0 place-items-center rounded-pill border border-line transition-colors duration-(--dur-base) group-open:border-ink group-open:bg-ink group-open:text-canvas" aria-hidden>
-          <Plus className="size-3.5 transition-transform duration-(--dur-base) ease-soft group-open:rotate-45" />
+          <PlusIcon className="size-3.5 transition-[rotate] duration-(--dur-base) ease-soft group-open:rotate-45" />
         </span>
       </summary>
       <div className="pb-5 text-body text-ink-soft">{children}</div>

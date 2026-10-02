@@ -1,7 +1,7 @@
 "use client";
 
 import { clsx } from "clsx";
-import { ChevronDown } from "lucide-react";
+import { ChevronDownIcon, IconMotion } from "@/components/ui/icons";
 import Link from "next/link";
 import { useState, type FocusEvent, type MouseEvent } from "react";
 import { adminCopy } from "@/data/copy";
@@ -50,7 +50,7 @@ export function AdminNav({ role, currentHref, rail = false, onNavigate, classNam
               >
                 <span className="t-overline min-w-0 flex-1 truncate">{group.label}</span>
                 {!open && hasActive && <span className="size-2 shrink-0 rounded-full bg-ink" aria-hidden />}
-                <ChevronDown className={clsx("size-4 shrink-0 transition-transform", !open && "-rotate-90")} aria-hidden />
+                <ChevronDownIcon className={clsx("size-4 shrink-0 transition-[rotate]", !open && "-rotate-90")} />
               </button>
             )}
             <ul id={listId} hidden={!open} className="flex flex-col gap-0.5">
@@ -70,7 +70,7 @@ export function AdminNav({ role, currentHref, rail = false, onNavigate, classNam
                         active ? "bg-ink font-medium text-on-dark shadow-sm" : "text-ink-soft hover:bg-surface-2 hover:text-ink",
                       )}
                     >
-                      <Icon className="size-5 shrink-0" aria-hidden />
+                      <IconMotion icon={Icon} className="size-5 shrink-0" />
                       <span className={rail ? "sr-only" : "min-w-0 flex-1 truncate"}>{label}</span>
                     </Link>
                   </li>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin } from "lucide-react";
+import { MapPinIcon } from "@/components/ui/icons";
 import { deliveryCopy as c } from "@/data/copy";
 
 /** Pincode serviceability via GET /api/shipping/serviceability (Shiprocket). */
@@ -40,7 +40,7 @@ export function DeliveryCheck() {
 
   return (
     <form onSubmit={check} className="rounded-lg bg-surface-2 p-4" noValidate aria-busy={loading}>
-      <label htmlFor="pincode" className="flex items-center gap-2 text-meta font-medium"><MapPin className="size-4" aria-hidden /> {c.title}</label>
+      <label htmlFor="pincode" className="flex items-center gap-2 text-meta font-medium"><MapPinIcon className="size-4" /> {c.title}</label>
       <div className="mt-2 flex gap-2">
         <input
           id="pincode" value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}

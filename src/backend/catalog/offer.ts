@@ -1,4 +1,4 @@
-/** Sub-category offer line (home subcategory_grid). Pure (no server-only) so vitest can cover it. */
+/** Sub-category offer line (home subcategory_grid). */
 import type { CategoryOffer } from "@/types/domain";
 
 /** One category_offer_stats row (0025): cheapest variant price (paise) and deepest compare-at discount %. */

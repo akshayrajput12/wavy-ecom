@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRightIcon } from "@/components/ui/icons";
 import { homeCopy } from "@/data/storefront";
 import { formatPrice } from "@/lib/format";
 import type { CategoryOffer, SubcategoryTile as Tile } from "@/types/domain";
@@ -32,7 +32,7 @@ export function SubcategoryTile({ tile: t, sizes }: { tile: Tile; sizes: string 
         {t.offer && <span className="mt-1 font-display text-h3 font-bold leading-tight tracking-tight text-ink">{offerText(t.offer)}</span>}
         <span className="mt-auto inline-flex items-center gap-0.5 pt-2 text-meta font-medium text-ink-soft underline decoration-line underline-offset-4 transition-colors duration-(--dur-fast) group-hover:text-ink group-hover:decoration-ink">
           {homeCopy.shopNow}
-          <ChevronRight aria-hidden className="size-3.5 transition-transform duration-(--dur-base) ease-soft motion-safe:group-hover:translate-x-1 motion-safe:group-focus-visible:translate-x-1" />
+          <ChevronRightIcon className="size-3.5" />
         </span>
       </span>
     </Link>

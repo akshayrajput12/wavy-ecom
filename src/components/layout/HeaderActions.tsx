@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { clsx } from "clsx";
-import { Heart, LayoutDashboard, Menu, Search, ShoppingBag, User } from "lucide-react";
-import { cartCount, useCart } from "@/stores/cart";
+import { LayoutDashboard } from "lucide-react";
+import { HeartIcon, MenuIcon, SearchIcon, ShoppingBagIcon, UserIcon } from "@/components/ui/icons";
+import { cartCount, useCart, useCartHydrated } from "@/stores/cart";
 import { headerCopy } from "@/data/copy";
 
 // 40px circle, 44px hit area via the ::after overhang
@@ -16,16 +17,17 @@ export function HeaderActions({ isStaff, onSearch, onMenu, menuOpen }: {
 }) {
   const count = useCart((s) => cartCount(s.lines));
   const openCart = useCart((s) => s.setOpen);
+  const hydrated = useCartHydrated(); // bounce on real changes only, not on the localStorage restore
   const desk = clsx(iconButton, "max-lg:hidden");
   const stroke = 1.6;
 
   return (
     <div className="flex flex-1 items-center justify-end gap-1.5">
       <button type="button" className={iconButton} onClick={onSearch} aria-label={headerCopy.search}>
-        <Search className="size-4.5" strokeWidth={stroke} aria-hidden />
+        <SearchIcon className="size-4.5" strokeWidth={stroke} />
       </button>
       <Link href="/wishlist" className={desk} aria-label={headerCopy.wishlist}>
-        <Heart className="size-4.5" strokeWidth={stroke} aria-hidden />
+        <HeartIcon className="size-4.5" strokeWidth={stroke} />
       </Link>
       {isStaff && (
         <Link href="/admin/dashboard" className={desk} aria-label={headerCopy.admin} title={headerCopy.admin}>
@@ -33,10 +35,10 @@ export function HeaderActions({ isStaff, onSearch, onMenu, menuOpen }: {
         </Link>
       )}
       <Link href="/account" className={desk} aria-label={headerCopy.account}>
-        <User className="size-4.5" strokeWidth={stroke} aria-hidden />
+        <UserIcon className="size-4.5" strokeWidth={stroke} />
       </Link>
       <button type="button" className={iconButton} onClick={() => openCart(true)} aria-label={`${headerCopy.bag}, ${count}`}>
-        <ShoppingBag className="size-4.5" strokeWidth={stroke} aria-hidden />
+        <ShoppingBagIcon className="size-4.5" strokeWidth={stroke} trigger={hydrated ? count : undefined} />
         {count > 0 && (
           <span className="absolute -right-1 -top-1 grid h-4.5 min-w-4.5 place-items-center rounded-pill bg-ink px-1 text-overline font-semibold leading-none text-canvas tabular-nums" aria-hidden>
             {count}
@@ -51,7 +53,7 @@ export function HeaderActions({ isStaff, onSearch, onMenu, menuOpen }: {
         aria-expanded={menuOpen}
         aria-controls="mobile-menu"
       >
-        <Menu className="size-4.5" strokeWidth={stroke} aria-hidden />
+        <MenuIcon className="size-4.5" strokeWidth={stroke} open={menuOpen} />
       </button>
     </div>
   );

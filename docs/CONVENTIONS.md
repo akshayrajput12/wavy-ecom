@@ -69,4 +69,4 @@ docs/                         specs/, database/, system-design/, design/, api/
 - Keep files focused (under about 200 lines). No speculative abstractions. Reuse `components/ui` before creating new primitives.
 - Accessibility: labelled inputs, `alt` on informative images, visible focus, keyboard reachable, 44px touch targets.
 - Images: `next/image` with `sizes`, lazy by default and `priority` only for the LCP hero.
-- Each non-trivial money/security path has one `*.test.ts` (vitest) next to it.
+- No automated test suite: the project does not use test files. Verify with `npx tsc --noEmit` and `npm run lint`.

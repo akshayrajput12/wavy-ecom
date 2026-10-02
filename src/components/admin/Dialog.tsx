@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { XIcon } from "@/components/ui/icons";
 import { useEffect, useRef, type ReactNode } from "react";
 import { adminCopy } from "@/data/copy";
 
@@ -28,7 +28,7 @@ export function Dialog({ open, onClose, title, children, footer }: {
         <div className="flex max-h-[85dvh] flex-col">
           <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3">
             <h2 id="admin-dialog-title" className="min-w-0 text-body-lg font-semibold">{title}</h2>
-            <button type="button" onClick={onClose} aria-label={adminCopy.close} className="-mr-2 grid size-11 shrink-0 place-items-center rounded-sm hover:bg-surface-2"><X className="size-4" aria-hidden /></button>
+            <button type="button" onClick={onClose} aria-label={adminCopy.close} className="-mr-2 grid size-11 shrink-0 place-items-center rounded-sm hover:bg-surface-2"><XIcon className="size-4" /></button>
           </div>
           <div className="overflow-y-auto px-5 py-4">{children}</div>
           {footer && <div className="flex flex-wrap justify-end gap-2 border-t border-line px-5 py-3">{footer}</div>}

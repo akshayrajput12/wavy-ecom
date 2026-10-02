@@ -1,7 +1,8 @@
 "use client";
 
 import { clsx } from "clsx";
-import { ChevronRight, ExternalLink, Lock, Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ChevronRight, ExternalLink, Lock, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { IconMotion, MenuIcon } from "@/components/ui/icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
@@ -65,7 +66,7 @@ function Shell({ me, brand, children }: { me: StaffSession | null; brand: ShellB
             type="button" onClick={() => setRail(rail ? "0" : "1")}
             aria-expanded={!rail} aria-controls="admin-sidebar" aria-label={rail ? c.expand : c.collapse} title={rail ? c.expand : c.collapse}
             className="grid size-11 shrink-0 place-items-center rounded-pill text-ink-soft transition-colors hover:bg-surface-2 hover:text-ink"
-          >{rail ? <PanelLeftOpen className="size-5" aria-hidden /> : <PanelLeftClose className="size-5" aria-hidden />}</button>
+          ><IconMotion icon={rail ? PanelLeftOpen : PanelLeftClose} className="size-5" /></button>
         </div>
       </aside>
 
@@ -82,7 +83,7 @@ function Shell({ me, brand, children }: { me: StaffSession | null; brand: ShellB
             type="button" onClick={() => setOpen(true)}
             aria-label={c.openNav} aria-expanded={open} aria-controls={DRAWER_NAV_ID}
             className="grid size-11 shrink-0 place-items-center rounded-pill transition-colors hover:bg-surface-2 lg:hidden"
-          ><Menu className="size-5" aria-hidden /></button>
+          ><MenuIcon className="size-5" /></button>
           <nav aria-label={c.breadcrumb} className="min-w-0 flex-1">
             <ol className="flex min-w-0 items-center gap-1.5 text-meta whitespace-nowrap text-ink-soft">
               <li className="hidden shrink-0 sm:block"><Link href="/admin/dashboard" className="hover:text-ink">{c.root}</Link></li>
@@ -92,7 +93,7 @@ function Shell({ me, brand, children }: { me: StaffSession | null; brand: ShellB
           </nav>
           {allowPreview && <div className="hidden md:block"><RolePreview role={role} /></div>}
           <Link href="/" aria-label={c.viewStore} className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-pill border border-line px-3 text-meta transition-colors hover:border-ink sm:h-9">
-            <span className="hidden sm:inline">{c.viewStore}</span><ExternalLink className="size-4" aria-hidden />
+            <span className="hidden sm:inline">{c.viewStore}</span><IconMotion icon={ExternalLink} className="size-4" />
           </Link>
         </header>
         <main id="admin-main" className="mx-auto w-full max-w-(--container) min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8">

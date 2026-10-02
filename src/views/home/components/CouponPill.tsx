@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy } from "lucide-react";
+import { CheckIcon, CopyIcon } from "@/components/ui/icons";
 import { useState } from "react";
 import { buttonClass } from "@/components/ui/Button";
 import { homeCopy } from "@/data/storefront";
@@ -21,7 +21,7 @@ export function CouponPill({ code }: { code: string }) {
     <button type="button" onClick={copy} aria-label={`${homeCopy.copyCode}: ${code}`} className={buttonClass({ variant: "secondary", size: "lg" })}>
       <span className="opacity-70">{homeCopy.useCode}</span>
       <span className="font-semibold tracking-wide">{code}</span>
-      {copied ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
+      {copied ? <CheckIcon className="size-4" appear /> : <CopyIcon className="size-4" />}
       <span className="sr-only" role="status">{copied ? homeCopy.copied : ""}</span>
     </button>
   );

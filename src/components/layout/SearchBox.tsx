@@ -4,7 +4,7 @@ import Form from "next/form";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { clsx } from "clsx";
-import { Search } from "lucide-react";
+import { SearchIcon } from "@/components/ui/icons";
 import { searchCopy } from "@/data/copy";
 import { layoutCopy } from "@/data/storefront";
 import type { SearchSuggestions } from "@/backend/catalog/repo";
@@ -88,7 +88,7 @@ export function SearchBox({ defaultValue = "", autoFocus, onNavigate, large, rec
     >
       <Form action="/search" role="search" onSubmit={onNavigate}
         className={clsx("flex items-center gap-3 border-b-2 border-ink/25 pb-2 transition-colors focus-within:border-ink", large && "pb-3")}>
-        <Search className={clsx("shrink-0 text-ink-soft", large ? "size-6" : "size-5")} strokeWidth={1.5} aria-hidden />
+        <SearchIcon className={clsx("shrink-0 text-ink-soft", large ? "size-6" : "size-5")} strokeWidth={1.5} />
         <label htmlFor={`${id}-q`} className="sr-only">{searchCopy.label}</label>
         <input
           ref={input} id={`${id}-q`} name="q" type="search" value={q} autoFocus={autoFocus} maxLength={100}

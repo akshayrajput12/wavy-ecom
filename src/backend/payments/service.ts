@@ -1,4 +1,5 @@
 import "server-only";
+import { after } from "next/server";
 import { must, serviceDb } from "@/backend/_core/db";
 import { ApiError } from "@/backend/_core/http";
 import { issueInvoiceIfEligible } from "@/backend/invoices/service";
@@ -52,12 +53,13 @@ export async function startRazorpayPayment(order: PayableOrder, ctx: ClientConte
     });
     throw new ApiError(502, "gateway_error", "The payment gateway is unavailable. Please try again.");
   }
-  await Promise.all([
+  // provider_order_id must be stored before we answer: verify and webhooks look the attempt up by it.
+  const [, , settings] = await Promise.all([
     db.from("payment_attempts").update({ provider_order_id: rzp.id, raw_request: { razorpayOrderId: rzp.id } }).eq("id", attempt.attemptId),
     db.from("payments").update({ provider_order_id: rzp.id }).eq("id", attempt.paymentId),
+    getStoreSettings(),
   ]);
   alog.info("payment.initiated", { provider: "razorpay", amount: rzp.amount });
-  const settings = await getStoreSettings();
   return {
     provider: "razorpay", orderId: order.id, orderNumber: order.number, attemptId: attempt.attemptId,
     keyId, razorpayOrderId: rzp.id, amount: rzp.amount, currency: rzp.currency, name: settings?.storeName ?? "",
@@ -88,8 +90,9 @@ async function markCaptured(orderId: string, attemptId: string, p: RazorpayPayme
   const clog = log.child({ orderId, attemptId, source });
   if (res.refundRequired) clog.warn("payment.refund_required", { result: res.result, paymentId: p.id });
   else clog.info("payment.captured", { result: res.result, amount: p.amount });
-  // GST invoice at capture; idempotent, so webhook + callback racing each other still yield one invoice
-  if (res.result === "captured" || res.result === "already_captured") await issueInvoiceIfEligible(orderId, source, clog);
+  // GST invoice at capture, after the response (3 DB round trips the shopper/webhook needn't wait for). Idempotent, so
+  // webhook + callback + the success page (invoiceIfReady) racing each other still yield one invoice.
+  if (res.result === "captured" || res.result === "already_captured") after(() => issueInvoiceIfEligible(orderId, source, clog));
   return res;
 }
 
@@ -117,13 +120,20 @@ async function findAttempt(filter: { attemptId?: string; orderId?: string; razor
 /** Checkout callback: verify signature, confirm with Razorpay (never trust the client amount), capture idempotently. */
 export async function verifyRazorpayPayment(input: VerifyInput): Promise<CaptureResult | { result: "failed"; orderId: string }> {
   const { keySecret } = razorpayConfig();
-  const attempt = await findAttempt({ attemptId: input.attemptId, orderId: input.orderId });
+  // The signature check is local, so the attempt lookup (DB) and the payment fetch (Razorpay) run side by side.
+  const signed = verifyPaymentSignature(input.razorpayOrderId, input.razorpayPaymentId, input.razorpaySignature, keySecret);
+  const [attempt, fetched] = await Promise.all([
+    findAttempt({ attemptId: input.attemptId, orderId: input.orderId }),
+    // settled, so a gateway error never masks attempt_mismatch below
+    signed ? fetchRazorpayPayment(input.razorpayPaymentId).then((info) => ({ info }), (error: unknown) => ({ error })) : null,
+  ]);
   if (!attempt || attempt.provider_order_id !== input.razorpayOrderId) throw new ApiError(400, "attempt_mismatch", "Payment does not match this order");
-  if (!verifyPaymentSignature(input.razorpayOrderId, input.razorpayPaymentId, input.razorpaySignature, keySecret)) {
+  if (!fetched) {
     await recordFailure(attempt.id, { id: input.razorpayPaymentId, errorCode: "invalid_signature", errorDescription: "checkout signature mismatch" }, "client", "signature_mismatch");
     throw new ApiError(400, "signature_invalid", "We could not verify this payment");
   }
-  let p = await fetchRazorpayPayment(input.razorpayPaymentId);
+  if ("error" in fetched) throw fetched.error;
+  let p = fetched.info;
   if (p.orderId !== input.razorpayOrderId) throw new ApiError(400, "attempt_mismatch", "Payment does not match this order");
   if (p.status === "authorized") p = await captureRazorpayPayment(p.id, p.amount, p.currency);
   if (p.status === "failed") { await recordFailure(attempt.id, p, "client"); return { result: "failed", orderId: input.orderId }; }

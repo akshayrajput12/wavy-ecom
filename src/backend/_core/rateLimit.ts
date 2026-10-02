@@ -1,6 +1,5 @@
 /**
  * Fixed-window limiter for public write / expensive endpoints, applied by `route()` (http.ts).
- * Pure (no server-only) so vitest can cover it.
  *
  * ponytail: in-memory, so limits are per server instance (N instances = N x the limit) and reset on
  * deploy. Upgrade path when that matters: a shared store with the same key/window, e.g. Upstash Redis
@@ -13,6 +12,9 @@ export const RATE_LIMITS: Record<string, readonly [number, number]> = {
   "GET catalog.suggest": [120, 60],            // typeahead
   "GET shipping.serviceability": [30, 60],     // calls Shiprocket
   "GET orders.track": [30, 60],                // token guessing
+  "GET geo.pincode": [30, 60],                 // India Post on a cache miss
+  "GET geo.reverse": [20, 60],                 // Nominatim (1 req/s policy, also throttled in backend/geo)
+  "GET geo.search": [60, 60],                  // Photon typeahead (debounced 300 ms client-side)
   "POST pricing": [60, 60],                    // cart quote (recomputes on every cart change)
   "POST pricing.coupon": [10, 600],            // coupon brute force
   "POST checkout": [10, 600],

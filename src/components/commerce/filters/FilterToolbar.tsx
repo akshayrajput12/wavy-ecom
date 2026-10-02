@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontalIcon } from "@/components/ui/icons";
 import { Chip, Select } from "@/components/ui/Controls";
 import { Drawer } from "@/components/ui/Drawer";
 import { Button } from "@/components/ui/Button";
@@ -34,7 +34,7 @@ export function FilterToolbar({ total, ...props }: FilterProps & { total: number
   return (
     <div className="flex flex-wrap items-center gap-2 border-y border-line py-3">
       <Button variant="secondary" size="sm" className="h-11 px-5" onClick={() => setSheet(true)} aria-haspopup="dialog">
-        <SlidersHorizontal className="size-4" aria-hidden /> {filterCopy.filters}
+        <SlidersHorizontalIcon className="size-4" /> {filterCopy.filters}
         {active.length > 0 && <span className="grid size-5 place-items-center rounded-pill bg-ink text-micro text-canvas">{active.length}</span>}
       </Button>
       {active.length > 0 && (

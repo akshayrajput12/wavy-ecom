@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRightIcon } from "@/components/ui/icons";
 import { toast } from "sonner";
 import { footerCopy } from "@/data/copy";
 
@@ -23,7 +23,7 @@ export function NewsletterForm({ placeholder, buttonLabel, consentText }: {
         <input id={id} type="email" required autoComplete="email" placeholder={placeholder ?? footerCopy.newsletterLabel}
           className="h-full min-w-0 flex-1 bg-transparent text-body text-ink placeholder:text-ink-muted focus:outline-none" />
         <button type="submit" className="inline-flex h-10 min-w-11 shrink-0 items-center gap-2 rounded-pill bg-ink px-4 text-meta font-medium text-canvas transition-colors hover:bg-ink/85">
-          {buttonLabel ?? footerCopy.newsletterCta} <ArrowRight className="size-3.5" aria-hidden />
+          {buttonLabel ?? footerCopy.newsletterCta} <ArrowRightIcon className="size-3.5" />
         </button>
       </div>
       {consentText && <p className="mt-3 text-micro text-ink-soft">{consentText}</p>}

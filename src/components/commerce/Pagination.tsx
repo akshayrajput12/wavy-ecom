@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { clsx } from "clsx";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/icons";
 import { paginationCopy as c } from "@/data/storefront";
 
 type Params = Record<string, string | string[] | undefined>;
@@ -28,7 +29,7 @@ export function Pagination({ page, total, pageSize, path, params }: { page: numb
   return (
     <nav aria-label={c.label} className="mt-16 flex flex-wrap items-center justify-center gap-2">
       {page > 1 ? (
-        <Link href={pageHref(path, params, page - 1)} rel="prev" aria-label={c.prev} className={clsx(circle, idle)}><ChevronLeft className="size-4" aria-hidden /></Link>
+        <Link href={pageHref(path, params, page - 1)} rel="prev" aria-label={c.prev} className={clsx(circle, idle)}><ChevronLeftIcon className="size-4" /></Link>
       ) : <span className={clsx(circle, off)} aria-hidden><ChevronLeft className="size-4" /></span>}
       {nums.map((n, i) => (
         <span key={n} className="flex items-center gap-2">
@@ -40,7 +41,7 @@ export function Pagination({ page, total, pageSize, path, params }: { page: numb
         </span>
       ))}
       {page < pages ? (
-        <Link href={pageHref(path, params, page + 1)} rel="next" aria-label={c.next} className={clsx(circle, idle)}><ChevronRight className="size-4" aria-hidden /></Link>
+        <Link href={pageHref(path, params, page + 1)} rel="next" aria-label={c.next} className={clsx(circle, idle)}><ChevronRightIcon className="size-4" /></Link>
       ) : <span className={clsx(circle, off)} aria-hidden><ChevronRight className="size-4" /></span>}
     </nav>
   );

@@ -4,7 +4,8 @@ import { clsx } from "clsx";
 import { motion } from "framer-motion";
 import { StaggerItem } from "@/components/ui/Reveal";
 import { useReducedMotion } from "@/components/ui/useMediaQuery";
-import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
+import { Pause, Play } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/icons";
 import { Children, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { homeCopy } from "@/data/storefront";
 import { useRailAutoplay, type PlayState } from "./useRailAutoplay";
@@ -93,10 +94,10 @@ export function HomeRail({ children, label, autoplay, playState, itemClassName, 
             </button>
           )}
           <button type="button" className={btn} onClick={() => arrow(-1)} disabled={edge.start} aria-label={labels?.prev ?? homeCopy.railPrev}>
-            <ChevronLeft className="size-4" aria-hidden />
+            <ChevronLeftIcon className="size-4" />
           </button>
           <button type="button" className={btn} onClick={() => arrow(1)} disabled={edge.end} aria-label={labels?.next ?? homeCopy.railNext}>
-            <ChevronRight className="size-4" aria-hidden />
+            <ChevronRightIcon className="size-4" />
           </button>
         </div>
       )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { clsx } from "clsx";
-import { X } from "lucide-react";
+import { XIcon } from "@/components/ui/icons";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { lockScroll } from "@/components/providers/SmoothScroll";
 import { uiCopy } from "@/data/copy";
@@ -73,7 +73,7 @@ export function Drawer({ open, onClose, title, children, footer, side = "right",
         <header className={clsx("flex items-center justify-between gap-4 px-5 py-3", !hideTitle && "border-b border-line-soft")}>
           <h2 id={titleId} className={clsx("t-h3", hideTitle && "sr-only")}>{title}</h2>
           <button type="button" onClick={onClose} aria-label={uiCopy.close} className="-mr-1.5 ml-auto grid size-11 place-items-center rounded-pill border border-line transition-colors hover:border-ink hover:bg-ink hover:text-canvas">
-            <X className="size-4.5" aria-hidden />
+            <XIcon className="size-4.5" />
           </button>
         </header>
         <div className={clsx("flex-1 overflow-y-auto overscroll-contain px-5 pb-5", hideTitle ? "pt-0" : "pt-5")}>{children}</div>

@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { create } from "zustand";
 import { clsx } from "clsx";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBagIcon } from "@/components/ui/icons";
 import { quickViewCopy } from "@/data/storefront";
 import type { Product } from "@/types/domain";
 
@@ -28,7 +28,7 @@ export function QuickViewButton({ product, className }: { product: Product; clas
       className={clsx("group/qv grid size-11 place-items-center rounded-pill", className)}
     >
       <span className="grid size-9 place-items-center rounded-pill bg-ink text-canvas shadow-sm transition-transform duration-(--dur-base) ease-soft group-hover/qv:scale-110 group-active/qv:scale-95" aria-hidden>
-        <ShoppingBag className="size-4" strokeWidth={1.8} />
+        <ShoppingBagIcon className="size-4" strokeWidth={1.8} />
       </span>
     </button>
   );

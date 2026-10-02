@@ -3,7 +3,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { AnimatePresence, motion, useDragControls, type PanInfo } from "framer-motion";
 import { useReducedMotion } from "@/components/ui/useMediaQuery";
-import { X } from "lucide-react";
+import { XIcon } from "@/components/ui/icons";
 import { lockScroll } from "@/components/providers/SmoothScroll";
 import { useMediaQuery } from "@/components/ui/useMediaQuery";
 import { quickViewCopy } from "@/data/storefront";
@@ -72,7 +72,7 @@ export function QuickViewDialog({ open, onClose, labelledBy, children }: {
               </div>
               <button type="button" onClick={onClose} aria-label={quickViewCopy.close}
                 className="absolute right-3 top-3 z-20 grid size-11 place-items-center rounded-pill border border-line bg-canvas/90 backdrop-blur-sm transition-colors hover:border-ink hover:bg-ink hover:text-canvas md:right-4 md:top-4">
-                <X className="size-4.5" aria-hidden />
+                <XIcon className="size-4.5" />
               </button>
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain md:overflow-hidden" data-lenis-prevent>{children}</div>
             </motion.div>

@@ -4,7 +4,8 @@ import Image from "next/image";
 import { clsx } from "clsx";
 import { motion } from "framer-motion";
 import { useReducedMotion } from "@/components/ui/useMediaQuery";
-import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
+import { Pause, Play } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/icons";
 import { useCallback, useEffect, useState, type KeyboardEvent } from "react";
 import { ButtonLink } from "@/components/ui/Button";
 import { homeCopy, homeStageCopy as copy } from "@/data/storefront";
@@ -61,8 +62,8 @@ export function HeroCarousel({ section }: { section: HomeSectionOf<"hero_carouse
       <div className="container-x relative flex min-h-svh flex-col pb-6 pt-[calc(var(--header-h)+var(--space-8))] lg:pb-10">
         {n > 1 && (
           <div className="flex items-center gap-2">
-            <button type="button" onClick={() => go(-1)} aria-label={copy.prev} className={circle}><ChevronLeft className="size-4" aria-hidden /></button>
-            <button type="button" onClick={() => go(1)} aria-label={copy.next} className={circle}><ChevronRight className="size-4" aria-hidden /></button>
+            <button type="button" onClick={() => go(-1)} aria-label={copy.prev} className={circle}><ChevronLeftIcon className="size-4" /></button>
+            <button type="button" onClick={() => go(1)} aria-label={copy.next} className={circle}><ChevronRightIcon className="size-4" /></button>
             <p className="t-index ml-3 flex items-center gap-3 text-ink-soft" aria-hidden>
               <span className="text-ink">{pad(index + 1)}</span><span className="h-px w-10 bg-line" />{pad(n)}
             </p>
@@ -89,7 +90,7 @@ export function HeroCarousel({ section }: { section: HomeSectionOf<"hero_carouse
             <motion.div key={`c${index}`} {...fade(0.28)} className="flex flex-col gap-3 sm:flex-row lg:mt-8">
               {slide.cta && (
                 <ButtonLink href={slide.cta.href} size="lg" className="w-full sm:w-auto">
-                  {slide.cta.label}<ChevronRight className="size-4" aria-hidden />
+                  {slide.cta.label}<ChevronRightIcon className="size-4" />
                 </ButtonLink>
               )}
               {slide.secondaryCta && <ButtonLink href={slide.secondaryCta.href} variant="secondary" size="lg" className="w-full sm:w-auto">{slide.secondaryCta.label}</ButtonLink>}

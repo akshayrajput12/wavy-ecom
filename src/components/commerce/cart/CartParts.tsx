@@ -1,7 +1,8 @@
 "use client";
 
 import { clsx } from "clsx";
-import { AlertTriangle, ArrowRight, Sparkles } from "lucide-react";
+import { AlertTriangle, Sparkles } from "lucide-react";
+import { ArrowRightIcon } from "@/components/ui/icons";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -127,7 +128,7 @@ export function CartTotals({ q, onCheckout, hideCta }: { q: CartQuoteState; onCh
           <ButtonLink href="/checkout" full size="lg" onClick={onCheckout} aria-disabled={t ? !t.valid : undefined}
             className={clsx(t && !t.valid && "pointer-events-none opacity-40")}>
             {cartCopy.checkout}{t ? ` · ${formatPrice(t.total)}` : ""}
-            <ArrowRight className="size-4" aria-hidden />
+            <ArrowRightIcon className="size-4" />
           </ButtonLink>
           <p className="text-center text-micro text-ink-soft">{cartCopy.taxNote}</p>
         </>

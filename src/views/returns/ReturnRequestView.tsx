@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeftIcon } from "@/components/ui/icons";
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/States";
@@ -11,7 +11,7 @@ export function ReturnRequestView({ order, items, preselect }: { order: Order | 
   return (
     <div className="grid max-w-2xl gap-8">
       <Link href={order ? `/account/orders/${order.number}` : "/account/returns"} className="inline-flex min-h-11 items-center gap-2 self-start text-meta text-ink-soft hover:text-ink">
-        <ArrowLeft className="size-4" aria-hidden /> {ac.back}
+        <ArrowLeftIcon className="size-4" /> {ac.back}
       </Link>
       <header className="grid gap-3">
         <p className="t-overline">{ac.returns}</p>

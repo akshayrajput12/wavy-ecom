@@ -49,6 +49,8 @@ export function clientContext(req: Request): { ip?: string; userAgent?: string }
 
 /** CDN-cacheable public JSON (no cookies/session in the response). Everything else defaults to private, no-store. */
 export const PUBLIC_CACHE = { "cache-control": "public, s-maxage=60, stale-while-revalidate=300" };
+/** Reference data that almost never changes (pincodes, states, districts): a day in the browser, 30 days at the CDN. */
+export const STATIC_CACHE = { "cache-control": "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=86400" };
 
 type Handler<P> = (ctx: { req: NextRequest; params: P; log: Logger; requestId: string }) => Promise<Response>;
 

@@ -6,6 +6,7 @@ import { clsx } from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 import { useReducedMotion } from "@/components/ui/useMediaQuery";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/icons";
 import { useCallback, useId, useRef, useState, type PointerEvent } from "react";
 import { homeCopy, homeStageCopy as copy } from "@/data/storefront";
 import type { HomeSectionOf } from "@/types/domain";
@@ -106,10 +107,10 @@ export function CollectionRail({ section }: { section: HomeSectionOf<"collection
         <div className="flex shrink-0 items-center gap-2">
           <p className="t-index mr-2 text-ink-soft" aria-hidden><span className="text-ink">{pad(active + 1)}</span> / {pad(items.length)}</p>
           <button type="button" onClick={() => goTo(active - 1)} disabled={active === 0} aria-label={copy.prevCollection} className={circle}>
-            <ChevronLeft className="size-4" aria-hidden />
+            <ChevronLeftIcon className="size-4" />
           </button>
           <button type="button" onClick={() => goTo(active + 1)} disabled={active >= items.length - 1} aria-label={copy.nextCollection} className={circle}>
-            <ChevronRight className="size-4" aria-hidden />
+            <ChevronRightIcon className="size-4" />
           </button>
         </div>
       </div>

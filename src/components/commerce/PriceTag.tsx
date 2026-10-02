@@ -2,7 +2,7 @@ import { clsx } from "clsx";
 import { productCopy as c } from "@/data/copy";
 import { formatPrice } from "@/lib/format";
 
-/** Price in paise; `from` prefixes "From" (cards); compare-at strike-through + % off when discounted. */
+/** Price in paise; `from` prefixes "From" (cards); compare-at strike-through + % off when discounted (the chip is `[data-off]`, for compact layouts to hide). */
 export function PriceTag({ price, compareAt, size = "sm", from, className }: {
   price: number; compareAt?: number; size?: "sm" | "lg"; from?: boolean; className?: string;
 }) {
@@ -17,7 +17,7 @@ export function PriceTag({ price, compareAt, size = "sm", from, className }: {
           <s className={clsx("font-normal text-ink-muted", lg ? "text-body-lg" : "text-micro")}>
             <span className="sr-only">{c.was} </span>{formatPrice(compareAt)}
           </s>
-          <span className={clsx("self-center rounded-pill bg-ink px-2 font-medium text-canvas", lg ? "text-meta" : "text-micro")}>
+          <span data-off className={clsx("self-center rounded-pill bg-ink px-2 font-medium text-canvas", lg ? "text-meta" : "text-micro")}>
             {c.off(Math.round((1 - price / compareAt) * 100))}
           </span>
         </>

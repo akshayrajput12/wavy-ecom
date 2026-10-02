@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { clsx } from "clsx";
-import { ChevronDown } from "lucide-react";
+import { ChevronDownIcon } from "@/components/ui/icons";
 import { headerCopy } from "@/data/copy";
 import { layoutCopy } from "@/data/storefront";
 import type { NavLink } from "@/types/domain";
@@ -40,7 +40,7 @@ export function MegaMenu({ categories, collections, pathname }: { categories: Na
                 )}
               >
                 {root.label}
-                {root.children?.length ? <ChevronDown className="size-3 transition-transform duration-(--dur-base) group-hover/nav:rotate-180" aria-hidden /> : null}
+                {root.children?.length ? <ChevronDownIcon className="size-3 transition-[rotate] duration-(--dur-base) group-hover/nav:rotate-180" /> : null}
               </Link>
               {root.children?.length ? (
                 <div className="invisible absolute inset-x-0 top-full translate-y-1 pt-2 opacity-0 transition-[opacity,translate,visibility] duration-(--dur-base) ease-out group-focus-within/nav:visible group-focus-within/nav:translate-y-0 group-focus-within/nav:opacity-100 group-hover/nav:visible group-hover/nav:translate-y-0 group-hover/nav:opacity-100">

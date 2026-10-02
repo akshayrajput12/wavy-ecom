@@ -1,9 +1,10 @@
 "use client";
 
 import { clsx } from "clsx";
-import { Heart } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { useWishlist } from "@/stores/wishlist";
+import { HeartIcon } from "@/components/ui/icons";
 import { productCopy } from "@/data/copy";
 
 /** Saves on this device and, when signed in, to the account (a 401 for guests is expected and ignored). */
@@ -20,6 +21,7 @@ export function WishlistButton({ productId, name, className, variant = "overlay"
 }) {
   const saved = useWishlist((s) => s.ids.includes(productId));
   const toggle = useWishlist((s) => s.toggle);
+  const [taps, setTaps] = useState(0); // pulse on the shopper's toggle only, not on the localStorage restore
   return (
     <button
       type="button"
@@ -27,6 +29,7 @@ export function WishlistButton({ productId, name, className, variant = "overlay"
       aria-label={`${saved ? productCopy.wishlistRemove : productCopy.wishlistAdd}: ${name}`}
       onClick={() => {
         const now = toggle(productId);
+        setTaps((n) => n + 1);
         sync(productId, now);
         toast(now ? `${productCopy.wishlistAdd}: ${name}` : `${productCopy.wishlistRemove}: ${name}`);
       }}
@@ -36,7 +39,7 @@ export function WishlistButton({ productId, name, className, variant = "overlay"
         className,
       )}
     >
-      <Heart className={clsx("size-4.5 transition-transform duration-(--dur-fast) active:scale-90", saved ? "fill-ink text-ink" : "text-ink")} strokeWidth={1.6} aria-hidden />
+      <HeartIcon className={clsx("size-4.5 text-ink transition-[fill] duration-(--dur-fast)", saved && "fill-ink")} strokeWidth={1.6} trigger={taps} />
     </button>
   );
 }

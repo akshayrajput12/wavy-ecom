@@ -1,8 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import type { PointerEvent, ReactNode } from "react";
-import { motion, useMotionValue, useSpring, type MotionValue } from "framer-motion";
+import { AnimatePresence, motion, useMotionValue, useSpring, type MotionValue } from "framer-motion";
 import { clsx } from "clsx";
 import { TrendingUp } from "lucide-react";
 import type { Media, SpotlightItem } from "@/types/domain";
@@ -10,37 +9,29 @@ import { floatingCardCopy as copy } from "@/data/storefront";
 import { ImageWell } from "./ImageWell";
 
 export const EASE_OUT = [0.22, 1, 0.36, 1] as const; // mirrors --ease-out
+const FADE = { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } };
 
-/** The product photo, blurred and saturated, as the stage's coloured glow (same trick as the home hero). */
-export function Glow({ media }: { media?: Media }) {
-  if (!media?.url) return null;
-  return <Image src={media.url} alt="" fill sizes="64px" className="scale-150 object-cover opacity-70 blur-2xl saturate-150" />;
-}
-
-/** Thin ring that fills with `progress` (0 → 1) around whatever it wraps (a 44px control). */
+/** Thin ring that fills with `progress` (0 → 1) around whatever it wraps (the minimised pill's thumbnail). */
 export function ProgressRing({ progress, children, className }: { progress: MotionValue<number>; children: ReactNode; className?: string }) {
   return (
     <span className={clsx("relative grid shrink-0 place-items-center", className)}>
       <svg viewBox="0 0 44 44" className="pointer-events-none absolute inset-0 size-full -rotate-90" aria-hidden>
-        <circle cx="22" cy="22" r="20" fill="none" strokeWidth="1.5" className="stroke-line" />
-        <motion.circle cx="22" cy="22" r="20" fill="none" strokeWidth="1.5" strokeLinecap="round" className="stroke-ink" style={{ pathLength: progress }} />
+        <circle cx="22" cy="22" r="20.5" fill="none" strokeWidth="1.5" className="stroke-line" />
+        <motion.circle cx="22" cy="22" r="20.5" fill="none" strokeWidth="1.5" strokeLinecap="round" className="stroke-ink" style={{ pathLength: progress }} />
       </svg>
       {children}
     </span>
   );
 }
 
-/** "New arrival" with a live pulse, "Bestseller" with a trend mark. Text always carries the meaning. */
+/** Overline pill: "New arrival" with a live ink dot, "Bestseller" with a trend mark. Text always carries the meaning. */
 export function KindBadge({ kind }: { kind: SpotlightItem["kind"] }) {
   return (
-    <span className={clsx(
-      "inline-flex items-center gap-1.5 whitespace-nowrap rounded-pill px-2.5 py-0.5 text-micro font-medium leading-5",
-      kind === "new" ? "bg-ink text-canvas" : "border border-line bg-surface-2 text-ink",
-    )}>
+    <span className="t-overline inline-flex items-center gap-1.5 whitespace-nowrap rounded-pill border border-line bg-surface px-2.5 py-1 leading-none text-ink">
       {kind === "new" ? (
         <span className="relative flex size-1.5" aria-hidden>
-          <span className="absolute inset-0 motion-safe:animate-ping rounded-full bg-current opacity-60" />
-          <span className="relative size-1.5 rounded-full bg-current" />
+          <span className="absolute inset-0 rounded-full bg-ink opacity-50 motion-safe:animate-ping" />
+          <span className="relative size-1.5 rounded-full bg-ink" />
         </span>
       ) : <TrendingUp className="size-3" strokeWidth={2} aria-hidden />}
       {copy.kind[kind]}
@@ -48,9 +39,9 @@ export function KindBadge({ kind }: { kind: SpotlightItem["kind"] }) {
   );
 }
 
-const SPRING = { stiffness: 180, damping: 18, mass: 0.6 };
+const SPRING = { stiffness: 200, damping: 20, mass: 0.5 };
 
-/** Pointer-tilt for the floating packshot: returns the rotate springs and handlers for the area that tracks the pointer. */
+/** Micro pointer-tilt (±4°, mouse only) for the packshot: rotate springs + handlers for the area that tracks the pointer. */
 export function useTilt(enabled: boolean) {
   const rx = useMotionValue(0);
   const ry = useMotionValue(0);
@@ -59,21 +50,49 @@ export function useTilt(enabled: boolean) {
   const onPointerMove = (e: PointerEvent<HTMLElement>) => {
     if (!enabled || e.pointerType !== "mouse") return;
     const r = e.currentTarget.getBoundingClientRect();
-    ry.set(((e.clientX - r.left) / r.width - 0.5) * 22);
-    rx.set(((e.clientY - r.top) / r.height - 0.5) * -22);
+    ry.set(((e.clientX - r.left) / r.width - 0.5) * 8);
+    rx.set(((e.clientY - r.top) / r.height - 0.5) * -8);
   };
   const onPointerLeave = () => { rx.set(0); ry.set(0); };
   return { style: { rotateX, rotateY }, handlers: { onPointerMove, onPointerLeave } };
 }
 
-/** Packshot floating above a soft ground shadow, tilting in 3D. */
-export function FloatingShot({ media, tilt }: { media?: Media; tilt: ReturnType<typeof useTilt>["style"] }) {
+/** Packshot on its paper well with a soft floor shadow; products cross-fade in place, the photo scales 1.04 on card hover. */
+export function Shot({ id, media, tilt, reduce }: { id: string; media?: Media; tilt: ReturnType<typeof useTilt>["style"]; reduce: boolean }) {
   return (
     <div className="relative shrink-0 perspective-normal">
-      <motion.div style={tilt} className="relative transform-3d">
-        <ImageWell media={media} alt="" sizes="96px" className="aspect-[4/5] w-18 rounded-md shadow-lg ring-1 ring-line sm:w-22" />
+      <span className="absolute inset-x-3 -bottom-1.5 h-4 rounded-[50%] bg-ink/15 blur-md" aria-hidden />
+      <motion.div style={tilt} className="relative aspect-4/5 w-22 overflow-hidden rounded-lg bg-surface-2 ring-1 ring-line-soft sm:w-24">
+        <AnimatePresence initial={false}>
+          <motion.div key={id} {...FADE} transition={{ duration: reduce ? 0 : 0.6, ease: EASE_OUT }} className="absolute inset-0">
+            <ImageWell media={media} alt="" sizes="96px" className="size-full"
+              imgClassName="transition-transform duration-(--dur-slow) ease-soft motion-safe:group-hover/card:scale-[1.04]" />
+          </motion.div>
+        </AnimatePresence>
       </motion.div>
-      <span className="absolute -bottom-2 left-1/2 h-3 w-3/4 -translate-x-1/2 rounded-[50%] bg-black/70 blur-md" aria-hidden />
     </div>
+  );
+}
+
+/** Minimised state: a light glass pill with the live thumbnail (ringed by the rotation progress) and the kind label. */
+export function MiniPill({ id, media, kind, progress, reduce }: {
+  id: string; media?: Media; kind: SpotlightItem["kind"]; progress: MotionValue<number>; reduce: boolean;
+}) {
+  const t = { duration: reduce ? 0 : 0.45, ease: EASE_OUT };
+  return (
+    <span className="flex items-center gap-2.5 rounded-pill border border-line bg-surface/85 p-1 shadow-md backdrop-blur-xl sm:pr-4">
+      <ProgressRing progress={progress} className="size-10">
+        <span className="relative size-8 overflow-hidden rounded-pill bg-surface-2">
+          <AnimatePresence initial={false}>
+            <motion.span key={id} {...FADE} transition={t} className="absolute inset-0">
+              <ImageWell media={media} alt="" sizes="32px" className="size-full" />
+            </motion.span>
+          </AnimatePresence>
+        </span>
+      </ProgressRing>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.span key={kind} {...FADE} transition={t} className="t-overline whitespace-nowrap text-ink max-sm:hidden">{copy.kind[kind]}</motion.span>
+      </AnimatePresence>
+    </span>
   );
 }

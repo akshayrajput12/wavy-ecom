@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { ChevronRight } from "lucide-react";
+import { ChevronRightIcon } from "@/components/ui/icons";
 import { ImageWell } from "@/components/commerce/ImageWell";
 import { ButtonLink } from "@/components/ui/Button";
 import { Parallax, Reveal } from "@/components/ui/Reveal";
@@ -20,7 +20,7 @@ function DarkBand({ section: { title, config: c } }: { section: Promo }) {
           {c.body && <p className="mx-auto mt-5 max-w-md text-body text-ink-soft">{c.body}</p>}
           {(c.cta || c.couponCode) && (
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              {c.cta && <ButtonLink href={c.cta.href} size="lg">{c.cta.label}<ChevronRight className="size-4" aria-hidden /></ButtonLink>}
+              {c.cta && <ButtonLink href={c.cta.href} size="lg">{c.cta.label}<ChevronRightIcon className="size-4" /></ButtonLink>}
               {c.couponCode && <CouponPill code={c.couponCode} />}
             </div>
           )}
@@ -53,7 +53,7 @@ function FeatureSplit({ section: { title, config: c } }: { section: Promo }) {
           {c.couponCode && <div className="mt-6 border-t border-line pt-6"><CouponPill code={c.couponCode} /></div>}
           {c.cta && (
             <ButtonLink href={c.cta.href} variant="link" className="mt-6 min-h-11">
-              {c.cta.label}<ChevronRight className="size-4" aria-hidden />
+              {c.cta.label}<ChevronRightIcon className="size-4" />
             </ButtonLink>
           )}
         </div>

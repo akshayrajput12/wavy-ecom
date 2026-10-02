@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeftIcon } from "@/components/ui/icons";
 import { ArticleCard } from "@/components/commerce";
 import { formatDate } from "@/lib/format";
 import { blogCopy as c } from "@/data/copy";
@@ -24,7 +24,7 @@ export function ArticleView({ post, related }: { post: BlogPost; related: BlogPo
   return (
     <article className="pb-24 pt-10">
       <header className="container-x max-w-5xl py-10 text-center lg:py-16">
-        <Link href="/blog" className="inline-flex min-h-11 items-center gap-2 text-meta text-ink-soft hover:text-ink"><ArrowLeft className="size-4" aria-hidden />{c.back}</Link>
+        <Link href="/blog" className="inline-flex min-h-11 items-center gap-2 text-meta text-ink-soft hover:text-ink"><ArrowLeftIcon className="size-4" />{c.back}</Link>
         {post.category && <p className="t-overline mt-6">{post.category.name}</p>}
         <h1 className="t-display mt-4">{post.title}</h1>
         {post.excerpt && <p className="mx-auto mt-6 max-w-xl text-body-lg text-ink-soft">{post.excerpt}</p>}

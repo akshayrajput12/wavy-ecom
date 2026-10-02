@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { getSession, type Session } from "@/backend/_core/auth";
 import { must, publicDb, safe, serviceDb, userDb } from "@/backend/_core/db";
 import { ApiError } from "@/backend/_core/http";
@@ -35,15 +36,18 @@ export async function getMyOrder(session: Session, number: string): Promise<Orde
  */
 export async function getOrderForViewer(number: string, trackingToken?: string): Promise<Order | null> {
   if (!hasServiceRole) return null;
-  const session = await getSession();
-  const row: OrderRow | null = safe(
-    await serviceDb().from("orders").select(`${ORDER_COLS}, user_id`).eq("order_number", number).maybeSingle(), "load order", null,
-  );
+  const [session, row] = await Promise.all([getSession(), orderRowByNumber(number)]);
   if (!row) return null;
-  const owner = (row as OrderRow & { user_id: string | null }).user_id;
-  const allowed = (session && owner === session.userId) || (trackingToken && trackingToken === row.tracking_token);
+  const allowed = (session && row.user_id === session.userId) || (trackingToken && trackingToken === row.tracking_token);
   return allowed ? toOrder(row) : null;
 }
+
+/**
+ * Unchecked service-role read of an order by number, deduped per request (React cache): the success page's order,
+ * guest invoice offer and its gate share one round trip. Callers MUST check the viewer (session owner / tracking token).
+ */
+export const orderRowByNumber = cache(async (number: string): Promise<(OrderRow & { user_id: string | null }) | null> =>
+  safe(await serviceDb().from("orders").select(`${ORDER_COLS}, user_id`).eq("order_number", number).maybeSingle(), "load order", null));
 
 /** Public tracking by token (safe fields only). */
 export async function getOrderTracking(token: string): Promise<OrderTracking | null> {

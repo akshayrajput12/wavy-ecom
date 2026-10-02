@@ -28,6 +28,7 @@ export async function invoicesIssuedBetween(from: string, to: string, limit: num
 }
 
 interface OrderSrc {
+  status: string; payment_status: string; invoice: InvoiceRow | InvoiceRow[] | null;
   order_number: string; placed_at: string; currency: string; customer_name: string; email: string; phone: string;
   shipping_address: unknown; billing_address: unknown; discount_total: number; shipping_total: number; cod_fee: number;
   tax_total: number; total: number; tax_rate: number; tax_inclusive: boolean; payment_provider: PaymentProvider; paid_at: string | null;
@@ -37,11 +38,26 @@ interface OrderSrc {
 type SettingsSrc = Record<string, unknown>;
 const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined);
 
-/** Everything buildInvoice needs, read once from the stored order (never re-priced). */
-export async function loadInvoiceSource(orderId: string): Promise<InvoiceSource | null> {
+/**
+ * Mirror of SQL invoice_eligible() (0021), so ensureInvoice can skip an issue_invoice call that would only raise
+ * invoice_not_ready (e.g. every view of an undispatched COD order). issue_invoice still re-checks; keep the two in sync.
+ */
+const invoiceEligible = (o: Pick<OrderSrc, "status" | "payment_status" | "payment_provider" | "total">) =>
+  !["pending_payment", "cancelled"].includes(o.status) && (o.payment_provider === "cod" && o.total > 0
+    ? ["packed", "shipped", "delivered", "return_requested", "returned", "refunded"].includes(o.status)
+    : ["captured", "partially_refunded", "refunded"].includes(o.payment_status));
+
+export interface InvoiceContext { existing: InvoiceRow | null; eligible: boolean; source: InvoiceSource }
+
+/**
+ * One round trip for ensureInvoice: the order's invoice if it has one, whether it may be issued, and everything
+ * buildInvoice needs, read once from the stored order (never re-priced).
+ */
+export async function loadInvoiceContext(orderId: string): Promise<InvoiceContext | null> {
   const db = serviceDb();
   const [o, s] = await Promise.all([
     db.from("orders").select(
+      `status, payment_status, invoice:invoices!invoices_order_id_fkey(${COLS}), ` +
       "order_number, placed_at, currency, customer_name, email, phone, shipping_address, billing_address, discount_total, shipping_total, cod_fee, " +
       "tax_total, total, tax_rate, tax_inclusive, payment_provider, paid_at, " +
       "items:order_items!order_items_order_id_fkey(product_name, variant_title, sku, hsn_code, unit_price, quantity, discount_allocated, line_total, created_at), " +
@@ -53,7 +69,8 @@ export async function loadInvoiceSource(orderId: string): Promise<InvoiceSource 
   const st = must<SettingsSrc | null>(s, "load store settings") ?? {};
   if (!order) return null;
   const paid = (order.payments ?? []).find((p) => p.provider === order.payment_provider && p.status !== "initiated" && p.status !== "failed");
-  return {
+  const inv = Array.isArray(order.invoice) ? order.invoice[0] : order.invoice; // one-to-one embed (older PostgREST: array)
+  const source: InvoiceSource = {
     order: {
       number: order.order_number, placedAt: order.placed_at, currency: order.currency, customerName: order.customer_name,
       email: order.email, phone: order.phone, shippingAddress: toAddress(order.shipping_address),
@@ -72,6 +89,7 @@ export async function loadInvoiceSource(orderId: string): Promise<InvoiceSource 
     payment: paid && { method: paid.method ?? undefined, reference: paid.provider_payment_id ?? undefined, paidAt: paid.captured_at ?? order.paid_at ?? undefined },
     labels: { shipping: invoiceCopy.shipping, codFee: invoiceCopy.codFee, sku: invoiceCopy.sku },
   };
+  return { existing: inv ? { ...inv, pdf_path: inv.pdf_path ?? null } : null, eligible: invoiceEligible(order), source };
 }
 
 /** issue_invoice RPC: idempotent (existing row returned), gap-free number per FY, refuses ineligible orders (409 invoice_not_ready). */

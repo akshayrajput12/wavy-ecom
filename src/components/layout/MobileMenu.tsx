@@ -4,7 +4,7 @@ import Link from "next/link";
 import { clsx } from "clsx";
 import { motion, type Variants } from "framer-motion";
 import { useReducedMotion } from "@/components/ui/useMediaQuery";
-import { ArrowUpRight, ChevronDown } from "lucide-react";
+import { ArrowUpRightIcon, ChevronDownIcon } from "@/components/ui/icons";
 import { useId, useState } from "react";
 import { Drawer } from "@/components/ui/Drawer";
 import { footerCopy, headerCopy } from "@/data/copy";
@@ -57,7 +57,7 @@ export function MobileMenu({ open, onClose, storeName, categories, collections, 
                     className={clsx("flex min-h-16 flex-1 items-center justify-between gap-4 font-display text-h1 font-semibold leading-none tracking-(--tracking-display)", active && "underline decoration-2 underline-offset-8")}
                   >
                     {l.label}
-                    {!kids && <ArrowUpRight className="size-6 shrink-0" strokeWidth={1.5} aria-hidden />}
+                    {!kids && <ArrowUpRightIcon className="size-6 shrink-0" strokeWidth={1.5} />}
                   </Link>
                   {kids && (
                     <button
@@ -65,7 +65,7 @@ export function MobileMenu({ open, onClose, storeName, categories, collections, 
                       aria-label={mobileMenuCopy.toggle(l.label)}
                       className="grid size-11 shrink-0 place-items-center rounded-pill border border-line transition-colors duration-(--dur-fast) hover:border-ink aria-expanded:border-ink aria-expanded:bg-ink aria-expanded:text-canvas"
                     >
-                      <ChevronDown className={clsx("size-5 transition-transform duration-(--dur-base) ease-soft", open1 && "rotate-180")} aria-hidden />
+                      <ChevronDownIcon className={clsx("size-5 transition-[rotate] duration-(--dur-base) ease-soft", open1 && "rotate-180")} />
                     </button>
                   )}
                 </div>

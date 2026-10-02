@@ -1,4 +1,5 @@
 import "server-only";
+import { after } from "next/server";
 import type { Session } from "@/backend/_core/auth";
 import { must, serviceDb } from "@/backend/_core/db";
 import { ApiError } from "@/backend/_core/http";
@@ -37,7 +38,9 @@ export async function placeOrder(input: CheckoutInput, idempotencyKey: string, s
       p_payload: {
         userId: session?.userId ?? null, email: input.email, phone: input.phone,
         customerName: input.customerName || input.shippingAddress.name,
-        shippingAddress: addr(input.shippingAddress), billingAddress: input.billingAddress ? addr(input.billingAddress) : null,
+        // undefined, not null: JSON drops the key so `p_payload -> 'billingAddress'` is SQL NULL. A JSON null would be
+        // jsonb 'null' and fail orders_billing_address_check (null or an object).
+        shippingAddress: addr(input.shippingAddress), billingAddress: input.billingAddress ? addr(input.billingAddress) : undefined,
         items: input.items, couponCode: input.couponCode ?? null, shippingMethodId: input.shippingMethodId ?? null,
         paymentProvider: input.paymentProvider, notes: input.notes ?? null,
         customerIp: ctx.ip ?? null, userAgent: ctx.userAgent ?? null,
@@ -51,12 +54,12 @@ export async function placeOrder(input: CheckoutInput, idempotencyKey: string, s
   };
   log.info(order.replayed ? "order.replayed" : "order.placed", { orderId: order.id, provider: order.paymentProvider, total: order.total });
 
+  // Not needed for the response: run after it is sent (address book write, zero-total invoice) so the shopper doesn't wait.
   if (session && input.saveAddress && !order.replayed) {
-    await createAddress(session, { ...input.shippingAddress, isDefault: false })
-      .catch((e: unknown) => log.warn("checkout.save_address_failed", { reason: e instanceof Error ? e.message : String(e) }));
+    after(() => createAddress(session, { ...input.shippingAddress, isDefault: false })
+      .catch((e: unknown) => log.warn("checkout.save_address_failed", { reason: e instanceof Error ? e.message : String(e) })));
   }
-
-  if (order.status === "paid") await issueInvoiceIfEligible(order.id, "checkout", log); // zero-total: paid at placement
+  if (order.status === "paid") after(() => issueInvoiceIfEligible(order.id, "checkout", log)); // zero-total: paid at placement
   if (order.status !== "pending_payment" || order.paymentProvider === "cod") {
     return { order, payment: { provider: "none", orderId: order.id, orderNumber: order.number } };
   }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { ChevronRightIcon } from "@/components/ui/icons";
 import { ProductRail } from "@/components/commerce";
 import { Reveal } from "@/components/ui/Reveal";
 import { productCopy as c } from "@/data/copy";
@@ -39,7 +40,7 @@ export function ProductView({ product: p, trail, reviews, related }: ProductView
             </div>
             {parent && (
               <Link href={`/collections/${parent.slug}`} className="group inline-flex min-h-11 shrink-0 items-center gap-1 text-meta font-medium underline decoration-line underline-offset-4 hover:decoration-ink">
-                {c.viewAll}<ChevronRight className="size-3.5 transition-transform duration-(--dur-fast) group-hover:translate-x-0.5" aria-hidden />
+                {c.viewAll}<ChevronRightIcon className="size-3.5" />
               </Link>
             )}
           </Reveal>

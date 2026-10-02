@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { cartCopy, pricingErrors } from "@/data/copy";
@@ -92,11 +92,32 @@ export function useCartHydrated() {
 export type QuoteOptions = { shippingMethodId?: string; paymentProvider?: PaymentProvider; state?: string; email?: string; enabled?: boolean };
 type QuoteResult = { quote?: CartQuote; error?: string };
 
+/** Request body + cache key for a bag quote (also used by CouponForm to prime the cache). */
+export const quoteKey = (lines: Pick<CartLine, "variantId" | "quantity">[], couponCode?: string, opts: Omit<QuoteOptions, "enabled"> = {}) =>
+  JSON.stringify({ items: lines.map((l) => ({ variantId: l.variantId, quantity: l.quantity })), couponCode, ...opts });
+
+// Server answers by request key: an exact repeat (drawer re-open, bag -> checkout, coupon just applied) renders at once.
+// Display only: a fresh entry skips the request, an older one shows while it revalidates; checkout always re-prices.
+const FRESH_MS = 10_000;
+const MEMO_MAX = 20;
+const memo = new Map<string, { quote: CartQuote; at: number }>();
+const remember = (key: string, quote: CartQuote) => {
+  memo.delete(key);
+  memo.set(key, { quote, at: Date.now() });
+  if (memo.size > MEMO_MAX) memo.delete(memo.keys().next().value as string);
+};
+/** Stores a quote the server already returned for `key` (e.g. POST /api/cart/coupon) so the hook doesn't ask again. */
+export const primeQuote = (key: string, quote: CartQuote) => remember(key, quote);
+
 let inflight: { key: string; promise: Promise<QuoteResult> } | undefined;
 function postQuote(key: string): Promise<QuoteResult> {
   if (inflight?.key !== key) {
     const promise = api<CartQuote>("/api/cart/quote", { body: JSON.parse(key) as unknown })
-      .then((r): QuoteResult => (r.ok ? { quote: r.data } : { error: r.error.message }))
+      .then((r): QuoteResult => {
+        if (!r.ok) return { error: r.error.message };
+        remember(key, r.data);
+        return { quote: r.data };
+      })
       .finally(() => { if (inflight?.key === key) inflight = undefined; }); // dedupe concurrent callers only
     inflight = { key, promise };
   }
@@ -110,25 +131,29 @@ export const quoteErrorText = (e: CartQuote["errors"][number]) =>
     : pricingErrors[e.code] ?? pricingErrors.unavailable;
 
 /**
- * Debounced POST /api/cart/quote for the current bag. Keeps the last quote on screen while a new one loads.
+ * POST /api/cart/quote for the current bag. The first quote goes out at once; later changes (quantity taps) are
+ * debounced 250 ms. Shows the remembered answer for this exact bag at once, else keeps the last quote on screen.
  * `lineErrors` is keyed by variantId; `orderErrors` are shipping/payment/coupon-level messages.
  */
 export function useCartQuote({ enabled = true, ...opts }: QuoteOptions = {}) {
   const lines = useCart((s) => s.lines);
   const coupon = useCart((s) => s.coupon);
-  const key = enabled && lines.length
-    ? JSON.stringify({ items: lines.map((l) => ({ variantId: l.variantId, quantity: l.quantity })), couponCode: coupon, ...opts })
-    : "";
+  const key = enabled && lines.length ? quoteKey(lines, coupon, opts) : "";
   const [res, setRes] = useState<QuoteResult & { key: string }>({ key: "" });
+  const hit = key ? memo.get(key) : undefined;
+  const quoted = useRef(false);
 
   useEffect(() => {
     if (!key) return;
+    const known = memo.get(key);
+    if (known && Date.now() - known.at < FRESH_MS) return;
     let live = true;
-    const t = setTimeout(() => void postQuote(key).then((r) => live && setRes({ key, ...r })), 250);
+    const t = setTimeout(() => void postQuote(key).then((r) => live && setRes({ key, ...r })), quoted.current ? 250 : 0);
+    quoted.current = true;
     return () => { live = false; clearTimeout(t); };
   }, [key]);
 
-  const quote = key ? res.quote : undefined;
+  const quote = key ? (hit?.quote ?? res.quote) : undefined;
   const lineErrors: Record<string, string> = {};
   const orderErrors: string[] = [];
   for (const e of quote?.errors ?? []) {
@@ -137,7 +162,7 @@ export function useCartQuote({ enabled = true, ...opts }: QuoteOptions = {}) {
   }
   return {
     quote, lineErrors, orderErrors, nudges: quote?.offerNudges ?? [],
-    loading: !!key && res.key !== key,
+    loading: !!key && !hit && res.key !== key,
     error: key && res.key === key ? res.error : undefined,
   };
 }

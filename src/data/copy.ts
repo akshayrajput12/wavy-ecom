@@ -10,6 +10,7 @@ export const uiCopy = {
   close: "Close", prevSlide: "Previous slide", nextSlide: "Next slide", play: "Play slideshow", pause: "Pause slideshow",
   slideOf: (i: number, n: number) => `${i} of ${n}`, goToSlide: (i: number) => `Go to slide ${i}`,
   decrease: "Decrease quantity", increase: "Increase quantity",
+  noMatches: "No matches", loadingOptions: "Loading...", showOptions: "Show options",
 } as const;
 
 export const headerCopy = {
@@ -170,6 +171,41 @@ export const checkoutCopy = {
   retry: "Retry payment", otherMethod: "Choose another method", support: "Need help? Contact us with your order number",
   successTitle: "Thank you, your order is placed", guestPrompt: "Create an account to track orders and check out faster next time.",
   stepOf: (n: number, total: number) => `Step ${n} of ${total}`,
+} as const;
+
+/** Address form helpers shared by checkout Delivery and account Addresses: pincode lookup, city list, map + location. */
+export const addressCopy = {
+  pin: {
+    looking: (pin: string) => `Looking up ${pin}...`, found: (place: string) => `${place} ✓`,
+    notFound: "Couldn't find this PIN, enter city and state", failed: "Couldn't look up this PIN right now, enter city and state",
+  },
+  cityPlaceholder: "Pick or type your city", statePlaceholder: "Select state", localityPlaceholder: "Pick or type your area",
+  useLocation: "Use my current location",
+  map: {
+    title: "Pin your delivery location", region: "Map. Drag or use the arrow keys to move the pin, plus and minus to zoom.",
+    search: "Search area, street or landmark", searchPlaceholder: "e.g. Hawa Mahal, Jaipur", locate: "Locate me", relocate: "Try again",
+    drag: "Drag the map to put the pin on your door.", loadingMap: "Loading map...",
+    subtitle: "Find yourself on the map and we'll fill in the address.", showMap: "Open map", hideMap: "Hide map",
+    recenter: "Back to my location", zoomIn: "Zoom in", zoomOut: "Zoom out", live: "Live", off: "Location off", idle: "Drag or search",
+    locating: "Locating...", refining: (acc: string) => `Refining location... ${acc}`, accuracy: (acc: string) => `Accurate to ${acc}`,
+    signal: ["", "Weak signal", "Fair signal", "Good signal", "Strong signal"],
+    coarse: "This device is estimating from Wi-Fi or network, so it can be off by a few hundred metres. Drag the map to correct the pin.",
+    finding: "Finding the address...", pinnedAt: "Delivering to", noAddress: "We couldn't name this spot. Use it and fill in the rest below.",
+    fields: { line: "Street", locality: "Area", city: "City", state: "State", pin: "PIN" }, use: "Use this address",
+    denied: "Location access is blocked for this site.",
+    deniedHelp: [
+      "Chrome / Edge: click the icon left of the address bar, then Site settings, Location, Allow, and reload.",
+      "Safari (iPhone): Settings, Apps, Safari, Location, Allow. Safari (Mac): Safari, Settings for this website, Location, Allow.",
+      "Firefox: click the permissions icon in the address bar and clear the Location block.",
+    ],
+    unavailable: "Your device couldn't determine a location. Check that location services are on, or search instead.",
+    timeout: "Finding your location took too long. Try again, or search for your area.",
+    insecure: "Location needs a secure (https) connection. Search for your area or drag the map instead.",
+    unsupported: "This browser can't share your location. Search for your area or drag the map instead.",
+    manual: "You can still search, drag the map, or type the address in the fields.",
+  },
+  /** ±25 m / ±1.2 km */
+  accuracy: (m: number) => (m < 1000 ? `±${Math.max(1, Math.round(m))} m` : `±${(m / 1000).toFixed(1)} km`),
 } as const;
 
 // ---------- GST invoice (document + access UI) ----------

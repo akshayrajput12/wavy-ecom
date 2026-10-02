@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { canonicalState } from "@/backend/geo/normalise";
 
 const phone = z.string().trim().regex(/^(\+91)?[6-9]\d{9}$/, "Enter a valid 10-digit mobile number");
 
@@ -10,7 +11,8 @@ export const AddressSchema = z.object({
   line2: z.string().trim().max(200).optional(),
   landmark: z.string().trim().max(120).optional(),
   city: z.string().trim().min(2).max(80),
-  state: z.string().trim().min(2).max(80),
+  // Canonical state/UT name or 422: invoices derive the GST place-of-supply code from it (invoices/gst.ts stateCodeOf).
+  state: z.string().trim().max(80).transform((s, ctx) => canonicalState(s) ?? (ctx.addIssue({ code: "custom", message: "Select a valid Indian state" }), z.NEVER)),
   postalCode: z.string().trim().regex(/^[1-9]\d{5}$/, "Enter a valid 6-digit pincode"),
   country: z.string().trim().length(2).default("IN"),
   isDefault: z.boolean().optional(),

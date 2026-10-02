@@ -1,4 +1,5 @@
 import "server-only";
+import { after } from "next/server";
 import { ApiError } from "@/backend/_core/http";
 import { logger, type Logger } from "@/lib/logger";
 import type { Invoice } from "@/types/domain";
@@ -6,7 +7,7 @@ import { buildInvoice } from "./build";
 import { invoicePrefix } from "./gst";
 import { renderInvoicesPdf } from "./pdf";
 import {
-  findInvoice, findInvoices, invoicesIssuedBetween, issueInvoiceRow, loadInvoiceSource, readPdf, storePdf, toInvoice, type InvoiceRow,
+  findInvoice, findInvoices, invoicesIssuedBetween, issueInvoiceRow, loadInvoiceContext, readPdf, storePdf, toInvoice, type InvoiceRow,
 } from "./repo";
 
 const log = logger.child({ svc: "invoices" });
@@ -19,12 +20,12 @@ export const BULK_INVOICE_LIMIT = 200;
  * Throws 409 invoice_not_ready when the order doesn't qualify yet.
  */
 export async function ensureInvoice(orderId: string): Promise<InvoiceRow> {
-  const existing = await findInvoice(orderId);
-  if (existing) return existing;
-  const src = await loadInvoiceSource(orderId);
-  if (!src) throw new ApiError(404, "order_not_found", "Order not found");
-  const row = await issueInvoiceRow(orderId, invoicePrefix(new Date()), buildInvoice(src));
-  log.info("invoice.issued", { orderId, invoiceNumber: row.invoice_number, total: src.order.total });
+  const ctx = await loadInvoiceContext(orderId); // 1 round trip: existing invoice + eligibility + source
+  if (!ctx) throw new ApiError(404, "order_not_found", "Order not found");
+  if (ctx.existing) return ctx.existing;
+  if (!ctx.eligible) throw new ApiError(409, "invoice_not_ready", "This order has no invoice yet");
+  const row = await issueInvoiceRow(orderId, invoicePrefix(new Date()), buildInvoice(ctx.source));
+  log.info("invoice.issued", { orderId, invoiceNumber: row.invoice_number, total: ctx.source.order.total });
   return row;
 }
 
@@ -62,12 +63,17 @@ export async function regenerateInvoicePdf(orderId: string) {
   return { number: row.invoice_number };
 }
 
+/**
+ * Renders the PDF. `strict` (staff regenerate) stores it before returning; otherwise the storage upload + row update
+ * run after the response, so a first download doesn't wait two more round trips for the cache write.
+ * ponytail: after() needs a request scope (route handlers today); an email job calling getInvoicePdf would pass strict.
+ */
 async function renderAndStore(row: InvoiceRow, strict = false): Promise<Buffer> {
   const pdf = await renderInvoicesPdf([toInvoice(row)]);
-  await storePdf(row, pdf).catch((e: unknown) => {
-    if (strict) throw e;
+  if (strict) await storePdf(row, pdf);
+  else after(() => storePdf(row, pdf).catch((e: unknown) => {
     log.warn("invoice.pdf_cache_failed", { orderId: row.order_id, reason: e instanceof Error ? e.message : String(e) });
-  });
+  }));
   return pdf;
 }
 

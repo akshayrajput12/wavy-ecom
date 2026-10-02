@@ -33,14 +33,14 @@ export const getStoreSettings = cached("settings.store", [TAGS.settings], async 
 export const listPaymentOptions = cached("settings.gateways", [TAGS.settings], async (): Promise<PaymentOption[]> => {
   const db = publicDb();
   if (!db) return [];
+  const [res, settings] = await Promise.all([
+    db.from("payment_gateways").select("provider, display_name, description, supported_methods, min_amount, max_amount").order("sort_order"),
+    getStoreSettings(),
+  ]);
   const rows: {
     provider: PaymentOption["provider"]; display_name: string; description: string | null; supported_methods: string[];
     min_amount: number | null; max_amount: number | null;
-  }[] = safe(
-    await db.from("payment_gateways").select("provider, display_name, description, supported_methods, min_amount, max_amount").order("sort_order"),
-    "list payment gateways", [],
-  );
-  const settings = await getStoreSettings();
+  }[] = safe(res, "list payment gateways", []);
   return rows
     .filter((r) => r.provider !== "cod" || settings?.codEnabled)
     .map((r) => ({

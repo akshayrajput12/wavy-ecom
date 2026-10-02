@@ -2,7 +2,8 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useReducedMotion } from "@/components/ui/useMediaQuery";
-import { PartyPopper, Truck } from "lucide-react";
+import { PartyPopper } from "lucide-react";
+import { TruckIcon } from "@/components/ui/icons";
 import { formatPrice } from "@/lib/format";
 import { cartExtraCopy as x } from "./copy";
 
@@ -30,7 +31,7 @@ export function FreeShippingProgress({ net, threshold }: { net: number; threshol
             transition={{ type: "spring", stiffness: 520, damping: 18 }}
             aria-hidden
           >
-            {unlocked ? <PartyPopper className="size-3.5" /> : <Truck className="size-3.5" />}
+            {unlocked ? <PartyPopper className="size-3.5" /> : <TruckIcon className="size-3.5" />}
           </motion.span>
         </AnimatePresence>
         <span>{label}</span>

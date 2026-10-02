@@ -1,4 +1,5 @@
-import { ArrowLeft, FileText, RotateCcw, Truck } from "lucide-react";
+import { FileText } from "lucide-react";
+import { ArrowLeftIcon, RotateCcwIcon, TruckIcon } from "@/components/ui/icons";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { ButtonLink, buttonClass } from "@/components/ui/Button";
@@ -17,7 +18,7 @@ export function OrderDetailView({ order, canCancel, canReturn, invoiceHref }: { 
   return (
     <div className="grid gap-8">
       <Link href="/account/orders" className="inline-flex min-h-11 items-center gap-2 self-start text-meta text-ink-soft hover:text-ink">
-        <ArrowLeft className="size-4" aria-hidden /> {ac.allOrders}
+        <ArrowLeftIcon className="size-4" /> {ac.allOrders}
       </Link>
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="grid gap-3">
@@ -30,11 +31,11 @@ export function OrderDetailView({ order, canCancel, canReturn, invoiceHref }: { 
 
       <div className="flex flex-wrap gap-2">
         {order.trackingToken && order.status !== "cancelled" && (
-          <ButtonLink href={`/track/${order.trackingToken}`}><Truck className="size-4" aria-hidden /> {ac.track}</ButtonLink>
+          <ButtonLink href={`/track/${order.trackingToken}`}><TruckIcon className="size-4" /> {ac.track}</ButtonLink>
         )}
         {canReturn && (
           <ButtonLink href={`/account/returns/new?order=${encodeURIComponent(order.number)}`} variant="secondary">
-            <RotateCcw className="size-4" aria-hidden /> {accountCopy.requestReturn}
+            <RotateCcwIcon className="size-4" /> {accountCopy.requestReturn}
           </ButtonLink>
         )}
         {invoiceHref && (

@@ -1,7 +1,8 @@
 "use client";
 
 import { clsx } from "clsx";
-import { LayoutDashboard, LogOut } from "lucide-react";
+import { LayoutDashboard } from "lucide-react";
+import { LogOutIcon } from "@/components/ui/icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { accountNav } from "@/data/copy";
@@ -37,7 +38,7 @@ export function AccountNav({ isStaff }: { isStaff?: boolean }) {
         <li>
           <form action={signOut}>
             <button type="submit" className="flex min-h-11 items-center gap-2 whitespace-nowrap rounded-pill px-4 text-body text-ink-soft hover:bg-surface-warm hover:text-ink lg:w-full">
-              <LogOut className="size-4" aria-hidden /> {ac.auth.logout}
+              <LogOutIcon className="size-4" /> {ac.auth.logout}
             </button>
           </form>
         </li>

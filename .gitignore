@@ -43,3 +43,6 @@ next-env.d.ts
 # supabase cli local state
 supabase/.temp
 supabase/.branches
+
+# MapLibre worker, copied from node_modules by `postinstall` (version-locked to the installed package)
+/public/maplibre

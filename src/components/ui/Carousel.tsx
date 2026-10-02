@@ -3,6 +3,7 @@
 import { clsx } from "clsx";
 import { useReducedMotion } from "./useMediaQuery";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/icons";
 import { Children, useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
 import { uiCopy } from "@/data/copy";
 
@@ -170,10 +171,10 @@ export function Carousel({ children, label, perView = { base: 1 }, gap = "var(--
       {arrows && arrowsAt === "sides" && slides.length > 1 && (
         <>
           <button type="button" aria-label={uiCopy.prevSlide} onClick={() => goTo(state.index - 1)} disabled={state.atStart} className={clsx(arrowBtn, "left-3")}>
-            <ChevronLeft className="size-5" aria-hidden />
+            <ChevronLeftIcon className="size-5" />
           </button>
           <button type="button" aria-label={uiCopy.nextSlide} onClick={() => goTo(state.index + 1)} disabled={state.atEnd} className={clsx(arrowBtn, "right-3")}>
-            <ChevronRight className="size-5" aria-hidden />
+            <ChevronRightIcon className="size-5" />
           </button>
         </>
       )}

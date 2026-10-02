@@ -1,6 +1,6 @@
 /**
  * Framework-free typeahead engine: debounce, abort of in-flight requests, a small LRU of recent answers.
- * Pure (timers + AbortController only) so vitest covers it; `useTypeahead` in SearchBox wires it to React.
+ * Pure (timers + AbortController only); `useTypeahead` in SearchBox wires it to React.
  */
 
 export const MIN_CHARS = 2;

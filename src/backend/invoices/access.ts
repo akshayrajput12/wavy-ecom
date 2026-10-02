@@ -2,6 +2,7 @@ import "server-only";
 import { requireUser } from "@/backend/_core/auth";
 import { must, serviceDb, userDb } from "@/backend/_core/db";
 import { ApiError } from "@/backend/_core/http";
+import { orderRowByNumber } from "@/backend/orders/repo";
 import { logger } from "@/lib/logger";
 import type { Invoice } from "@/types/domain";
 import { GUEST_WINDOW_MS, guestLinkKey, signGuestToken, verifyGuestToken } from "./guest-token";
@@ -20,10 +21,7 @@ export type GuestInvoiceOffer =
  */
 export async function guestInvoiceOffer(orderNumber: string, trackingToken: string | undefined): Promise<GuestInvoiceOffer | null> {
   if (!trackingToken || trackingToken.length < 32) return null;
-  const o = must<{ id: string; tracking_token: string; placed_at: string; payment_provider: string } | null>(
-    await serviceDb().from("orders").select("id, tracking_token, placed_at, payment_provider").eq("order_number", orderNumber).maybeSingle(),
-    "load the order",
-  );
+  const o = await orderRowByNumber(orderNumber); // same request-cached row the success page already loaded
   if (!o || o.tracking_token !== trackingToken || Date.now() - Date.parse(o.placed_at) > GUEST_WINDOW_MS) return null;
   const key = guestLinkKey();
   if (!key) { log.warn("invoice.guest_link_unconfigured", { orderId: o.id }); return null; }

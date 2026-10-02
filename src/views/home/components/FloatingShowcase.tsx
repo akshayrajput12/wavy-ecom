@@ -44,7 +44,7 @@ export function FloatingShowcase({ section }: { section: HomeSectionOf<"floating
                       <ImageWell media={p.images[0]} alt="" sizes="(min-width: 640px) 20vw, 36vw" className="aspect-square rounded-md"
                         imgClassName="transition-[scale] duration-(--dur-slow) ease-soft group-hover:scale-[1.04]" />
                       <span className="mt-2 block truncate px-1 text-meta font-medium">{p.name}</span>
-                      <PriceTag price={p.priceFrom} compareAt={p.compareAtFrom} className="px-1 pb-1 text-meta [&_span:last-child]:hidden sm:[&_span:last-child]:inline" />
+                      <PriceTag price={p.priceFrom} compareAt={p.compareAtFrom} className="px-1 pb-1 text-meta [&_[data-off]]:hidden sm:[&_[data-off]]:inline" />
                     </button>
                   </Float>
                 </Reveal>

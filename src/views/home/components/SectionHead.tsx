@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRightIcon } from "@/components/ui/icons";
 import { plainText } from "@/lib/format";
 import type { Cta } from "@/types/domain";
 import { HeadingLines } from "./HeadingLines";
@@ -10,7 +10,7 @@ export function MoreLink({ cta, context }: { cta: Cta; context?: string }) {
     <Link href={cta.href} className="group inline-flex min-h-11 shrink-0 items-center gap-1 self-start text-meta font-medium underline decoration-line underline-offset-4 transition-colors hover:decoration-ink sm:self-end">
       {cta.label}
       {context && <span className="sr-only">: {context}</span>}
-      <ChevronRight className="size-3.5 transition-transform duration-(--dur-fast) group-hover:translate-x-0.5" aria-hidden />
+      <ChevronRightIcon className="size-3.5" />
     </Link>
   );
 }

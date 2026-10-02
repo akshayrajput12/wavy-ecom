@@ -56,8 +56,8 @@ function deny(res: NextResponse, status: number, code: string, message: string) 
   return withCookies(res, NextResponse.json({ ok: false, error: { code, message } }, { status }));
 }
 
-// Public, CDN-cacheable JSON (PUBLIC_CACHE) skips the session refresh: no auth round trip, and a
+// Public, CDN-cacheable JSON (PUBLIC_CACHE / STATIC_CACHE, and the sessionless /api/geo lookups) skips the session refresh: no auth round trip, and a
 // refreshed Set-Cookie can never end up on a shared cached response.
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/products|api/search/suggest|api/shipping/methods|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|txt|xml|webmanifest)$).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/products|api/search/suggest|api/shipping/methods|api/geo|maplibre/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|txt|xml|webmanifest)$).*)"],
 };

@@ -1,4 +1,5 @@
-import { ArrowUpRight, Package } from "lucide-react";
+import { Package } from "lucide-react";
+import { ArrowUpRightIcon } from "@/components/ui/icons";
 import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
@@ -25,7 +26,7 @@ export function OrderRow({ order }: { order: OrderSummary }) {
       </span>
       <span className="font-medium tabular-nums">{formatPrice(order.total)}</span>
       <span aria-hidden className="hidden size-10 shrink-0 place-items-center rounded-pill border border-line transition-colors group-hover:border-ink group-hover:bg-ink group-hover:text-canvas sm:grid">
-        <ArrowUpRight className="size-4 transition-transform duration-(--dur-base) group-hover:rotate-45" />
+        <ArrowUpRightIcon className="size-4 transition-[rotate] duration-(--dur-base) group-hover:rotate-45" />
       </span>
     </Link>
   );

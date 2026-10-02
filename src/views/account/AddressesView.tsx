@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@/components/ui/icons";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/Badge";
@@ -44,7 +44,7 @@ export function AddressesView({ initial }: { initial: Address[] }) {
     <div className="grid gap-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <header className="grid gap-3"><p className="t-overline">{ac.overline}</p><h1 className="t-h1">{ac.addresses}</h1></header>
-        {editing === null && <Button onClick={() => setEditing("new")}><Plus className="size-4" aria-hidden /> {ac.addAddress}</Button>}
+        {editing === null && <Button onClick={() => setEditing("new")}><PlusIcon className="size-4" /> {ac.addAddress}</Button>}
       </div>
 
       {editing !== null && (

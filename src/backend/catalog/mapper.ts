@@ -1,5 +1,5 @@
 /**
- * DB rows -> domain types for the catalog. Pure (no server-only) so vitest can cover it.
+ * DB rows -> domain types for the catalog.
  * Column lists live here next to the row shapes they produce. NEVER select product_variants.cost_price
  * (not granted to anon/authenticated) and never use `*` on variants.
  */

@@ -3,7 +3,7 @@
 import { clsx } from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 import { useReducedMotion } from "@/components/ui/useMediaQuery";
-import { Minus, Plus } from "lucide-react";
+import { PlusIcon } from "@/components/ui/icons";
 import { useId, useState } from "react";
 import type { Faq } from "@/types/domain";
 
@@ -27,7 +27,7 @@ export function FaqAccordion({ faqs, className }: { faqs: Faq[]; className?: str
                 {f.question}
                 <span aria-hidden className={clsx("grid size-8 shrink-0 place-items-center rounded-pill border transition-colors duration-(--dur-base) ease-soft",
                   isOpen ? "border-ink bg-ink text-canvas" : "border-line text-ink")}>
-                  {isOpen ? <Minus className="size-3.5" /> : <Plus className="size-3.5" />}
+                  <PlusIcon className="size-3.5" open={isOpen} />
                 </span>
               </button>
             </h3>

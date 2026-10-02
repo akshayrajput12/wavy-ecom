@@ -108,7 +108,7 @@ Admin mutations call `updateTag()` inside Server Actions (read-your-writes for t
 - Enums in `src/types/domain.ts` mirror Postgres enums one-to-one.
 - Snapshots: `orders` and `order_items` copy name/price/tax/discount/address at placement; they never join back to live catalog for totals.
 - Heavy analytics (`analytics_events`, `visitor_sessions`) are **partitioned monthly** (`pg_partman` or manual), retained 13 months raw; aggregates in `daily_metrics`.
-- Supabase clients: `lib/supabase/server.ts` (user JWT, RLS applies), `lib/supabase/client.ts` (browser, anon), `lib/supabase/admin.ts` (service role, **server-only**, used by webhooks/cron/admin services after the RBAC guard).
+- Supabase clients: `lib/supabase/server.ts` (user JWT, RLS applies), `lib/supabase/admin.ts` (service role, **server-only**, used by webhooks/cron/admin services after the RBAC guard).
 
 ## 6. Jobs and queues
 

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { clsx } from "clsx";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { useReducedMotion } from "@/components/ui/useMediaQuery";
-import { ChevronRight } from "lucide-react";
+import { ChevronRightIcon } from "@/components/ui/icons";
 import { useId, useRef, useState, type KeyboardEvent } from "react";
 import { collectionCopy, homeCopy } from "@/data/storefront";
 import type { Category } from "@/types/domain";
@@ -82,7 +82,7 @@ export function CategoryTabs({ categories, label }: { categories: Category[]; la
         {current && (
           <Link href={`/collections/${current.slug}`} className="group inline-flex min-h-11 items-center gap-1 text-meta font-medium underline decoration-line underline-offset-4 hover:decoration-ink">
             {collectionCopy.allIn(current.name)}
-            <ChevronRight className="size-3.5 transition-transform duration-(--dur-fast) group-hover:translate-x-0.5" aria-hidden />
+            <ChevronRightIcon className="size-3.5" />
           </Link>
         )}
       </div>

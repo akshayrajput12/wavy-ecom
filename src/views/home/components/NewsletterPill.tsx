@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRightIcon } from "@/components/ui/icons";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 import { footerCopy } from "@/data/copy";
@@ -18,7 +18,7 @@ export function NewsletterPill({ placeholder, buttonLabel, consentText }: { plac
         <input id={id} type="email" required autoComplete="email" placeholder={placeholder ?? footerCopy.newsletterLabel}
           className="h-11 min-w-0 flex-1 bg-transparent text-body-lg text-ink placeholder:text-ink-muted focus:outline-none" />
         <Button type="submit" className="shrink-0">
-          {buttonLabel ?? footerCopy.newsletterCta} <ArrowRight className="size-4" aria-hidden />
+          {buttonLabel ?? footerCopy.newsletterCta} <ArrowRightIcon className="size-4" />
         </Button>
       </div>
       {consentText && <p className="mt-3 px-5 text-micro text-ink-soft">{consentText}</p>}

@@ -1,12 +1,13 @@
 "use client";
 
 import { clsx } from "clsx";
-import { TicketPercent, X } from "lucide-react";
+import { TicketPercent } from "lucide-react";
+import { XIcon } from "@/components/ui/icons";
 import { useId, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 import { cartCopy, pricingErrors } from "@/data/copy";
-import { useCart, type QuoteOptions } from "@/stores/cart";
+import { primeQuote, quoteKey, useCart, type QuoteOptions } from "@/stores/cart";
 import { api } from "@/stores/http";
 import type { CartQuote, QuoteCoupon } from "@/types/domain";
 import { cartExtraCopy as x } from "./copy";
@@ -36,6 +37,7 @@ export function CouponForm({ quoteCoupon, context }: { quoteCoupon?: QuoteCoupon
     setLoading(false);
     if (!res.ok) return setError(res.error.message);
     if (!res.data.coupon.valid) return setError(pricingErrors[res.data.coupon.error ?? ""] ?? x.couponInvalid);
+    primeQuote(quoteKey(lines, value, context), res.data.quote); // same answer the next quote would fetch
     setCoupon(value);
     setCode("");
     toast.success(cartCopy.couponApplied(value));
@@ -48,7 +50,7 @@ export function CouponForm({ quoteCoupon, context }: { quoteCoupon?: QuoteCoupon
         <div className="flex items-center justify-between gap-3 text-meta">
           <span className="inline-flex items-center gap-2 font-medium"><TicketPercent className="size-4 text-accent-deep" aria-hidden /> {cartCopy.couponApplied(coupon)}</span>
           <button type="button" className="inline-flex min-h-11 items-center gap-1 rounded-pill px-2 text-ink-soft hover:text-ink" onClick={() => setCoupon(undefined)}>
-            <X className="size-3.5" aria-hidden /> {cartCopy.couponRemove}<span className="sr-only"> {coupon}</span>
+            <XIcon className="size-3.5" /> {cartCopy.couponRemove}<span className="sr-only"> {coupon}</span>
           </button>
         </div>
         {stale && <p role="status" className="pb-1 text-meta text-warning">⚠ {pricingErrors[quoteCoupon.error ?? ""] ?? x.couponInvalid}</p>}

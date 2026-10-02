@@ -3,7 +3,7 @@
 import { clsx } from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 import { useReducedMotion } from "@/components/ui/useMediaQuery";
-import { Minus, Plus } from "lucide-react";
+import { PlusIcon } from "@/components/ui/icons";
 import { useId, useState } from "react";
 
 /** One FAQ row: hairline, question button with a circular +/− toggle (ink when open), animated answer region. */
@@ -11,7 +11,6 @@ export function FaqItem({ question, answer, defaultOpen = false }: { question: s
   const [open, setOpen] = useState(defaultOpen);
   const reduce = useReducedMotion();
   const id = useId();
-  const Icon = open ? Minus : Plus;
   return (
     <div className="border-b border-line">
       <h3>
@@ -22,7 +21,7 @@ export function FaqItem({ question, answer, defaultOpen = false }: { question: s
             "grid size-8 shrink-0 place-items-center rounded-pill border transition-colors duration-(--dur-base)",
             open ? "border-ink bg-ink text-canvas" : "border-line text-ink",
           )}>
-            <Icon className="size-3.5" />
+            <PlusIcon className="size-3.5" open={open} />
           </span>
         </button>
       </h3>

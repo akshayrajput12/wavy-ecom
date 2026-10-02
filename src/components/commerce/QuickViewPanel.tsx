@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useId, useState } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRightIcon } from "@/components/ui/icons";
 import { quickViewCopy } from "@/data/storefront";
 import type { Product } from "@/types/domain";
 import { BuyBox } from "./BuyBox";
@@ -36,7 +36,7 @@ function QuickViewBody({ product: p, titleId, onClose }: { product: Product; tit
           <Link href={`/products/${p.slug}`} onClick={onClose}
             className="group inline-flex min-h-11 items-center gap-1 text-meta font-medium text-ink underline underline-offset-4 decoration-line hover:decoration-ink">
             {quickViewCopy.viewDetails}
-            <ChevronRight className="size-4 transition-transform duration-(--dur-fast) group-hover:translate-x-0.5" aria-hidden />
+            <ChevronRightIcon className="size-4" />
           </Link>
         </BuyBox>
       </div>

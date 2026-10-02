@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
 import { clsx } from "clsx";
 import { useReducedMotion } from "@/components/ui/useMediaQuery";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/icons";
 import { pdpCopy } from "@/data/storefront";
 import type { Media } from "@/types/domain";
 import { ImageWell } from "./ImageWell";
@@ -73,11 +73,11 @@ export function Gallery({ images, name, focusUrl, sizes, aspect = "aspect-[4/5]"
             <span className="pointer-events-auto flex gap-1.5">
               <button type="button" onClick={() => goTo(index - 1)} disabled={index === 0} aria-label={pdpCopy.prevImage}
                 className={clsx(arrow, "bg-canvas/85 backdrop-blur-sm hover:bg-ink hover:text-canvas disabled:opacity-40")}>
-                <ChevronLeft className="size-4" aria-hidden />
+                <ChevronLeftIcon className="size-4" />
               </button>
               <button type="button" onClick={() => goTo(index + 1)} disabled={index === last} aria-label={pdpCopy.nextImage}
                 className={clsx(arrow, "bg-ink text-canvas hover:bg-ink/85 disabled:opacity-40")}>
-                <ChevronRight className="size-4" aria-hidden />
+                <ChevronRightIcon className="size-4" />
               </button>
             </span>
           </div>

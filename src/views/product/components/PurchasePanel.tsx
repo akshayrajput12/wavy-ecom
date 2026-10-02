@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { clsx } from "clsx";
-import { RotateCcw, ShieldCheck } from "lucide-react";
+import { RotateCcwIcon, ShieldCheckIcon } from "@/components/ui/icons";
 import { Button } from "@/components/ui/Button";
 import { BuyBox, MAX_QTY } from "@/components/commerce/BuyBox";
 import { addToBag } from "@/components/commerce/addToBag";
@@ -41,13 +41,13 @@ export function PurchasePanel({ product: p, variant, selection, onSelect }: {
       <DeliveryCheck />
 
       <ul className="grid gap-4 border-y border-line py-5 text-meta sm:grid-cols-2">
-        <li className="flex items-start gap-3">
-          <span className="grid size-9 shrink-0 place-items-center rounded-pill bg-surface-2" aria-hidden><RotateCcw className="size-4" strokeWidth={1.6} /></span>
+        <li data-icon-host className="flex items-start gap-3">
+          <span className="grid size-9 shrink-0 place-items-center rounded-pill bg-surface-2" aria-hidden><RotateCcwIcon className="size-4" strokeWidth={1.6} /></span>
           <span><span className="block font-semibold">{c.returns}</span><span className="text-ink-soft">{p.returnable && p.returnWindowDays ? c.returnable(p.returnWindowDays) : c.notReturnable}</span></span>
         </li>
         {p.warranty && (
-          <li className="flex items-start gap-3">
-            <span className="grid size-9 shrink-0 place-items-center rounded-pill bg-surface-2" aria-hidden><ShieldCheck className="size-4" strokeWidth={1.6} /></span>
+          <li data-icon-host className="flex items-start gap-3">
+            <span className="grid size-9 shrink-0 place-items-center rounded-pill bg-surface-2" aria-hidden><ShieldCheckIcon className="size-4" strokeWidth={1.6} /></span>
             <span><span className="block font-semibold">{c.warranty}</span><span className="text-ink-soft">{p.warranty}</span></span>
           </li>
         )}

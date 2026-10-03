@@ -19,7 +19,12 @@ const nextConfig: NextConfig = {
       ...(supabaseHost && !supabaseHost.endsWith(".supabase.co") ? [{ protocol: "https" as const, hostname: supabaseHost }] : []),
     ],
   },
-  experimental: { optimizePackageImports: ["lucide-react", "recharts", "framer-motion"] },
+  experimental: {
+    optimizePackageImports: ["lucide-react", "recharts", "framer-motion"],
+    // ponytail: the dev disk cache (.next/dev/cache/turbopack) corrupted twice under bulk edits ("conflicting effects
+    // for the same key" panic). Off = slower cold `next dev` start; turn back on once Turbopack fixes it.
+    turbopackFileSystemCacheForDev: false,
+  },
   // Invoice PDFs embed these fonts (read from disk at render time, so the tracer can't see them).
   outputFileTracingIncludes: {
     "/api/**/invoice": ["./src/backend/invoices/fonts/*.ttf"],

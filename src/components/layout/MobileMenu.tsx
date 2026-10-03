@@ -54,7 +54,7 @@ export function MobileMenu({ open, onClose, storeName, categories, collections, 
                   <Link
                     href={l.href}
                     aria-current={active ? "page" : undefined}
-                    className={clsx("flex min-h-16 flex-1 items-center justify-between gap-4 font-display text-h1 font-semibold leading-none tracking-(--tracking-display)", active && "underline decoration-2 underline-offset-8")}
+                    className={clsx("flex min-h-16 flex-1 items-center justify-between gap-4 font-display text-h1 font-heading leading-none tracking-(--tracking-display)", active && "underline decoration-2 underline-offset-8")}
                   >
                     {l.label}
                     {!kids && <ArrowUpRightIcon className="size-6 shrink-0" strokeWidth={1.5} />}

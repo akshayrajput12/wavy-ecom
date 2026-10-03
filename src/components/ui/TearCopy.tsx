@@ -12,7 +12,7 @@ export function TearCopy({ word, tagline }: { word: string; tagline?: string }) 
       )}
       {/* stretched to a fixed width so any face fits (54 units clear of each frame edge); short words (404) are not ballooned */}
       <text x={CX} y={404} textAnchor="middle" textLength={Math.min(820, word.length * 150)} lengthAdjust="spacingAndGlyphs"
-        style={{ fill: "var(--ink)", fontFamily: "var(--font-editorial)", fontSize: 250, fontWeight: 600, letterSpacing: 0 }}>
+        style={{ fill: "var(--ink)", fontFamily: "var(--font-editorial)", fontSize: 250, fontWeight: "var(--weight-heading)", letterSpacing: 0 }}>
         {word}
       </text>
     </>

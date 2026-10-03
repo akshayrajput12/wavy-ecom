@@ -67,7 +67,7 @@ export function HomeRail({ children, label, autoplay, playState, itemClassName, 
     <div>
       <motion.ul
         ref={ref}
-        // cards stagger in once on scroll into view (and again when a CategoryTabs panel remounts the rail)
+        // cards stagger in once on scroll into view
         initial={reduce ? false : "hidden"}
         whileInView="show"
         viewport={{ once: true, margin: "0px 0px -10% 0px" }}

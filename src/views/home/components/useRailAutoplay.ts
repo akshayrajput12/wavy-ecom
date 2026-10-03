@@ -2,7 +2,7 @@
 
 import { useEffect, useEffectEvent, useRef, useState, useSyncExternalStore, type Dispatch, type FocusEvent, type PointerEvent, type RefObject, type SetStateAction, type WheelEvent } from "react";
 
-/** A play/pause state owned by a parent, so it survives the rail remounting (CategoryTabs swaps rails per tab). */
+/** A play/pause state owned by a parent, so it survives the rail remounting. */
 export type PlayState = [boolean, Dispatch<SetStateAction<boolean>>];
 
 const INTERVAL_MS = 4000;

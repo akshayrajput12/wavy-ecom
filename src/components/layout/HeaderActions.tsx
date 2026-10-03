@@ -22,7 +22,7 @@ export function HeaderActions({ isStaff, onSearch, onMenu, menuOpen }: {
   const stroke = 1.6;
 
   return (
-    <div className="flex flex-1 items-center justify-end gap-1.5">
+    <div className="flex items-center justify-end gap-1.5">
       <button type="button" className={iconButton} onClick={onSearch} aria-label={headerCopy.search}>
         <SearchIcon className="size-4.5" strokeWidth={stroke} />
       </button>

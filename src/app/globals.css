@@ -61,8 +61,13 @@
   --leading-body: 1.6;
   --tracking-tight: -0.012em;
   --tracking-wide: 0.14em;
-  --tracking-display: -0.03em;
+  --tracking-label: 0.08em; /* quieter uppercase UI labels (header nav) */
+  --tracking-display: -0.016em; /* light condensed cut: less negative than a bold one, or counters clog */
   --stretch-display: 88%;  /* Bricolage wdth axis (75–100%): hero / display headings */
+  /* display weights: light, never semibold/bold. Change the whole site's heading weight here */
+  --weight-display: 360;    /* hero, display, wordmark (Bricolage wght axis 200–800) */
+  --weight-heading: 400;    /* h1, h2 */
+  --weight-heading-sm: 500; /* h3 and smaller display text (logo, card titles, menu) */
   --stretch-wordmark: 82%; /* footer wordmark + preloader word */
 
   /* ---------- Spacing (8px rhythm) ---------- */
@@ -155,6 +160,9 @@
   --font-display: var(--font-editorial);
   --font-accent: var(--font-accent);
   --font-mono: var(--font-mono);
+  /* font-heading / font-heading-sm: display-text weights from the tokens above */
+  --font-weight-heading: var(--weight-heading);
+  --font-weight-heading-sm: var(--weight-heading-sm);
 
   --text-hero: var(--text-hero);
   --text-display: var(--text-display);
@@ -265,18 +273,18 @@
   .t-hero {
     font-family: var(--font-editorial);
     font-size: var(--text-hero);
-    line-height: 0.92;
+    line-height: 0.95;
     letter-spacing: var(--tracking-display);
-    font-weight: 700;
+    font-weight: var(--weight-display);
     font-stretch: var(--stretch-display);
     text-wrap: balance;
   }
   .t-display {
     font-family: var(--font-editorial);
     font-size: var(--text-display);
-    line-height: 0.96;
+    line-height: 0.98;
     letter-spacing: var(--tracking-display);
-    font-weight: 650;
+    font-weight: var(--weight-display);
     font-stretch: var(--stretch-display);
     text-wrap: balance;
   }
@@ -284,8 +292,8 @@
     font-family: var(--font-editorial);
     font-size: var(--text-h1);
     line-height: 1.1;
-    letter-spacing: -0.02em;
-    font-weight: 600;
+    letter-spacing: -0.01em;
+    font-weight: var(--weight-heading);
     font-stretch: 94%;
     text-wrap: balance;
   }
@@ -294,7 +302,7 @@
     font-size: var(--text-h2);
     line-height: 1.2;
     letter-spacing: var(--tracking-tight);
-    font-weight: 600;
+    font-weight: var(--weight-heading);
   }
   /* accent word: <em> in any display heading, or .t-accent anywhere. Never hard-code the word: admin marks it *so* */
   .t-accent,
@@ -310,17 +318,17 @@
   /* giant store-name wordmark (footer); the preloader word matches it */
   .t-wordmark {
     font-family: var(--font-editorial);
-    font-weight: 700;
+    font-weight: var(--weight-display);
     font-stretch: var(--stretch-wordmark);
     font-variation-settings: "opsz" 96; /* display cut at every size, so FooterWordmark's width table holds */
-    letter-spacing: -0.04em;
+    letter-spacing: -0.03em; /* the width table (measured at 700 / -0.04em) still bounds the lighter, narrower cut */
     line-height: 0.9;
     white-space: pre;
   }
   .t-h3 {
     font-size: var(--text-h3);
     line-height: var(--leading-snug);
-    font-weight: 500;
+    font-weight: var(--weight-heading-sm);
   }
   .t-body {
     font-size: var(--text-body);
@@ -408,6 +416,12 @@
   }
 }
 
+/* DragCursor (components/ui/DragCursor.tsx) sets this on its rail: native cursor hidden only inside it */
+[data-drag-cursor],
+[data-drag-cursor] * {
+  cursor: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -475,10 +489,10 @@
   padding-bottom: 0.1em;
   font-family: var(--font-editorial);
   font-size: clamp(3.5rem, 1.5rem + 9vw, 9rem);
-  font-weight: 700;
+  font-weight: var(--weight-display);
   font-stretch: var(--stretch-wordmark);
   line-height: 1;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.03em;
   white-space: pre;
 }
 .preloader-rise {

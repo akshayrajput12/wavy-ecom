@@ -28,7 +28,7 @@ export function CategoryCard({ category: c, index }: { category: Category; index
           // no photo yet: graphite stage with an oversized outlined monogram, so the tile reads as designed, not missing
           <span aria-hidden className="absolute inset-0 grid place-items-center overflow-hidden bg-linear-160 from-black-2 via-black to-black transition-[scale] duration-(--dur-slow) ease-out group-hover:scale-[1.06] group-focus-visible:scale-[1.06]">
             <span className="absolute -right-1/4 -top-1/4 size-3/4 rounded-pill bg-on-dark/6 blur-3xl" />
-            <span className="font-display text-[10rem] lg:text-[13rem] font-semibold leading-none text-transparent [-webkit-text-stroke:1px_color-mix(in_srgb,var(--on-dark)_28%,transparent)]">
+            <span className="font-display text-[10rem] lg:text-[13rem] font-heading leading-none text-transparent [-webkit-text-stroke:1px_color-mix(in_srgb,var(--on-dark)_28%,transparent)]">
               {c.name.charAt(0)}
             </span>
           </span>

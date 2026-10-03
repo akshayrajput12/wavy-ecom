@@ -12,7 +12,8 @@ const DELTA = 6;
 function overDarkStage(pill: HTMLElement) {
   const header = pill.offsetParent instanceof HTMLElement ? pill.offsetParent.offsetTop : 0;
   const y = header + pill.offsetTop + pill.offsetHeight / 2;
-  const under = document.elementsFromPoint(window.innerWidth / 2, y).find((el) => !pill.contains(el));
+  // skip the first-visit preloader cover too: it sits on top while the first probe runs, and nothing re-probes after it lifts
+  const under = document.elementsFromPoint(window.innerWidth / 2, y).find((el) => !pill.contains(el) && !el.closest(".preloader"));
   return Boolean(under?.closest(".on-dark"));
 }
 

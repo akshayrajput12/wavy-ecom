@@ -30,7 +30,7 @@ export function CategoryMock({ cfg, title, subtitle, lookups }: MockProps) {
         <div className="relative aspect-[4/5] overflow-hidden rounded-md bg-ink text-on-dark">
           <span className="t-index absolute left-2 top-2 text-micro">({pad(i + 1)})</span>
           <ArrowUpRight className="absolute right-2 top-2 size-3" aria-hidden />
-          <span className="absolute inset-x-2 bottom-2 line-clamp-2 font-display text-meta font-semibold">{name}</span>
+          <span className="absolute inset-x-2 bottom-2 line-clamp-2 font-display text-meta font-heading-sm">{name}</span>
         </div>
       )} />
     </div>
@@ -49,7 +49,7 @@ export function SubcategoryMock({ cfg, title, subtitle, lookups }: MockProps) {
         {(names.length ? names : [t.noPreview]).slice(0, 6).map((name, i) => (
           <div key={i} className="rounded-md border border-line-soft bg-surface p-1 text-center">
             <div className="grid aspect-[4/5] place-items-center rounded-sm bg-ink font-display text-h3 text-on-dark/40" aria-hidden>{name.charAt(0)}</div>
-            <p className="mt-1 truncate text-micro font-semibold">{name}</p>
+            <p className="mt-1 truncate font-display text-micro font-heading-sm">{name}</p>
             {cfg.showOffer !== false && <Bars n={1} className="mx-auto mt-1 w-2/3" />}
             <p className="mt-1 text-micro underline decoration-line underline-offset-2">{homeCopy.shopNow} ›</p>
           </div>

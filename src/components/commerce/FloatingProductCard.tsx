@@ -138,7 +138,7 @@ function Spotlight({ items, className }: { items: SpotlightItem[]; className?: s
                     <motion.div key={product.id} className="flex flex-1 flex-col"
                       initial={{ opacity: 1 }} exit={{ opacity: 0, y: reduce ? 0 : -4 }} transition={reduce ? { duration: 0 } : { duration: 0.2 }}>
                       <button type="button" onClick={() => openQuickView(product)} aria-label={quickViewCopy.open(product.name)}
-                        className="text-left font-display text-body-lg font-semibold leading-snug tracking-tight text-ink after:absolute after:inset-0 after:rounded-xl after:content-['']">
+                        className="text-left font-display text-body-lg font-heading-sm leading-snug tracking-tight text-ink after:absolute after:inset-0 after:rounded-xl after:content-['']">
                         <motion.span {...rise(0.04)} className="line-clamp-2">{product.name}</motion.span>
                       </button>
                       <motion.div {...rise(0.1)}><PriceTag price={product.priceFrom} compareAt={product.compareAtFrom} className="mt-1" /></motion.div>

@@ -17,7 +17,7 @@ const pill = "group inline-flex min-h-14 items-center gap-3 rounded-pill border 
 /** Thumbnail disc: category photo, or a graphite monogram while photos are not uploaded yet. */
 function Thumb({ name, image }: { name: string; image?: Category["image"] }) {
   return (
-    <span aria-hidden className="relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-pill bg-linear-160 from-black-2 to-black font-display text-body font-semibold text-on-dark">
+    <span aria-hidden className="relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-pill bg-linear-160 from-black-2 to-black font-display text-body font-heading-sm text-on-dark">
       {image?.url
         ? <Image src={image.url} alt="" fill sizes="44px" className="object-cover transition-[scale] duration-(--dur-slow) ease-out group-hover:scale-110" />
         : name.charAt(0)}

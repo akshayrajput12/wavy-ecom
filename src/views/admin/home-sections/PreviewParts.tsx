@@ -34,7 +34,7 @@ const accented = (text: string) => text.split(/\*([^*]+)\*/).map((part, i) => (i
 /** Display heading at mock scale. Empty text shows a muted placeholder so the layout keeps its shape. */
 export function Title({ text, fallback, soft, className }: { text: string; fallback: string; soft?: string; className?: string }) {
   return (
-    <p className={clsx("font-display font-semibold leading-tight tracking-tight text-balance", className)}>
+    <p className={clsx("font-display font-heading leading-tight tracking-tight text-balance", className)}>
       {text ? accented(text) : <span className="text-ink-muted">{fallback}</span>}
       {soft && <span className="text-ink-soft"> {soft}</span>}
     </p>

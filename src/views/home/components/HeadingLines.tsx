@@ -9,7 +9,7 @@ import { accentWords, type AccentSegment } from "@/lib/format";
 const EASE_OUT = [0.22, 1, 0.36, 1] as const; // mirrors --ease-out
 const rise: Variants = { hidden: { y: "110%" }, show: { y: 0, transition: { duration: 0.8, ease: EASE_OUT } } };
 // the mask: padding gives descenders, accents and the italic overhang room; equal negative margins keep the line box
-const MASK = "inline-block overflow-hidden px-[0.06em] -mx-[0.06em] pb-[0.14em] -mb-[0.14em] pt-[0.04em] -mt-[0.04em] align-bottom";
+export const MASK = "inline-block overflow-hidden px-[0.06em] -mx-[0.06em] pb-[0.14em] -mb-[0.14em] pt-[0.04em] -mt-[0.04em] align-bottom";
 
 /** One heading word: its segments, accent ones as <em> (styled by globals.css). */
 export const Word = ({ word }: { word: AccentSegment[] }) =>

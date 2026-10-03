@@ -8,8 +8,8 @@ export type BrandKey = (typeof BRAND_KEYS)[number];
 export type BrandImages = Record<BrandKey, DropzoneImage[]>;
 
 const FIELDS: Record<BrandKey, { label: string; hint: string }> = {
-  logoUrl: { label: "Logo", hint: "Header, footer, checkout and admin. Transparent PNG or SVG, about 40px tall." },
-  logoDarkUrl: { label: "Logo for dark backgrounds", hint: "Light version, shown over the hero and in the preloader. Optional." },
+  logoUrl: { label: "Logo", hint: "Header on light pages, footer, checkout and admin. Transparent PNG or SVG, cropped tight to the mark. A JPEG always sits on a solid box, so the header and footer show the store name instead." },
+  logoDarkUrl: { label: "Logo for dark backgrounds", hint: "Light-coloured version on a transparent PNG or SVG, shown over the hero and in the preloader. Without one, the store name shows there." },
   faviconUrl: { label: "Favicon", hint: "Square PNG or SVG, at least 180 × 180. Browser tab and home-screen icon." },
 };
 
@@ -18,7 +18,7 @@ export function BrandFields({ value, onChange, errors }: {
   value: BrandImages; onChange: (key: BrandKey, imgs: DropzoneImage[]) => void; errors: Record<string, string>;
 }) {
   return (
-    <Panel title="Brand" description="Without a logo the store shows its name with a monogram. The store name stays the accessible label.">
+    <Panel title="Brand" description="Without a logo the store shows its name as a wordmark. The store name stays the accessible label.">
       <div className="grid gap-4 lg:grid-cols-3">
         {BRAND_KEYS.map((k) => (
           <ImageDropzone

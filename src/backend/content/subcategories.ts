@@ -3,7 +3,7 @@ import { cached, TAGS } from "@/backend/_core/cache";
 import { publicDb, safe } from "@/backend/_core/db";
 import { descendantIds } from "@/backend/catalog/mapper";
 import { categoryOffer, type OfferStats } from "@/backend/catalog/offer";
-import type { Category, CategoryRef, SubcategoryTile } from "@/types/domain";
+import type { Category, SubcategoryTile } from "@/types/domain";
 import type { HomeSectionConfigs } from "./schema";
 
 type StatsRow = { category_id: string; price_min: number; max_discount_pct: number };
@@ -26,7 +26,7 @@ export async function resolveSubcategoryGrid(c: HomeSectionConfigs["subcategory_
   const picked = c.categoryIds?.length
     ? c.categoryIds.flatMap((id) => byId.get(id) ?? [])
     : parents.flatMap((p) => flat.filter((x) => x.parentId === p.id));
-  const list = picked.slice(0, c.limit ?? 24);
+  const list = picked.slice(0, c.limit ?? 48); // default: every sub-category (no tabs, one grid)
 
   const stats = new Map<string, OfferStats>();
   if (c.showOffer !== false) {
@@ -36,11 +36,5 @@ export async function resolveSubcategoryGrid(c: HomeSectionConfigs["subcategory_
     id, name, slug, parentId, image,
     offer: categoryOffer(descendantIds(flat, id).flatMap((d) => stats.get(d) ?? [])),
   }));
-
-  const tabs = new Map<string, CategoryRef>();
-  for (const t of tiles) {
-    const p = t.parentId ? byId.get(t.parentId) : undefined;
-    if (p && !tabs.has(p.id)) tabs.set(p.id, { id: p.id, name: p.name, slug: p.slug });
-  }
-  return { tiles, parents: [...tabs.values()] };
+  return { tiles };
 }

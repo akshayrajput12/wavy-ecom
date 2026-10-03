@@ -46,7 +46,7 @@ export const homeCopy = {
   categoryTabs: { all: "All", label: "Departments" },
   /** subcategory_grid: tab strip + offer line ("Up to 40% off" / "From ₹1,299"). */
   subcategories: {
-    overline: "Categories", tabs: "Filter categories by department",
+    overline: "Categories",
     upTo: (pct: number) => `Up to ${pct}% off`, from: (price: string) => `From ${price}`,
   },
   testimonialsChip: "Testimonials",
@@ -61,10 +61,10 @@ export const homeStageCopy = {
   pause: "Pause slideshow",
   play: "Play slideshow",
   slideOf: (i: number, n: number) => `${i} of ${n}`,
-  nextUp: (heading: string) => `Next slide: ${heading}`,
   lookbookOverline: "Selected edits",
   lookbookCount: (n: number) => `Collections (${n})`,
-  drag: "Drag to slide",
+  drag: "Drag", // custom cursor label on the lookbook rail
+  view: "View", // custom cursor label over a collection panel
   prevCollection: "Previous collection",
   nextCollection: "Next collection",
 } as const;

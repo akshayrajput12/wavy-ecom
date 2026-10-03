@@ -6,7 +6,7 @@ import { IconMotion, MenuIcon } from "@/components/ui/icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import { BrandImage } from "@/components/layout/Logo";
+import { BrandImage, isCleanLogo } from "@/components/layout/Logo";
 import { Drawer } from "@/components/ui/Drawer";
 import { EmptyState } from "@/components/ui/States";
 import { adminCopy as c } from "@/data/copy";
@@ -112,11 +112,11 @@ function Shell({ me, brand, children }: { me: StaffSession | null; brand: ShellB
 }
 
 function Brand({ brand, compact }: { brand: ShellBrand; compact?: boolean }) {
-  const src = compact ? brand.iconUrl : brand.logoUrl;
+  const src = compact ? brand.iconUrl : isCleanLogo(brand.logoUrl) ? brand.logoUrl : undefined; // JPEG logos carry a solid box
   return (
     <Link href="/admin/dashboard" className="flex min-h-11 min-w-0 items-center gap-2 rounded-pill">
       {src ? <BrandImage src={src} alt={brand.name} className={compact ? "size-9 rounded-sm" : "h-7"} /> : (
-        <span className="font-display text-h2 leading-none font-semibold tracking-tight text-ink">{compact ? brand.name.charAt(0) : brand.name}</span>
+        <span className="font-display text-h2 leading-none font-heading-sm tracking-tight text-ink">{compact ? brand.name.charAt(0) : brand.name}</span>
       )}
       {!compact && <span className="t-overline rounded-pill bg-accent-soft px-2 py-0.5 text-accent-deep">{c.brandTag}</span>}
       {compact && <span className="sr-only">{c.brandTag}</span>}

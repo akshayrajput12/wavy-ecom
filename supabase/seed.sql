@@ -407,7 +407,7 @@ insert into public.home_sections (id, type, title, subtitle, config, sort_order)
    '{"categoryIds": ["10000000-0000-4000-8000-000000000001", "10000000-0000-4000-8000-000000000002",
                      "10000000-0000-4000-8000-000000000003"], "limit": 3}', 2),
   -- subcategory_grid: the "Categories" overline comes from UI copy; title is the heading, subtitle its greyed second line.
-  -- Empty config = every active sub-category under the home departments, with department tabs and offer lines.
+  -- Empty config = every active sub-category under the home departments in one grid (no tabs), with offer lines.
   ('74000000-0000-4000-8000-000000000013', 'subcategory_grid', 'Shop the edit', 'Every category, one tap away',
    '{"columns": 6, "showOffer": true}', 3),
   ('74000000-0000-4000-8000-000000000003', 'product_carousel', 'Best sellers', 'Team favourites',

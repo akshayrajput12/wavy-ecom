@@ -254,8 +254,7 @@ export type HomeSection = HomeSectionBase & (
   | {
       type: "subcategory_grid";
       config: { parentIds?: string[]; categoryIds?: string[]; limit?: number; columns?: 4 | 6; showOffer?: boolean };
-      /** Parents that own at least one tile, in tile order (the filter tabs). */
-      parents: CategoryRef[]; tiles: SubcategoryTile[];
+      tiles: SubcategoryTile[];
     }
 );
 export type HomeSectionOf<T extends HomeSectionType> = Extract<HomeSection, { type: T }>;

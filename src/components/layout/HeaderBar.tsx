@@ -47,12 +47,13 @@ export function HeaderBar({ storeName, logoUrl, logoDarkUrl, categories, collect
           <div
             ref={pill}
             className={clsx(
-              "pointer-events-auto relative flex h-14 items-center gap-3 rounded-pill border border-line pl-3 pr-2 shadow-sm backdrop-blur-md sm:pl-4",
+              // 1fr | auto | 1fr keeps the nav group optically centred whatever the logo and actions measure
+              "pointer-events-auto relative grid h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-pill border border-line pl-4 pr-2 shadow-sm backdrop-blur-md sm:pl-5 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]",
               "transition-[background-color,border-color,color] duration-(--dur-base) ease-soft",
               dark ? "on-dark bg-black/40" : "bg-surface/80 text-ink",
             )}
           >
-            <div className="flex min-w-0 flex-1"><Logo storeName={storeName} logoUrl={logoUrl} logoDarkUrl={logoDarkUrl} dark={dark} /></div>
+            <Logo storeName={storeName} logoUrl={logoUrl} logoDarkUrl={logoDarkUrl} dark={dark} className="justify-self-start" />
             <MegaMenu categories={categories} collections={collections} pathname={pathname} />
             <HeaderActions isStaff={isStaff} onSearch={() => setSearch(true)} onMenu={() => setMenu(true)} menuOpen={menu} />
           </div>

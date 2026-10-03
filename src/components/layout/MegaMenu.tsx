@@ -35,12 +35,12 @@ export function MegaMenu({ categories, collections, pathname }: { categories: Na
                 href={root.href}
                 aria-current={active ? "page" : undefined}
                 className={clsx(
-                  "t-overline relative inline-flex h-9 items-center gap-1 rounded-pill px-3.5 transition-colors duration-(--dur-fast) after:absolute after:inset-x-0 after:-inset-y-1 ",
-                  active ? "bg-ink text-canvas" : "text-ink hover:bg-ink/8 group-focus-within/nav:bg-ink/8",
+                  "relative inline-flex h-9 items-center gap-1 rounded-pill px-3.5 text-micro font-medium uppercase tracking-(--tracking-label) transition-colors duration-(--dur-fast) after:absolute after:inset-x-0 after:-inset-y-1",
+                  active ? "bg-ink text-canvas" : "text-ink/80 hover:bg-ink/8 hover:text-ink group-focus-within/nav:bg-ink/8 group-focus-within/nav:text-ink",
                 )}
               >
                 {root.label}
-                {root.children?.length ? <ChevronDownIcon className="size-3 transition-[rotate] duration-(--dur-base) group-hover/nav:rotate-180" /> : null}
+                {root.children?.length ? <ChevronDownIcon className="size-3 opacity-60 transition-[rotate] duration-(--dur-base) group-hover/nav:rotate-180" /> : null}
               </Link>
               {root.children?.length ? (
                 <div className="invisible absolute inset-x-0 top-full translate-y-1 pt-2 opacity-0 transition-[opacity,translate,visibility] duration-(--dur-base) ease-out group-focus-within/nav:visible group-focus-within/nav:translate-y-0 group-focus-within/nav:opacity-100 group-hover/nav:visible group-hover/nav:translate-y-0 group-hover/nav:opacity-100">

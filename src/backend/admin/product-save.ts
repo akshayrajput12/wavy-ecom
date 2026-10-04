@@ -40,8 +40,8 @@ async function preflight(actor: Actor, p: ProductUpsert, existing: AdminProduct 
   if (held.length) throw new ApiError(409, "variant_has_reservations", `Stock is held for open orders on ${held.map((v) => v.sku).join(", ")}`);
 }
 
-/** Snake-case product document for admin_upsert_product (0018): one transaction, array order = position. */
-const productDoc = (p: ProductUpsert, existing: AdminProduct | null, actor: Actor) => ({
+/** Snake-case product document for admin_upsert_product (0018): one transaction, array order = position. Also used by the catalog import. */
+export const productDoc = (p: ProductUpsert, existing: Pick<AdminProduct, "id"> | null, actor: Actor) => ({
   id: existing?.id ?? null,
   product: { ...productRow(p), created_by: actor.userId },
   variants: p.variants.map((v) => ({

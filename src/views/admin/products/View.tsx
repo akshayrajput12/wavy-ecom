@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/admin/Panel";
 import { useCan } from "@/components/admin/useRole";
 import { StatusBadge } from "@/components/ui/Badge";
 import { Button, ButtonLink } from "@/components/ui/Button";
+import { catalogImportCopy } from "@/data/copy";
 import { formatPrice } from "@/lib/format";
 import type { AdminProduct, AdminProductRow, Paginated } from "@/types/admin";
 import type { ProductStatus } from "@/types/domain";
@@ -16,6 +17,7 @@ import type { ProductListQuery } from "@/backend/admin/schemas/catalog";
 import { adminApi, mutate } from "../api";
 import { BulkBar, RemoveButton, useCanRemove } from "../_kit/Remove";
 import { Filters, listHref } from "./Filters";
+import { ImportDialog } from "./ImportDialog";
 
 type Opt = { id: string; name: string; depth?: number };
 
@@ -30,6 +32,7 @@ export function ProductsView({ data, query, categories, collections }: { data: P
   const canDelete = useCanRemove("products");
   const [picked, setPicked] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [importing, setImporting] = useState(false);
   const pages = Math.max(1, Math.ceil(data.total / data.pageSize));
   const allOn = data.items.length > 0 && data.items.every((p) => picked.includes(p.id));
 
@@ -47,7 +50,11 @@ export function ProductsView({ data, query, categories, collections }: { data: P
   return (
     <>
       <PageHeader title="Products" description="Catalog items, variants and publish state."
-        actions={canWrite && <ButtonLink href="/admin/products/new" size="sm">New product</ButtonLink>} />
+        actions={canWrite && <>
+          <Button size="sm" variant="secondary" onClick={() => setImporting(true)}>{catalogImportCopy.open}</Button>
+          <ButtonLink href="/admin/products/new" size="sm">New product</ButtonLink>
+        </>} />
+      {canWrite && <ImportDialog open={importing} onClose={() => setImporting(false)} />}
       <Filters query={query} categories={categories} collections={collections} />
       {(canPublish || canDelete) && (
         <BulkBar count={picked.length} onClear={() => setPicked([])}>

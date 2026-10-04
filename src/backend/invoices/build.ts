@@ -1,5 +1,5 @@
 /**
- * Order snapshot -> invoice body (pure; covered by invoice.test.ts). Nothing is re-priced: the order's own
+ * Order snapshot -> invoice body (pure). Nothing is re-priced: the order's own
  * tax_total (from compute_pricing at checkout) is allocated across the lines, so every column sums back
  * to exactly what the customer paid.
  */

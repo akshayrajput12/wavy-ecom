@@ -5,6 +5,8 @@ const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Catalog import (backend/catalog-import): CJS with archiver/unzipper deps; load it from node_modules, don't bundle it.
+  serverExternalPackages: ["exceljs"],
   compress: true, // gzip under `next start`; turn off only if a proxy/CDN in front already compresses
   images: {
     formats: ["image/avif", "image/webp"],

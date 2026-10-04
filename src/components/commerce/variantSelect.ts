@@ -1,4 +1,4 @@
-/** Pure option/variant selection for any product shape (0-3 option axes). Covered by variantSelect.test.ts. */
+/** Pure option/variant selection for any product shape (0-3 option axes). */
 import type { Product, ProductVariant } from "@/types/domain";
 
 export type Selection = Record<string, string>;
@@ -49,12 +49,6 @@ export function selectOption(p: Product, sel: Selection, name: string, value: st
   const withValue = p.variants.filter((v) => optionOf(v, name) === value);
   const best = withValue.find(inStock) ?? withValue[0];
   return best ? selectionOf(best) : next;
-}
-
-/** Colour swatches for cards: only when the product has a colour axis. */
-export function swatchesOf(p: Product): { value: string; colorHex?: string }[] {
-  const axis = p.optionNames.find(isColorAxis);
-  return axis ? choicesFor(p, axis, {}).map(({ value, colorHex }) => ({ value, colorHex })) : [];
 }
 
 export const totalStock = (p: Product) => p.variants.reduce((n, v) => n + (inStock(v) ? v.stock : 0), 0);

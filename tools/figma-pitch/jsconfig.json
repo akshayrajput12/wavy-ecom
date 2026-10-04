@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "target": "ES2017",
+    "lib": ["ES2017"],
+    "typeRoots": ["./node_modules/@figma"],
+    "types": ["plugin-typings"],
+    "skipLibCheck": true
+  },
+  "files": ["plugin/code.js"]
+}

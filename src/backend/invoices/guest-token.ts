@@ -1,7 +1,7 @@
 /**
  * Short-lived guest invoice link: `<expUnixSeconds>.<hmac>` bound to one order id. Minted only by the checkout
  * success page after it has verified the order's tracking token, so the order id alone never grants access.
- * Pure (key passed in); covered by invoice.test.ts.
+ * Pure (key passed in).
  */
 import { createHmac, timingSafeEqual } from "node:crypto";
 

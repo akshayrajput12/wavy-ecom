@@ -1,4 +1,4 @@
-/** compute_pricing jsonb -> CartQuote (pure; covered by quote.test.ts). */
+/** compute_pricing jsonb -> CartQuote (pure). */
 import type { AppliedDiscount, CartQuote, OfferNudge, OptionValue, QuoteCoupon, QuoteError, QuoteLine } from "@/types/domain";
 
 type Obj = Record<string, unknown>;

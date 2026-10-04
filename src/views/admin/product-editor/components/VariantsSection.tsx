@@ -52,7 +52,7 @@ export function VariantsSection({ f, set }: { f: EditorForm; set: SetForm }) {
   const txt = (i: number, k: "sku" | "barcode" | "colorHex", label: string, ph = "") => (
     <input aria-label={`${label}, variant ${i + 1}`} placeholder={ph} className={cell} value={f.variants[i][k]} onChange={(e) => upd(i, { [k]: e.target.value })} />
   );
-  const heads = [...names, "SKU", "Barcode", "Price (Rs)", "Compare-at", "Cost", "Weight (g)", "Stock", "Low at", "Colour", "Image", "Off"];
+  const heads = [...names, "SKU", "Barcode", "Price (Rs)", "Compare-at", "Cost", "Weight (g)", "Stock", "Low at", "Swatch hex", "Image", "Off"];
   return (
     <FormSection title="Options & variants" description="Up to 3 options. Prices in rupees. Stock of saved variants changes in Inventory.">
       <OptionRows f={f} set={set} />
@@ -60,7 +60,7 @@ export function VariantsSection({ f, set }: { f: EditorForm; set: SetForm }) {
       <div className="relative overflow-x-auto overscroll-x-contain sm:col-span-2">
         <table className="w-full min-w-[60rem] border-collapse text-left">
           <caption className="sr-only">Variants</caption>
-          <thead><tr>{heads.map((h) => <th key={h} scope="col" className="px-1 pb-2 text-micro font-medium text-ink-soft">{h}</th>)}</tr></thead>
+          <thead><tr>{heads.map((h, k) => <th key={k} scope="col" className="px-1 pb-2 text-micro font-medium text-ink-soft">{h}</th>)}</tr></thead>
           <tbody>
             {f.variants.map((v, i) => (
               <tr key={v.id ?? i} className="border-t border-line-soft">

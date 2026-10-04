@@ -140,12 +140,6 @@ export const pageStates = {
   unconfigured: "The store is being set up. Please check back soon.",
 } as const;
 
-// ---------- Checkout ----------
-export const checkoutSteps = [
-  { id: "contact", label: "Contact" }, { id: "address", label: "Address" },
-  { id: "shipping", label: "Delivery" }, { id: "payment", label: "Payment" },
-] as const;
-export type CheckoutStepId = (typeof checkoutSteps)[number]["id"];
 
 export const INDIAN_STATES = [
   "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chandigarh",
@@ -270,7 +264,6 @@ export const returnReasonLabels: Record<ReturnReason, string> = {
   wrong_item: "Received the wrong item", missing_parts: "Missing parts", not_as_described: "Not as described",
   changed_mind: "Changed my mind", other: "Other",
 };
-export const evidenceRules = { maxFiles: 3, maxBytes: 5 * 1024 * 1024, types: ["image/jpeg", "image/png", "image/webp"] } as const;
 
 export const orderStatusLabels: Record<OrderStatus, string> = {
   pending_payment: "Awaiting payment", paid: "Confirmed", processing: "Processing", packed: "Packed", shipped: "Shipped",
@@ -373,5 +366,51 @@ export const adminCopy = {
       "shipping-methods": { one: "method", many: "methods", kept: "switched off (used by orders)",
         effect: "Methods used by past orders are switched off instead, so order records stay intact. The rest are removed for good." },
     },
+  },
+} as const;
+
+/** Admin > Products > Import from Excel (dialog) and the Instructions sheet of the generated template. */
+export const catalogImportCopy = {
+  open: "Import from Excel", title: "Import from Excel",
+  intro: "Download the template, fill it in, then upload it. You'll see a preview first: nothing is saved until you confirm.",
+  download: "Download template", templateHint: "The template lists your current categories and collections.",
+  fileLabel: "Upload the filled template", fileHint: (mb: number, rows: number) => `.xlsx only, up to ${mb} MB and ${rows.toLocaleString("en-IN")} rows`,
+  browse: "Drag the file here or click to browse", chosen: (name: string) => `Selected: ${name}`,
+  wrongType: "Choose an Excel workbook (.xlsx).", tooBig: (mb: number) => `This file is over ${mb} MB. Split it into smaller files.`,
+  check: "Check file", confirm: (n: number) => `Import ${n} change${n === 1 ? "" : "s"}`, another: "Choose another file", cancel: "Cancel", close: "Close",
+  summary: "What will change", item: "Item", new: "New", updated: "Updated", unchanged: "Unchanged",
+  entities: { categories: "Categories", collections: "Collections", products: "Products", variants: "Variants" },
+  memberships: (n: number) => `${n} product${n === 1 ? "" : "s"} to add to collections.`,
+  errors: (n: number) => `${n} problem${n === 1 ? "" : "s"} to fix in the file, then upload it again`,
+  warnings: (n: number) => `${n} note${n === 1 ? "" : "s"}`,
+  more: (shown: number, total: number) => `Showing the first ${shown} of ${total}.`,
+  sheet: "Sheet", row: "Row", column: "Column", problem: "Problem", wholeRow: "Whole row",
+  ready: "No problems found. Check the counts, then import.", nothing: "Everything in this file already matches the store. There's nothing to import.",
+  done: (n: number) => `Import complete: ${n} change${n === 1 ? "" : "s"} saved`, failed: "Import failed", checkFailed: "Couldn't read the file",
+  template: {
+    title: "How to fill this template",
+    rules: [
+      "1. Fill in the Categories, Collections, Products and Variants sheets. You can leave any sheet empty.",
+      "2. Keep row 1 (the column names) as it is. Columns marked * are required for new rows. Hover a column name for help.",
+      "3. Rows starting with EXAMPLE are samples. The importer skips them, so you can leave them or delete them.",
+      "4. Re-importing is safe: categories, collections and products are matched by slug and variants by SKU. Matches are updated, everything else is created, and nothing is deleted.",
+      "5. A blank cell on something that already exists keeps its current value. To clear a value, use the editor in admin.",
+      "6. Prices are in rupees, e.g. 1499 or 1499.50. The store converts them to paise.",
+      "7. Lists are comma-separated: Collections, Tags, Badges, Options, and the Products column on the Collections sheet.",
+      "8. Yes/no columns take yes or no.",
+      "9. Products with options (e.g. Size, Colour): put the option names in Options, then add one Variants row per combination with the values in Option 1, 2 and 3, in the same order.",
+      "10. Products without options: leave Options blank and fill Price (plus SKU and Stock if you like) on the Products sheet. A blank SKU is made from the slug.",
+      "11. Stock is opening stock for new variants only. Change the stock of existing variants in Admin > Inventory.",
+      "12. Images aren't imported. Add them in the product editor after the import.",
+      "13. New products are saved as drafts unless Status says otherwise. Publishing needs the catalog.publish permission.",
+      "14. Up to 2,000 rows and 5 MB per file. Upload it in Admin > Products > Import from Excel to see a preview and any problems before anything is saved.",
+    ],
+    exampleTitle: "The example rows",
+    example: [
+      "EXAMPLE Handloom cotton kurta has two options (Size, Colour), so its prices are on the Variants sheet: one row per size and colour, each with its own SKU, price and opening stock.",
+      "EXAMPLE Silver jhumka earrings has no options, so its SKU, price and stock are on the Products sheet and it has no Variants rows.",
+      "EXAMPLE Festive edit (Collections) adds the kurta to that collection. The Collections column on the Products sheet does the same from the product's side.",
+    ],
+    columnsTitle: (sheet: string) => `${sheet} sheet`, column: "Column", required: "Required", notes: "What to enter", yes: "yes",
   },
 } as const;

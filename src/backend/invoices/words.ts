@@ -1,4 +1,4 @@
-/** Amount in words, Indian numbering (thousand, lakh, crore). Pure; covered by invoice.test.ts. */
+/** Amount in words, Indian numbering (thousand, lakh, crore). Pure. */
 const ONES = [
   "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen",
   "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen",

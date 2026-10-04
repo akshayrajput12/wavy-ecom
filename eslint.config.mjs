@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // vendored MapLibre worker/bundle copied by postinstall (gitignored)
     "public/maplibre/**",
+    // standalone dev tools with their own package.json (Figma pitch board capture + plugin)
+    "tools/**",
   ]),
 ]);
 

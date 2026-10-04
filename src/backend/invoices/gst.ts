@@ -1,4 +1,4 @@
-/** GST primitives for invoices (pure; covered by invoice.test.ts). Money is integer paise. */
+/** GST primitives for invoices (pure). Money is integer paise. */
 
 /** GST state codes (statutory, CBIC). 25/28 are retired (merged into 26/37). */
 export const GST_STATES: Record<string, string> = {

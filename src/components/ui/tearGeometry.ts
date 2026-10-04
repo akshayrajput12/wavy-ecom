@@ -52,13 +52,6 @@ export function easeOutBack(t: number) {
   return 1 + (c + 1) * u * u * u + c * u * u;
 }
 
-/** How far through the pinned scroll we are: 0 when the section top meets the viewport top, 1 when the stage lets go. */
-export function scrollProgress(top: number, height: number, viewport: number) {
-  const range = height - viewport;
-  if (range <= 0) return top <= 0 ? 1 : 0;
-  return clamp01(-top / range);
-}
-
 /** One scroll value drives every beat. `clear` (image variant) carries the halves off-screen after they part. */
 export function stages(p: number) {
   return {

@@ -147,11 +147,6 @@ export const mobileMenuCopy = {
   toggle: (name: string) => `${name} sub-categories`,
 } as const;
 
-export const contentCopy = {
-  notFound: "This page isn't available yet.",
-  faqGeneral: "General",
-} as const;
-
 /** TearReveal (home "tear_reveal" sections, 404): the poster that rips open as you scroll. */
 export const tearRevealCopy = {
   hint: "Scroll",

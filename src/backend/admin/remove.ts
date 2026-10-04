@@ -158,7 +158,6 @@ export const REMOVABLE = {
   }),
 } satisfies Record<string, RemoveSpec>;
 export type Removable = keyof typeof REMOVABLE;
-export const isRemovable = (name: string): name is Removable => Object.hasOwn(REMOVABLE, name);
 
 /**
  * Bulk delete (1-200 ids): rows referenced by order history are soft-deleted, the rest hard-deleted, owned storage

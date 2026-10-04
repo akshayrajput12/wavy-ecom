@@ -1,4 +1,4 @@
-/** Filter facets computed from the products in scope (pure; covered by mapper.test.ts). */
+/** Filter facets computed from the products in scope (pure). */
 import type { Category } from "@/types/domain";
 import { descendantIds } from "./mapper";
 

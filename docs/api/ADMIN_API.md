@@ -25,6 +25,8 @@ Everything reads and writes Supabase. There is no demo data and no fake success.
 | PATCH `products/:slug/rating` | reviews.moderate | `{ratingOverride: 0-5\|null, reviewCountOverride: int\|null}` → rating columns |
 | POST `products/bulk-status` | catalog.publish | `{ids, status}` → `{updated}` |
 | GET `products/options` | catalog.read | → `{id,name,slug,status}[]` (pickers) |
+| GET `catalog-import` | catalog.write | → `.xlsx` template (Instructions, Categories, Collections, Products, Variants; current categories/collections pre-filled). Columns: `backend/catalog-import/columns.ts` |
+| POST `catalog-import` | catalog.write (+ catalog.publish for status changes, inventory.write for opening stock) | multipart `file` (.xlsx, max 5 MB / 2,000 rows), `mode=preview\|commit` → `ImportSummary {counts, errors[{sheet,row,column,message}], errorCount, warnings, imported}`. Commit re-validates the file from scratch, 422 `import_invalid` (details = summary) on problems, then writes everything in one transaction (`admin_import_catalog`, 0027): upsert by slug / SKU, never deletes, keeps media and memberships, 409 `import_stale` if a product changed since the check |
 | GET `slug-check` | catalog.read | `?entity=product\|category\|collection&slug&excludeId` → `{slug, available, takenBy}` (categories and collections share one URL space) |
 | GET `categories` | catalog.read | → `AdminCategory[]` tree (`children`, `productCount`). `?flat=1` → `{id,name,slug,depth}[]` |
 | POST `categories` | catalog.write | `[CategorySchema]` → category |

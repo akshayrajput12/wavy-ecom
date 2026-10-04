@@ -3,7 +3,7 @@ import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabase } from "@/lib/env";
 import { ApiError } from "./http";
-import { can, isStaffRole, type Permission } from "./permissions";
+import { can, type Permission } from "./permissions";
 import type { UserRole } from "@/types/domain";
 
 export interface Session {
@@ -33,12 +33,6 @@ export const getSession = cache(async (): Promise<Session | null> => {
 export async function requireUser(): Promise<Session> {
   const s = await getSession();
   if (!s) throw new ApiError(401, "unauthenticated", "Please sign in");
-  return s;
-}
-
-export async function requireStaff(): Promise<Session> {
-  const s = await requireUser();
-  if (!isStaffRole(s.role)) throw new ApiError(403, "forbidden", "Staff access only");
   return s;
 }
 

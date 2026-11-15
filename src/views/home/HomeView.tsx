@@ -4,7 +4,7 @@ import { ScrollProgress } from "@/components/ui/Reveal";
 import { EmptyState } from "@/components/ui/States";
 import { TearReveal } from "@/components/ui/TearReveal";
 import { homeCopy } from "@/data/storefront";
-import type { Faq, HomeSection, Media } from "@/types/domain";
+import type { Faq, HomeSection, Media, SubcategoryTile } from "@/types/domain";
 import { BlogRail } from "./components/BlogRail";
 import { CategoryGrid } from "./components/CategoryGrid";
 import { CollectionRail } from "./components/CollectionRail";
@@ -33,7 +33,6 @@ function Section({ section: s, images }: { section: HomeSection; images: Media[]
   }
 }
 
-/** Storefront imagery already on the page (category + product shots), used to fill the testimonials mosaic. */
 function pageImages(sections: HomeSection[]): Media[] {
   return sections.flatMap((s) => {
     if (s.type === "category_grid") return s.categories.flatMap((c) => (c.image?.url ? [c.image] : []));
@@ -42,11 +41,6 @@ function pageImages(sections: HomeSection[]): Media[] {
   });
 }
 
-/**
- * Home is entirely admin-defined: sections render in the order getHomeSections() returns. No wrapper or top padding,
- * so the first section (the hero) sits flush under the floating header. The FAQ preview goes near the end, before a
- * closing newsletter band if there is one.
- */
 export function HomeView({ sections, faqs = [] }: { sections: HomeSection[]; faqs?: Faq[] }) {
   if (!sections.length) {
     return (
@@ -56,9 +50,49 @@ export function HomeView({ sections, faqs = [] }: { sections: HomeSection[]; faq
       </div>
     );
   }
-  const images = pageImages(sections);
-  const closing = sections.at(-1)?.type === "newsletter" ? sections.at(-1) : undefined;
-  const body = closing ? sections.slice(0, -1) : sections;
+
+  // Extract real database subcategories directly from SQL category query data
+  const categorySection = sections.find((s) => s.type === "category_grid") as Extract<HomeSection, { type: "category_grid" }> | undefined;
+  const dbSubcategories: SubcategoryTile[] = categorySection?.categories.flatMap((c) => {
+    const subs = c.children && c.children.length > 0 ? c.children : [c];
+    return subs.map((sub) => ({
+      id: sub.id,
+      name: sub.name,
+      slug: sub.slug,
+      parentId: sub.parentId,
+      image: sub.image,
+    }));
+  }) ?? [];
+
+  const existingSubSection = sections.find((s) => s.type === "subcategory_grid") as Extract<HomeSection, { type: "subcategory_grid" }> | undefined;
+
+  const resolvedSubSection: HomeSection = {
+    id: existingSubSection?.id ?? "db-subcategory-grid",
+    type: "subcategory_grid",
+    title: existingSubSection?.title ?? "Explore Subcategories",
+    subtitle: existingSubSection?.subtitle ?? "Curated picks across all departments",
+    sortOrder: existingSubSection?.sortOrder ?? 2,
+    config: existingSubSection?.config ?? { columns: 6, showOffer: true },
+    tiles: existingSubSection?.tiles?.length ? existingSubSection.tiles : dbSubcategories,
+  };
+
+  const filteredSections = sections.filter((s) => s.type !== "subcategory_grid");
+  const catIdx = filteredSections.findIndex((s) => s.type === "category_grid");
+
+  let list: HomeSection[] = [];
+  if (catIdx !== -1) {
+    list = [
+      ...filteredSections.slice(0, catIdx + 1),
+      resolvedSubSection,
+      ...filteredSections.slice(catIdx + 1),
+    ];
+  } else {
+    list = [...filteredSections, resolvedSubSection];
+  }
+
+  const images = pageImages(list);
+  const closing = list.at(-1)?.type === "newsletter" ? list.at(-1) : undefined;
+  const body = closing ? list.slice(0, -1) : list;
   return (
     <>
       <ScrollProgress />

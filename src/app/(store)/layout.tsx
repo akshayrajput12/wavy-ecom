@@ -1,6 +1,7 @@
 import { AnnouncementBar, Footer, Header, StoreMain } from "@/components/layout";
 import { Preloader } from "@/components/layout/Preloader";
 import { CartDrawer, FloatingProductCard, QuickViewHost } from "@/components/commerce";
+import { AudioVibePlayer } from "@/components/ui/AudioVibePlayer";
 import { getSpotlight } from "@/backend/catalog/repo";
 import { getStoreSettings } from "@/backend/settings/repo";
 import { layoutCopy } from "@/data/storefront";
@@ -19,6 +20,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
       <CartDrawer freeShippingThreshold={settings?.freeShippingThreshold} />
       <FloatingProductCard items={spotlight} />
       <QuickViewHost />
+      <AudioVibePlayer />
     </>
   );
 }

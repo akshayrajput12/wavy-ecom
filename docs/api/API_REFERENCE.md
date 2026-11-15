@@ -165,7 +165,7 @@ GST tax invoice per order, issued automatically: prepaid when the payment is cap
 
 ## Environment
 
-`INVOICE_LINK_SECRET` (optional; HMAC key for guest invoice links, else derived from the service-role key), `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (reads), `SUPABASE_SERVICE_ROLE_KEY` (pricing, checkout, payments, webhooks, guest order view), `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `SHIPROCKET_API_EMAIL`, `SHIPROCKET_API_PASSWORD`, `SHIPROCKET_PICKUP_POSTCODE`, `NEXT_PUBLIC_SITE_URL`.
+`INVOICE_LINK_SECRET` (optional; HMAC key for guest invoice links, else derived from the service-role / secret key), `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or legacy `NEXT_PUBLIC_SUPABASE_ANON_KEY` for reads), `SUPABASE_SECRET_KEY` (or legacy `SUPABASE_SERVICE_ROLE_KEY` for pricing, checkout, payments, webhooks, guest order view), `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `SHIPROCKET_API_EMAIL`, `SHIPROCKET_API_PASSWORD`, `SHIPROCKET_PICKUP_POSTCODE`, `NEXT_PUBLIC_SITE_URL`.
 
 ## Not built
 

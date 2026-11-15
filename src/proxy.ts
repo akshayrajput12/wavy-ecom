@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { hasSupabase } from "@/lib/env";
+import { hasSupabase, supabasePublishableKey, supabaseUrl } from "@/lib/env";
 
 /**
  * 1. Refreshes the Supabase session cookie on every page/API request (Server Components cannot write cookies).
@@ -12,7 +12,7 @@ export async function proxy(req: NextRequest) {
   let res = NextResponse.next({ request: req });
   if (!hasSupabase) return res;   // demo mode: admin getters return empty, writes answer 503
 
-  const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+  const supabase = createServerClient(supabaseUrl!, supabasePublishableKey!, {
     cookies: {
       getAll: () => req.cookies.getAll(),
       setAll: (list) => {

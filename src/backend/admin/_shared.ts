@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { revalidateTag } from "next/cache";
 import { createClient, type PostgrestError, type SupabaseClient } from "@supabase/supabase-js";
 import type { ZodType } from "zod";
-import { hasSupabase } from "@/lib/env";
+import { hasServiceRole, supabaseSecretKey, supabaseUrl } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { createClient as createSessionClient } from "@/lib/supabase/server";
 import { ApiError } from "@/backend/_core/http";
@@ -16,15 +16,15 @@ import type { CamelRow, StaffSession } from "@/types/admin";
 export type Db = SupabaseClient<Database>;
 export type Actor = StaffSession;
 
-/** Admin reads/writes need the service key too (cost prices, RPCs that are service-only). */
-export const adminReady = hasSupabase && Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
+/** Admin reads/writes need the service/secret key too (cost prices, RPCs that are service-only). */
+export const adminReady = hasServiceRole;
 const notConfigured = () => new ApiError(503, "supabase_not_configured", "Supabase not configured");
 
 let service: Db | undefined;
-/** Service-role client (bypasses RLS). Only call after guard(). */
+/** Service-role / secret-key client (bypasses RLS). Only call after guard(). */
 export function db(): Db {
   if (!adminReady) throw notConfigured();
-  service ??= createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+  service ??= createClient<Database>(supabaseUrl!, supabaseSecretKey!, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   return service;

@@ -43,7 +43,11 @@ const COLOR_GROUPS = [["Ink", /^ink/], ["Paper & surfaces", /^(canvas|surface)/]
 
 export function parseTokens(css, layoutSrc = "") {
   const vars = rootVars(css);
-  const families = new Map([...layoutSrc.matchAll(/(\w+)\(\{\s*variable:\s*"(--[\w-]+)"/g)].map((m) => [m[2].slice(2), m[1].replace(/_/g, " ")]));
+  const families = new Map([
+    ...[...layoutSrc.matchAll(/(\w+)\(\{\s*variable:\s*"(--[\w-]+)"/g)].map((m) => [m[2].slice(2), m[1].replace(/_/g, " ")]),
+    ...[...layoutSrc.matchAll(/localFont\(\{[^}]*?src:\s*"\.\/fonts\/([A-Za-z]+)-[^"]*"[^}]*?variable:\s*"(--[\w-]+)"/gs)]
+      .map((m) => [m[2].slice(2), m[1].replace(/([a-z])([A-Z])/g, "$1 $2")]),
+  ]);
   const pick = (re) => [...vars].filter(([k]) => re.test(k));
 
   const colors = [];

@@ -11,7 +11,7 @@ let warned = false;
 function warnMissing() {
   if (warned) return;
   warned = true;
-  logger.warn("supabase.not_configured", { hint: "Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY; storefront renders empty states" });
+  logger.warn("supabase.not_configured", { hint: "Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (or legacy NEXT_PUBLIC_SUPABASE_ANON_KEY); storefront renders empty states" });
 }
 
 /** Anon client for public reads, or null when Supabase is not configured (caller returns empty). */

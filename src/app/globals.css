@@ -453,6 +453,7 @@
   position: fixed;
   inset: 0;
   z-index: 100;
+  background: var(--black);
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -480,47 +481,36 @@
   position: relative;
   display: grid;
   justify-items: center;
-  gap: var(--space-6);
-  animation: preloader-fade 360ms var(--ease-soft) var(--pl-hold) forwards;
+  gap: var(--space-3);
 }
 .preloader-word {
   display: flex;
   overflow: hidden; /* the mask the letters rise through */
   padding-bottom: 0.1em;
   font-family: var(--font-editorial);
-  font-size: clamp(3.5rem, 1.5rem + 9vw, 9rem);
+  font-size: clamp(4rem, 1.5rem + 12vw, 11rem);
   font-weight: var(--weight-display);
   font-stretch: var(--stretch-wordmark);
   line-height: 1;
   letter-spacing: -0.03em;
   white-space: pre;
+  color: var(--on-dark);
 }
 .preloader-rise {
   display: inline-block;
   translate: 0 110%;
   animation: preloader-rise 700ms var(--ease-out) calc(120ms + min(var(--i, 0) * 45ms, 480ms)) forwards;
 }
-.preloader-fill {
-  display: block;
-  height: 100%;
-  background: var(--on-dark);
-  transform-origin: left;
-  scale: 0 1;
-  animation: preloader-fill var(--pl-hold) var(--ease-soft) forwards;
-}
-.preloader-count {
-  min-width: 3ch;
-  text-align: right;
-  counter-reset: pl var(--pl-n);
-  animation: preloader-count var(--pl-hold) var(--ease-soft) forwards;
-}
-.preloader-count::after {
-  content: counter(pl, decimal-leading-zero);
+.preloader-tagline {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: clamp(0.75rem, 1.4vw, 1rem);
+  font-weight: var(--weight-heading-sm);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--on-dark-soft);
 }
 @keyframes preloader-rise { to { translate: 0 0; } }
-@keyframes preloader-fill { to { scale: 1 1; } }
-@keyframes preloader-count { to { --pl-n: 100; } }
-@keyframes preloader-fade { to { opacity: 0; translate: 0 -0.75rem; } }
 @keyframes preloader-up { to { translate: 0 -100%; } }
 @keyframes preloader-down { to { translate: 0 100%; } }
 @keyframes preloader-gone { to { visibility: hidden; } }
@@ -597,6 +587,15 @@
 @keyframes map-breathe { 50% { scale: 1.12; } }
 @keyframes map-spin { to { rotate: 1turn; } }
 @keyframes map-ping { to { box-shadow: 0 0 0 0.5rem transparent; } }
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes marquee-reverse {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0%); }
+}
 @media (prefers-reduced-motion: reduce) {
   .map-you-core, .map-you-ring, .map-scan::after, .map-live { animation: none; }
 }
+

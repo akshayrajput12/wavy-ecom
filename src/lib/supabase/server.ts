@@ -1,11 +1,12 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
+import { supabasePublishableKey, supabaseUrl } from "@/lib/env";
 
 /** Per-request client bound to the user session (RLS applies). Use in Server Components, actions, route handlers. */
 export async function createClient() {
   const store = await cookies();
-  return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+  return createServerClient(supabaseUrl!, supabasePublishableKey!, {
     cookies: {
       getAll: () => store.getAll(),
       setAll: (list) => {

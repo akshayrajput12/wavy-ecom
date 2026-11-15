@@ -29,8 +29,8 @@ export function verifyGuestToken(key: Buffer, orderId: string, token: string | n
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-/** Link key: INVOICE_LINK_SECRET, else derived from the service-role key (domain-separated). Null when neither is set. */
+/** Link key: INVOICE_LINK_SECRET, else derived from the service-role / secret key (domain-separated). Null when neither is set. */
 export function guestLinkKey(env: Record<string, string | undefined> = process.env): Buffer | null {
-  const base = env.INVOICE_LINK_SECRET || env.SUPABASE_SERVICE_ROLE_KEY;
+  const base = env.INVOICE_LINK_SECRET || env.SUPABASE_SECRET_KEY || env.SUPABASE_SERVICE_ROLE_KEY;
   return base ? createHmac("sha256", base).update("wavy.invoice-link.v1").digest() : null;
 }

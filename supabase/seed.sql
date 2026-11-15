@@ -86,46 +86,47 @@ insert into public.shipping_methods (id, zone_id, code, name, description, rate,
 on conflict do nothing;
 
 -- ---------- Categories (3 departments shown on home, 14 sub-categories) ----------
-insert into public.categories (id, parent_id, name, slug, description, sort_order, show_on_home, seo_title, seo_description)
+insert into public.categories (id, parent_id, name, slug, description, sort_order, show_on_home, seo_title, seo_description, image_url, banner_url)
 select format('10000000-0000-4000-8000-%s', lpad(no, 12, '0'))::uuid,
        case when parent is null then null else format('10000000-0000-4000-8000-%s', lpad(parent, 12, '0'))::uuid end,
-       name, slug, descr, sort, parent is null, left(name || ' | wavy', 70), left(descr, 170)
+       name, slug, descr, sort, parent is null, left(name || ' | wavy', 70), left(descr, 170),
+       image_url, banner_url
 from (values
-  ('01', null, 'Clothing',           'clothing',       'Everyday pieces, cut to last.',            1),
-  ('02', null, 'Shoes',              'shoes',          'From court to commute.',                   2),
-  ('03', null, 'Accessories',        'accessories',    'The finishing details.',                   3),
-  ('11', '01', 'T-shirts & Polos',   'tees-polos',     'Heavyweight cotton, made for repeat wear.', 1),
-  ('12', '01', 'Shirts',             'shirts',         'Oxford, linen and camp collars.',          2),
-  ('13', '01', 'Knitwear & Hoodies', 'knitwear',       'Soft layers for cooler days.',             3),
-  ('14', '01', 'Trousers & Denim',   'trousers-denim', 'Clean lines, honest fabrics.',             4),
-  ('15', '01', 'Outerwear',          'outerwear',      'Built for weather, worn for years.',       5),
-  ('16', '01', 'Dresses & Co-ords',  'dresses-coords', 'Easy sets and evening slips.',             6),
-  ('21', '02', 'Sneakers',           'sneakers',       'Leather courts and light runners.',        1),
-  ('22', '02', 'Loafers & Formal',   'loafers-formal', 'Polished, never stiff.',                   2),
-  ('23', '02', 'Boots',              'boots',          'Chelsea and lace-up, resoled for life.',   3),
-  ('24', '02', 'Sandals & Slides',   'sandals-slides', 'For heat, sand and slow weekends.',        4),
-  ('31', '03', 'Bags',               'bags',           'Totes and slings that carry well.',        1),
-  ('32', '03', 'Caps & Hats',        'caps-hats',      'Washed cotton, softened in.',              2),
-  ('33', '03', 'Belts & Wallets',    'belts-wallets',  'Full-grain leather, built to age.',        3),
-  ('34', '03', 'Eyewear',            'eyewear',        'Acetate frames with UV400 lenses.',        4)
-) as c(no, parent, name, slug, descr, sort)
+  ('01', null, 'Clothing',           'clothing',       'Everyday pieces, cut to last.',            1, 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=800&q=80'),
+  ('02', null, 'Shoes',              'shoes',          'From court to commute.',                   2, 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=800&q=80'),
+  ('03', null, 'Accessories',        'accessories',    'The finishing details.',                   3, 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=800&q=80'),
+  ('11', '01', 'T-shirts & Polos',   'tees-polos',     'Heavyweight cotton, made for repeat wear.', 1, 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80'),
+  ('12', '01', 'Shirts',             'shirts',         'Oxford, linen and camp collars.',          2, 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=80'),
+  ('13', '01', 'Knitwear & Hoodies', 'knitwear',       'Soft layers for cooler days.',             3, 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=800&q=80'),
+  ('14', '01', 'Trousers & Denim',   'trousers-denim', 'Clean lines, honest fabrics.',             4, 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=800&q=80'),
+  ('15', '01', 'Outerwear',          'outerwear',      'Built for weather, worn for years.',       5, 'https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&fit=crop&w=800&q=80'),
+  ('16', '01', 'Dresses & Co-ords',  'dresses-coords', 'Easy sets and evening slips.',             6, 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=800&q=80'),
+  ('21', '02', 'Sneakers',           'sneakers',       'Leather courts and light runners.',        1, 'https://images.unsplash.com/photo-1560769629-975ec94e6a86?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1560769629-975ec94e6a86?auto=format&fit=crop&w=800&q=80'),
+  ('22', '02', 'Loafers & Formal',   'loafers-formal', 'Polished, never stiff.',                   2, 'https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?auto=format&fit=crop&w=800&q=80'),
+  ('23', '02', 'Boots',              'boots',          'Chelsea and lace-up, resoled for life.',   3, 'https://images.unsplash.com/photo-1638247025967-b4e38f787b76?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1638247025967-b4e38f787b76?auto=format&fit=crop&w=800&q=80'),
+  ('24', '02', 'Sandals & Slides',   'sandals-slides', 'For heat, sand and slow weekends.',        4, 'https://images.unsplash.com/photo-1603808033192-082d6919d3e1?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1603808033192-082d6919d3e1?auto=format&fit=crop&w=800&q=80'),
+  ('31', '03', 'Bags',               'bags',           'Totes and slings that carry well.',        1, 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80'),
+  ('32', '03', 'Caps & Hats',        'caps-hats',      'Washed cotton, softened in.',              2, 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=800&q=80'),
+  ('33', '03', 'Belts & Wallets',    'belts-wallets',  'Full-grain leather, built to age.',        3, 'https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=800&q=80'),
+  ('34', '03', 'Eyewear',            'eyewear',        'Acetate frames with UV400 lenses.',        4, 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=800&q=80')
+) as c(no, parent, name, slug, descr, sort, image_url, banner_url)
 order by parent nulls first, no
 on conflict do nothing;
 
 -- ---------- Collections (new-arrivals + best-sellers slugs are read by the storefront; keep them) ----------
-insert into public.collections (id, name, slug, description, sort_order, show_on_home, seo_title, seo_description) values
+insert into public.collections (id, name, slug, description, sort_order, show_on_home, seo_title, seo_description, image_url, banner_url) values
   ('20000000-0000-4000-8000-000000000001', 'New Arrivals',     'new-arrivals',    'Just landed this season.',                    1, false,
-   'New Arrivals | wavy',     'The newest clothing, shoes and accessories at wavy.'),
+   'New Arrivals | wavy',     'The newest clothing, shoes and accessories at wavy.', null, null),
   ('20000000-0000-4000-8000-000000000002', 'Best Sellers',     'best-sellers',    'The pieces customers come back for.',         2, false,
-   'Best Sellers | wavy',     'The wavy pieces customers buy again and again.'),
+   'Best Sellers | wavy',     'The wavy pieces customers buy again and again.', null, null),
   ('20000000-0000-4000-8000-000000000003', 'The Festive Edit', 'festive-edit',    'Dressed-up ease for Diwali evenings.',        3, true,
-   'The Festive Edit | wavy', 'Satin slips, knit co-ords, merino and suede loafers for Diwali evenings.'),
+   'The Festive Edit | wavy', 'Satin slips, knit co-ords, merino and suede loafers for Diwali evenings.', null, null),
   ('20000000-0000-4000-8000-000000000004', 'Winter Layers',    'winter-layers',   'Knits, jackets and boots for cooler months.', 4, true,
-   'Winter Layers | wavy',    'Merino knits, loopback hoodies, waxed jackets and Chelsea boots.'),
+   'Winter Layers | wavy',    'Merino knits, loopback hoodies, waxed jackets and Chelsea boots.', null, null),
   ('20000000-0000-4000-8000-000000000005', 'Weekend Uniform',  'weekend-uniform', 'Easy pieces for slow days.',                  5, true,
-   'Weekend Uniform | wavy',  'Heavyweight tees, linen shirts, selvedge denim and slides for slow days.'),
+   'Weekend Uniform | wavy',  'Heavyweight tees, linen shirts, selvedge denim and slides for slow days.', null, null),
   ('20000000-0000-4000-8000-000000000006', 'Office Ready',     'office-ready',    'Sharp without trying.',                       6, true,
-   'Office Ready | wavy',     'Oxford shirts, pleated trousers, loafers and leather for the working week.')
+   'Office Ready | wavy',     'Oxford shirts, pleated trousers, loafers and leather for the working week.', null, null)
 on conflict do nothing;
 
 -- ---------- Products + variants ----------
@@ -358,6 +359,56 @@ join _seed_products p on format('30000000-0000-4000-8000-%s', lpad(p.no::text, 1
 join public.inventory i on i.variant_id = v.id
 where i.on_hand = 0;
 
+-- ---------- Product Media (primary + secondary hover packshots) ----------
+insert into public.product_media (product_id, url, alt, width, height, position, is_primary) values
+  ('30000000-0000-4000-8000-000000000001', 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80', 'Essential Heavyweight Tee', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000001', 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=800&q=80', 'Essential Heavyweight Tee detail', null, null, 1, false),
+  ('30000000-0000-4000-8000-000000000002', 'https://images.unsplash.com/photo-1625910513413-56291a13e4b7?auto=format&fit=crop&w=800&q=80', 'Pima Pique Polo', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000002', 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?auto=format&fit=crop&w=800&q=80', 'Pima Pique Polo detail', null, null, 1, false),
+  ('30000000-0000-4000-8000-000000000003', 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=80', 'Oxford Button-Down Shirt', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000003', 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80', 'Oxford Button-Down Shirt detail', null, null, 1, false),
+  ('30000000-0000-4000-8000-000000000004', 'https://images.unsplash.com/photo-1607345366928-199ea26cfe3e?auto=format&fit=crop&w=800&q=80', 'Linen Camp-Collar Shirt', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000004', 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=800&q=80', 'Linen Camp-Collar Shirt detail', null, null, 1, false),
+  ('30000000-0000-4000-8000-000000000005', 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=800&q=80', 'Merino Crew Knit', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000005', 'https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?auto=format&fit=crop&w=800&q=80', 'Merino Crew Knit detail', null, null, 1, false),
+  ('30000000-0000-4000-8000-000000000006', 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=80', 'Loopback Zip Hoodie', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000006', 'https://images.unsplash.com/photo-1509967419530-da38b4704bc6?auto=format&fit=crop&w=800&q=80', 'Loopback Zip Hoodie detail', null, null, 1, false),
+  ('30000000-0000-4000-8000-000000000007', 'https://images.unsplash.com/photo-1506629082955-511b1aa562c8?auto=format&fit=crop&w=800&q=80', 'Pleated Wide-Leg Trousers', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000007', 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=800&q=80', 'Pleated Wide-Leg Trousers detail', null, null, 1, false),
+  ('30000000-0000-4000-8000-000000000008', 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=800&q=80', 'Rigid Straight Selvedge Jeans', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000008', 'https://images.unsplash.com/photo-1542272604-780c96856592?auto=format&fit=crop&w=800&q=80', 'Rigid Straight Selvedge Jeans detail', null, null, 1, false),
+  ('30000000-0000-4000-8000-000000000009', 'https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&fit=crop&w=800&q=80', 'Waxed Cotton Field Jacket', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000009', 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=800&q=80', 'Waxed Cotton Field Jacket detail', null, null, 1, false),
+  ('30000000-0000-4000-8000-000000000010', 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=800&q=80', 'Satin Slip Midi Dress', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000010', 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=800&q=80', 'Satin Slip Midi Dress detail', null, null, 1, false),
+  ('30000000-0000-4000-8000-000000000011', 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80', 'Knit Co-ord Set', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000011', 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=800&q=80', 'Knit Co-ord Set detail', null, null, 1, false),
+  ('30000000-0000-4000-8000-000000000012', 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=800&q=80', 'Court Classic Leather Sneaker', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000012', 'https://images.unsplash.com/photo-1560769629-975ec94e6a86?auto=format&fit=crop&w=800&q=80', 'Court Classic Leather Sneaker detail', null, null, 1, false),
+  ('30000000-0000-4000-8000-000000000013', 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80', 'Stone Runner Trainer', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000013', 'https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?auto=format&fit=crop&w=800&q=80', 'Stone Runner Trainer detail', null, null, 1, false),
+  ('30000000-0000-4000-8000-000000000014', 'https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?auto=format&fit=crop&w=800&q=80', 'Suede Penny Loafer', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000014', 'https://images.unsplash.com/photo-1533867617858-e7b97e060509?auto=format&fit=crop&w=800&q=80', 'Suede Penny Loafer detail', null, null, 1, false),
+  ('30000000-0000-4000-8000-000000000015', 'https://images.unsplash.com/photo-1638247025967-b4e38f787b76?auto=format&fit=crop&w=800&q=80', 'Leather Chelsea Boot', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000015', 'https://images.unsplash.com/photo-1608256246200-53e635b5b65f?auto=format&fit=crop&w=800&q=80', 'Leather Chelsea Boot detail', null, null, 1, false),
+  ('30000000-0000-4000-8000-000000000016', 'https://images.unsplash.com/photo-1603808033192-082d6919d3e1?auto=format&fit=crop&w=800&q=80', 'Moulded Slide', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000016', 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=800&q=80', 'Moulded Slide detail', null, null, 1, false),
+  ('30000000-0000-4000-8000-000000000017', 'https://images.unsplash.com/photo-1562273138-f46be4ebdf33?auto=format&fit=crop&w=800&q=80', 'Woven Leather Sandal', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000017', 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=800&q=80', 'Woven Leather Sandal detail', null, null, 1, false),
+  ('30000000-0000-4000-8000-000000000018', 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=800&q=80', 'Everyday Leather Tote', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000018', 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=800&q=80', 'Everyday Leather Tote detail', null, null, 1, false),
+  ('30000000-0000-4000-8000-000000000019', 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80', 'Canvas Crossbody Sling', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000019', 'https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?auto=format&fit=crop&w=800&q=80', 'Canvas Crossbody Sling detail', null, null, 1, false),
+  ('30000000-0000-4000-8000-000000000020', 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=800&q=80', 'Washed Cotton Cap', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000020', 'https://images.unsplash.com/photo-1575428652377-a2d80e2277fc?auto=format&fit=crop&w=800&q=80', 'Washed Cotton Cap detail', null, null, 1, false),
+  ('30000000-0000-4000-8000-000000000021', 'https://images.unsplash.com/photo-1624222247344-550fb60583dc?auto=format&fit=crop&w=800&q=80', 'Reversible Leather Belt', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000021', 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80', 'Reversible Leather Belt detail', null, null, 1, false),
+  ('30000000-0000-4000-8000-000000000022', 'https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=800&q=80', 'Bifold Leather Wallet', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000022', 'https://images.unsplash.com/photo-1606503828399-e65593121cf3?auto=format&fit=crop&w=800&q=80', 'Bifold Leather Wallet detail', null, null, 1, false),
+  ('30000000-0000-4000-8000-000000000023', 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=800&q=80', 'Acetate Square Sunglasses', null, null, 0, true),
+  ('30000000-0000-4000-8000-000000000023', 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=800&q=80', 'Acetate Square Sunglasses detail', null, null, 1, false)
+on conflict do nothing;
+
 -- ---------- Collection membership ----------
 insert into public.collection_products (collection_id, product_id, position)
 select format('20000000-0000-4000-8000-%s', lpad(c::text, 12, '0'))::uuid,
@@ -511,22 +562,22 @@ insert into public.blog_tags (id, name, slug) values
   ('81000000-0000-4000-8000-000000000003', 'Festive', 'festive')
 on conflict do nothing;
 insert into public.blog_posts (id, slug, title, excerpt, body, status, published_at, author_name, category_id,
-                               reading_minutes, seo_title, seo_description) values
+                               reading_minutes, seo_title, seo_description, cover_url) values
   ('82000000-0000-4000-8000-000000000001', 'ten-piece-wardrobe-for-indian-weather', 'The 10-piece wardrobe for Indian weather',
    'Ten hard-working pieces that handle dry heat, monsoon humidity and a short northern winter.',
    E'## Start with fabric, not trends\n\nIndian weather asks a lot of clothes: dry heat, humid monsoons and a short, sharp winter in the north. A small wardrobe works when every piece breathes, layers and survives frequent washing.\n\n## The ten pieces\n\n1. **Three heavyweight tees** in bone, black and green. 240 gsm cotton holds its shape and does not cling in humidity.\n2. **One oxford button-down.** Tucked into trousers for work, open over a tee at the weekend.\n3. **One linen shirt** for the hottest weeks of the year.\n4. **Pleated wide-leg trousers.** The fluid drape keeps air moving around the leg.\n5. **Straight selvedge jeans.** Rigid denim softens to you and needs washing far less often than you think.\n6. **One merino knit** for Delhi winters and cold air-conditioned offices.\n7. **White leather sneakers** that go with everything above.\n8. **A leather tote** big enough for a laptop, lunch and a change of plans.\n\n## How to make it work\n\nKeep colours quiet: bone, navy, black, olive and indigo all mix with each other. Spend the most on what you wear most, usually tees and shoes. Wash cotton cold and dry it in the shade so colours last, and give leather a day off between wears so it can dry out.',
    'published', now() - interval '12 days', 'wavy Studio', '80000000-0000-4000-8000-000000000001', 2,
-   'The 10-piece wardrobe for Indian weather | wavy', 'Ten pieces that handle Indian heat, monsoon and winter: tees, shirts, trousers, denim, knitwear, sneakers and a tote.'),
+   'The 10-piece wardrobe for Indian weather | wavy', 'Ten pieces that handle Indian heat, monsoon and winter: tees, shirts, trousers, denim, knitwear, sneakers and a tote.', 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=80'),
   ('82000000-0000-4000-8000-000000000002', 'how-to-break-in-leather', 'How to break in leather (and when you don''t need to)',
    'Suede loafers are comfortable on day one. Welted boots and a new tote take a little patience.',
    E'## Not all leather needs breaking in\n\nSoft suede loafers are usually comfortable from the first wear, because suede is supple and a leather sole flexes easily. Structured calf leather, like a Goodyear-welted Chelsea boot, is different: the upper is firm and the footbed underneath has to mould to your foot.\n\n## Boots\n\nWear them at home for an hour or two at a time during the first week, with the socks you usually wear. Expect some firmness across the instep; it eases as the leather creases. Pinching at the toes, or a heel that slips more than a few millimetres, means the size is wrong, not that the boot needs more time.\n\n## Loafers\n\nIf a loafer rubs at the heel, wear it in short spells and let the lining shape itself. Do not soak leather or use heat to speed things up: both dry it out and can crack it.\n\n## Bags take time too\n\nA new leather tote can feel stiff. Use it daily, carry it by the handles and store it lightly stuffed with paper. Condition it every few months with a neutral cream.\n\n## Simple care\n\nBrush suede only when it is dry, rotate shoes so they rest between wears, and use cedar shoe trees if you can. Leather that is looked after gets better with age.',
    'published', now() - interval '6 days', 'wavy Studio', '80000000-0000-4000-8000-000000000002', 2,
-   'How to break in leather | wavy', 'How to break in leather boots, loafers and bags, when you do not need to, and how to care for them.'),
+   'How to break in leather | wavy', 'How to break in leather boots, loafers and bags, when you do not need to, and how to care for them.', 'https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&fit=crop&w=1200&q=80'),
   ('82000000-0000-4000-8000-000000000003', 'dressing-for-diwali-without-the-fuss', 'Dressing for Diwali without the fuss',
    'Comfortable, dressed-up outfits for long festive evenings, plus easy gifting picks.',
    E'## Plan for a long evening\n\nDiwali evenings run from puja to dinner to late visits, often in warm rooms full of diyas and sparklers. Choose clothes that stay comfortable for hours, and keep loose fabric well away from open flames.\n\n## For her\n\nA bias-cut satin slip dress is the easiest dressed-up option there is: it packs flat, barely creases and works with a light shawl or a cropped knit. If you prefer something softer, a ribbed knit co-ord feels relaxed but looks put together, and the top and pant work separately afterwards.\n\n## For him\n\nA fine merino crew, over a collared shirt or on its own, looks smart without a jacket. Pair it with suede penny loafers: they are comfortable for a night of visiting and need no breaking in.\n\n## Keep accessories simple\n\nOne good leather piece goes a long way. A cognac tote carries gifts and sweets between houses, and a slim bifold wallet keeps your pocket line clean.\n\n## Gifting\n\nBuying for someone else? Wallets, caps and sunglasses are safe on size. For clothing, check the size chart on each product page, and remember that unworn items with tags can be exchanged after the festival.',
    'published', now() - interval '2 days', 'wavy Studio', '80000000-0000-4000-8000-000000000001', 2,
-   'Dressing for Diwali without the fuss | wavy', 'Easy festive outfits for long Diwali evenings, and simple gifting picks.')
+   'Dressing for Diwali without the fuss | wavy', 'Easy festive outfits for long Diwali evenings, and simple gifting picks.', 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=1200&q=80')
 on conflict do nothing;
 insert into public.blog_post_tags (post_id, tag_id) values
   ('82000000-0000-4000-8000-000000000001', '81000000-0000-4000-8000-000000000001'),

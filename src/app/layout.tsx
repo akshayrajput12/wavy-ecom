@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Geist_Mono, Instrument_Serif, Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import { MotionConfig } from "framer-motion";
 import { Toaster } from "sonner";
 import { SmoothScroll } from "@/components/providers/SmoothScroll";
@@ -9,12 +9,39 @@ import "./globals.css";
 
 // UI/body: soft geometric sans. Display: Bricolage Grotesque (variable wght + opsz + wdth: headings condense and
 // sharpen as they grow). Accent: Instrument Serif italic for the odd *highlighted* word. Mono: indices and counters.
-// All SIL OFL 1.1 via Google Fonts, self-hosted at build time by next/font.
-const sans = Plus_Jakarta_Sans({ variable: "--font-jakarta", subsets: ["latin"], display: "swap" });
-const display = Bricolage_Grotesque({ variable: "--font-bricolage", subsets: ["latin"], axes: ["opsz", "wdth"], display: "swap" });
+// All SIL OFL 1.1 fonts self-hosted locally in ./fonts so `next dev` / `next build` never depend on network fetches.
+const sans = localFont({
+  src: "./fonts/PlusJakartaSans-Variable.woff2",
+  variable: "--font-jakarta",
+  weight: "200 800",
+  style: "normal",
+  display: "swap",
+});
+const display = localFont({
+  src: "./fonts/BricolageGrotesque-Variable.woff2",
+  variable: "--font-bricolage",
+  weight: "200 800",
+  style: "normal",
+  display: "swap",
+  declarations: [{ prop: "font-stretch", value: "75% 100%" }],
+});
 // not preloaded: only headings with an *accent* word request it
-const accent = Instrument_Serif({ variable: "--font-instrument", subsets: ["latin"], weight: "400", style: "italic", display: "swap", preload: false });
-const mono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"], display: "swap" });
+const accent = localFont({
+  src: "./fonts/InstrumentSerif-Italic.woff2",
+  variable: "--font-instrument",
+  weight: "400",
+  style: "italic",
+  display: "swap",
+  preload: false,
+  adjustFontFallback: "Times New Roman",
+});
+const mono = localFont({
+  src: "./fonts/GeistMono-Variable.woff2",
+  variable: "--font-geist-mono",
+  weight: "100 900",
+  style: "normal",
+  display: "swap",
+});
 
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getStoreSettings();

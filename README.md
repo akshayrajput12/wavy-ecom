@@ -20,7 +20,7 @@ npx supabase link --project-ref <your-ref>
 npx supabase db push            # runs supabase/migrations/*
 psql "$DB_URL" -f supabase/seed.sql   # or paste seed.sql in the SQL editor
 ```
-Then fill `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`, and enable the **Custom Access Token hook** (Auth → Hooks → `public.custom_access_token_hook`) so staff roles reach the JWT.
+Then fill `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or legacy `NEXT_PUBLIC_SUPABASE_ANON_KEY`) and `SUPABASE_SECRET_KEY` (or legacy `SUPABASE_SERVICE_ROLE_KEY`) in `.env.local`, and enable the **Custom Access Token hook** (Auth → Hooks → `public.custom_access_token_hook`) so staff roles reach the JWT.
 
 Option B: local (needs Docker Desktop):
 ```bash

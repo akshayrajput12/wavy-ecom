@@ -31,14 +31,33 @@ function useHostControls(ref: RefObject<Element | null>, trigger: unknown, appea
   const controls = useAnimationControls();
   const reduce = useReducedMotion();
   const prev = useRef(trigger);
+  const mountedRef = useRef(false);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     const el = ref.current;
     const host = el?.closest(HOST) ?? el?.parentElement;
     if (!host || reduce) return;
-    const play = () => void controls.start("animate");
-    const rest = () => void controls.start("normal");
-    if (appear) void controls.start("animate").then(rest);
+
+    const play = () => {
+      if (mountedRef.current) void controls.start("animate");
+    };
+    const rest = () => {
+      if (mountedRef.current) void controls.start("normal");
+    };
+
+    if (appear) {
+      requestAnimationFrame(() => {
+        if (mountedRef.current) void controls.start("animate").then(rest);
+      });
+    }
+
     host.addEventListener("pointerenter", play);
     host.addEventListener("pointerleave", rest);
     host.addEventListener("focusin", play);
@@ -54,16 +73,29 @@ function useHostControls(ref: RefObject<Element | null>, trigger: unknown, appea
   useEffect(() => {
     const was = prev.current;
     prev.current = trigger;
-    if (Object.is(was, trigger) || was === undefined || reduce) return;
-    void controls.start("animate").then(() => controls.start("normal"));
+    if (Object.is(was, trigger) || was === undefined || reduce || !mountedRef.current) return;
+    void controls.start("animate").then(() => {
+      if (mountedRef.current) void controls.start("normal");
+    });
   }, [trigger, controls, reduce]);
 
   return controls;
 }
 
 /** Lucide-compatible 24px stroke SVG whose `variants` (and its children's) play on parent hover/focus. */
-export function IconSvg({ className, size = 24, strokeWidth = 2, trigger, appear, variants, transition = ICON_T, children }: IconProps & {
-  variants?: Variants; transition?: Transition; children: ReactNode;
+export function IconSvg({
+  className,
+  size = 24,
+  strokeWidth = 2,
+  trigger,
+  appear,
+  variants,
+  transition = ICON_T,
+  children,
+}: IconProps & {
+  variants?: Variants;
+  transition?: Transition;
+  children: ReactNode;
 }) {
   const ref = useRef<SVGSVGElement>(null);
   const controls = useHostControls(ref, trigger, appear);
@@ -96,7 +128,12 @@ export function IconSvg({ className, size = 24, strokeWidth = 2, trigger, appear
 const lift: Variants = { normal: { y: 0, rotate: 0, scale: 1 }, animate: { y: -1.5, rotate: -6, scale: 1.06 } };
 
 /** Gentle lift + tilt for any plain lucide icon without a bespoke animation (admin nav). Client callers only: `icon` is a component. */
-export function IconMotion({ icon: Icon, className, strokeWidth, trigger }: IconProps & {
+export function IconMotion({
+  icon: Icon,
+  className,
+  strokeWidth,
+  trigger,
+}: IconProps & {
   icon: ComponentType<{ className?: string; strokeWidth?: number; "aria-hidden"?: boolean }>;
 }) {
   const ref = useRef<HTMLSpanElement>(null);

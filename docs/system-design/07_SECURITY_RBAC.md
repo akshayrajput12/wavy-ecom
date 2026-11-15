@@ -82,7 +82,7 @@ Lint rule: `import "@/lib/supabase/admin"` is only allowed under `src/backend/**
 
 ## 4. Secrets
 
-- All secrets are Vercel env vars (Production / Preview scoped separately; preview uses test keys). None use the `NEXT_PUBLIC_` prefix except `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (publishable key), `NEXT_PUBLIC_POSTHOG_KEY` and `NEXT_PUBLIC_GA_ID`.
+- All secrets are Vercel env vars (Production / Preview scoped separately; preview uses test keys). None use the `NEXT_PUBLIC_` prefix except `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (and legacy `NEXT_PUBLIC_SUPABASE_ANON_KEY`), `NEXT_PUBLIC_POSTHOG_KEY` and `NEXT_PUBLIC_GA_ID`. Server-only keys like `SUPABASE_SECRET_KEY` (and legacy `SUPABASE_SERVICE_ROLE_KEY`) bypass RLS and must never be prefixed with `NEXT_PUBLIC_`.
 - `lib/env.ts` validates server env with zod at boot and imports `server-only`.
 - Integration secrets that admin must set at runtime (e.g. Shiprocket password, VTON API key) go into **Supabase Vault** (`vault.create_secret`). They are read only by `security definer` functions callable by the service role. The admin UI shows only `••••last4` and a "Replace" action.
 - Rotation: webhook secrets every 12 months or on staff offboarding. For zero downtime, the Razorpay/PayU webhook handler accepts `*_WEBHOOK_SECRET` and `*_WEBHOOK_SECRET_PREVIOUS` during rotation.
